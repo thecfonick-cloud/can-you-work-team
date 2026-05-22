@@ -76,15 +76,21 @@ const updatePreferences = async (req, res) => {
     const user = await User.findById(req.user._id);
 
     if (notificationPreferences) {
+      const currentPrefs = user.notificationPreferences ? 
+        (typeof user.notificationPreferences.toObject === 'function' ? user.notificationPreferences.toObject() : user.notificationPreferences)
+        : {};
       user.notificationPreferences = {
-        ...user.notificationPreferences.toObject(),
+        ...currentPrefs,
         ...notificationPreferences
       };
     }
 
     if (doNotDisturb) {
+      const currentDnd = user.doNotDisturb ? 
+        (typeof user.doNotDisturb.toObject === 'function' ? user.doNotDisturb.toObject() : user.doNotDisturb)
+        : {};
       user.doNotDisturb = {
-        ...user.doNotDisturb.toObject(),
+        ...currentDnd,
         ...doNotDisturb
       };
     }

@@ -35,7 +35,7 @@ const getLeaderboard = async (req, res) => {
     // Find current user's rank
     const allLeaderboard = await Leaderboard.find({}).sort({ totalEarnings: -1 });
     const userRankIdx = allLeaderboard.findIndex(row => row.userId.toString() === req.user._id.toString());
-    const userRank = userRankIdx !== -1 ? userRankIdx + 1 : 23; // fallback to John's rank in mockup
+    const userRank = userRankIdx !== -1 ? userRankIdx + 1 : '--';
 
     const userTasksCompleted = await TaskSubmission.countDocuments({
       userId: req.user._id,
@@ -46,8 +46,8 @@ const getLeaderboard = async (req, res) => {
       rank: userRank,
       fullname: req.user.fullname,
       username: req.user.username,
-      tasksCompleted: userTasksCompleted || 156, // matching John's data in design
-      totalEarnings: req.user.totalEarnings || 15230
+      tasksCompleted: userTasksCompleted,
+      totalEarnings: req.user.totalEarnings
     };
 
     // Calculate Leaderboard Statistics
@@ -58,7 +58,7 @@ const getLeaderboard = async (req, res) => {
     const totalPayouts = await User.aggregate([
       { $group: { _id: null, sum: { $sum: '$totalEarnings' } } }
     ]);
-    const totalRewardsPaid = totalPayouts[0] ? totalPayouts[0].sum : 2500000;
+    const totalRewardsPaid = totalPayouts[0] ? totalPayouts[0].sum : 0;
 
     res.json({
       success: true,

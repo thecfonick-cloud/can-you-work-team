@@ -1,3 +1,15 @@
+// Intercept require('mongoose') to use our custom mock
+const path = require('path');
+const mockMongoose = require('./mongoose-mock');
+const Module = require('module');
+const originalRequire = Module.prototype.require;
+Module.prototype.require = function(request) {
+  if (request === 'mongoose') {
+    return mockMongoose;
+  }
+  return originalRequire.apply(this, arguments);
+};
+
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('./models/User');
@@ -230,6 +242,57 @@ async function seed() {
         createdByAdmin: admin._id
       }
     ];
+
+    // Generate random social media microtasks dynamically as requested by the user
+    console.log('Generating random social media microtasks...');
+    const platforms = ['tiktok', 'instagram', 'twitter', 'youtube', 'facebook', 'telegram'];
+    const actions = [
+      { name: 'Follow', type: 'social_follow', descPrefix: 'Follow the page or handle', rewards: [10, 15, 20, 25] },
+      { name: 'Like & Comment on', type: 'social_like', descPrefix: 'Like and leave a positive comment on this post', rewards: [15, 20, 30, 45] },
+      { name: 'Share/Retweet', type: 'social_like', descPrefix: 'Share or retweet this post publicly', rewards: [20, 25, 35, 50] },
+      { name: 'Subscribe to', type: 'social_follow', descPrefix: 'Subscribe to this channel and turn on notifications', rewards: [30, 40, 50, 75] }
+    ];
+    
+    const randomAccounts = ['hype_deals', 'crypto_king', 'daily_funny', 'tech_insider', 'fashion_hub', 'gaming_legend', 'fitness_guru', 'chef_bites'];
+
+    for (let i = 0; i < 15; i++) {
+      const platform = platforms[Math.floor(Math.random() * platforms.length)];
+      const action = actions[Math.floor(Math.random() * actions.length)];
+      const account = randomAccounts[Math.floor(Math.random() * randomAccounts.length)] + Math.floor(10 + Math.random() * 90);
+      const title = `${action.name} @${account} on ${platform.charAt(0).toUpperCase() + platform.slice(1)}`;
+      const reward = action.rewards[Math.floor(Math.random() * action.rewards.length)];
+      
+      let link = '';
+      if (platform === 'twitter') link = `https://twitter.com/${account}`;
+      else if (platform === 'instagram') link = `https://instagram.com/${account}`;
+      else if (platform === 'tiktok') link = `https://tiktok.com/@${account}`;
+      else if (platform === 'youtube') link = `https://youtube.com/c/${account}`;
+      else if (platform === 'facebook') link = `https://facebook.com/${account}`;
+      else if (platform === 'telegram') link = `https://t.me/${account}`;
+
+      const slots = Math.floor(5000 + Math.random() * 45000);
+      const remaining = Math.floor(slots * (0.2 + Math.random() * 0.7));
+
+      tasksData.push({
+        title,
+        description: `${action.descPrefix}. Take a screenshot showing you completed the action and submit it as proof.`,
+        platform,
+        taskType: action.type,
+        rewardAmount: reward,
+        totalSlots: slots,
+        remainingSlots: remaining,
+        taskLink: link,
+        instructions: [
+          `Click the link to redirect to ${platform}.`,
+          `Perform the required ${action.name.toLowerCase()} action.`,
+          `Capture a screenshot demonstrating completion.`,
+          `Submit the screenshot along with your username.`
+        ],
+        requiredProof: { screenshot: true, username: true },
+        status: 'active',
+        createdByAdmin: admin._id
+      });
+    }
 
     await Task.insertMany(tasksData);
     console.log('Sample tasks inserted successfully.');

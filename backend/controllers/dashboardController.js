@@ -71,18 +71,18 @@ const getDashboardOverview = async (req, res) => {
         fullname: user.fullname,
         username: user.username,
         walletBalance: wallet.availableBalance,
-        earningsThisMonth: earningsThisMonth || wallet.totalEarned * 0.7, // mock month split fallback
-        tasksCompleted: tasksCompletedCount || 320, // fallback to mockup John's data
+        earningsThisMonth: earningsThisMonth,
+        tasksCompleted: tasksCompletedCount,
         availableForWithdrawal: wallet.availableBalance - wallet.pendingBalance,
         isVerified: user.isVerified
       },
       recentTasks,
       earningsOverviewGraph: chartData,
       bottomStats: {
-        totalReferrals: referralsCount || 25,
-        referralEarnings: referralsCount * 210 || 5250, // estimated Commission ₦210 per referral
-        tasksInProgress: tasksInProgressCount || 2,
-        totalWithdrawn: wallet.totalWithdrawn || 36800
+        totalReferrals: referralsCount,
+        referralEarnings: referralsCount * 210, // estimated Commission ₦210 per referral
+        tasksInProgress: tasksInProgressCount,
+        totalWithdrawn: wallet.totalWithdrawn
       }
     });
 

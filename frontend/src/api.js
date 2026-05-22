@@ -230,6 +230,143 @@ const getHeaders = () => {
   };
 };
 
+// Local Storage Offline Database Engine
+const initOfflineDb = () => {
+  if (!localStorage.getItem('cw_offline_db_initialized')) {
+    localStorage.setItem('cw_offline_users', JSON.stringify([
+      {
+        _id: '6a10cc2151f6a0a1d2981526',
+        fullname: 'John Goodluck',
+        username: 'johng',
+        email: 'johng@example.com',
+        phone: '+234 801 234 5678',
+        country: 'Nigeria',
+        referralCode: 'JohnG',
+        isVerified: true,
+        socialAccounts: {
+          instagramUsername: 'john_doe',
+          tiktokUsername: 'johndoe_tt',
+          twitterUsername: 'johndoe_x',
+          facebookUsername: 'john.doe.fb',
+          telegramUsername: 'johndoe_tg',
+          youtubeChannel: 'JohnDoeChannel'
+        },
+        notificationPreferences: {
+          taskAlerts: true,
+          bonusRewards: true,
+          withdrawalAlerts: true,
+          referrals: true,
+          leaderboard: true,
+          systemUpdates: true,
+          marketing: false
+        },
+        doNotDisturb: {
+          enabled: true,
+          quietHoursStart: '22:00',
+          quietHoursEnd: '07:00'
+        },
+        password: 'password123'
+      }
+    ]));
+
+    localStorage.setItem('cw_offline_wallets', JSON.stringify({
+      '6a10cc2151f6a0a1d2981526': {
+        availableBalance: 25680.00,
+        pendingBalance: 1230.00,
+        totalEarnings: 48250.00,
+        totalWithdrawn: 36800.00
+      }
+    }));
+
+    localStorage.setItem('cw_offline_tasks', JSON.stringify(MOCK_TASKS));
+    localStorage.setItem('cw_offline_submissions', JSON.stringify([
+      { _id: 's1', taskId: 't1', userId: '6a10cc2151f6a0a1d2981526', socialUsername: 'john_doe', status: 'approved', createdAt: new Date().toISOString() },
+      { _id: 's2', taskId: 't2', userId: '6a10cc2151f6a0a1d2981526', socialUsername: 'john_doe', status: 'approved', createdAt: new Date().toISOString() },
+      { _id: 's3', taskId: 't3', userId: '6a10cc2151f6a0a1d2981526', socialUsername: 'john_doe', status: 'approved', createdAt: new Date().toISOString() },
+      { _id: 's4', taskId: 't4', userId: '6a10cc2151f6a0a1d2981526', socialUsername: 'johndoe_tg', status: 'approved', createdAt: new Date().toISOString() },
+      { _id: 's5', taskId: 't5', userId: '6a10cc2151f6a0a1d2981526', socialUsername: 'john_doe', status: 'pending', createdAt: new Date().toISOString() }
+    ]));
+
+    localStorage.setItem('cw_offline_transactions', JSON.stringify([
+      { _id: 'tx1', userId: '6a10cc2151f6a0a1d2981526', type: 'task_reward', description: 'Watch YouTube Video', amount: 304.60, status: 'Completed', createdAt: '2024-05-25T10:30:00Z' },
+      { _id: 'tx2', userId: '6a10cc2151f6a0a1d2981526', type: 'task_reward', description: 'Follow on Instagram', amount: 152.30, status: 'Completed', createdAt: '2024-05-25T09:15:00Z' },
+      { _id: 'tx3', userId: '6a10cc2151f6a0a1d2981526', type: 'withdrawal', description: 'Withdrawal to PayPal (john@example.com)', amount: -30460.00, status: 'Completed', createdAt: '2024-05-24T16:45:00Z' },
+      { _id: 'tx4', userId: '6a10cc2151f6a0a1d2981526', type: 'referral_bonus', description: 'Invite Bonus: 5 Friends Joined', amount: 7615.00, status: 'Completed', createdAt: '2024-05-24T14:20:00Z' },
+      { _id: 'tx5', userId: '6a10cc2151f6a0a1d2981526', type: 'task_reward', description: 'Like Facebook Page', amount: 152.30, status: 'Completed', createdAt: '2024-05-24T11:05:00Z' },
+      { _id: 'tx6', userId: '6a10cc2151f6a0a1d2981526', type: 'withdrawal', description: 'Pending Payout (Minimum payout not reached)', amount: 18732.90, status: 'Pending', createdAt: '2024-05-24T10:00:00Z' }
+    ]));
+
+    localStorage.setItem('cw_offline_notifications', JSON.stringify(MOCK_NOTIFICATIONS));
+    
+    localStorage.setItem('cw_offline_streaks', JSON.stringify({
+      '6a10cc2151f6a0a1d2981526': {
+        streakCount: 7,
+        checkedInToday: true,
+        lastCheckedIn: new Date().toISOString().split('T')[0],
+        streakList: [
+          { day: 'Mon', checked: true },
+          { day: 'Tue', checked: true },
+          { day: 'Wed', checked: true },
+          { day: 'Thu', checked: true },
+          { day: 'Fri', checked: true },
+          { day: 'Sat', checked: true },
+          { day: 'Sun', checked: false }
+        ]
+      }
+    }));
+
+    localStorage.setItem('cw_offline_withdrawals', JSON.stringify([
+      { _id: 'w1', userId: '6a10cc2151f6a0a1d2981526', amount: 30460, method: 'PayPal', accountDetails: 'john@example.com', status: 'paid', createdAt: '2024-05-24T16:45:00Z' },
+      { _id: 'w2', userId: '6a10cc2151f6a0a1d2981526', amount: 76150, method: 'Bank Transfer', accountDetails: 'Access Bank - 0123456789', status: 'paid', createdAt: '2024-05-10T09:10:00Z' },
+      { _id: 'w3', userId: '6a10cc2151f6a0a1d2981526', amount: 45690, method: 'Payoneer', accountDetails: 'payoneer@example.com', status: 'paid', createdAt: '2024-04-28T15:30:00Z' }
+    ]));
+
+    localStorage.setItem('cw_offline_referrals', JSON.stringify([
+      { referrerId: '6a10cc2151f6a0a1d2981526', fullname: 'Sarah Johnson', email: 'sarahj@example.com', status: 'Active', joinedOn: '2024-05-25T00:00:00Z', totalEarned: 500 },
+      { referrerId: '6a10cc2151f6a0a1d2981526', fullname: 'Michael Brown', email: 'michaelb@example.com', status: 'Active', joinedOn: '2024-05-24T00:00:00Z', totalEarned: 500 },
+      { referrerId: '6a10cc2151f6a0a1d2981526', fullname: 'Emily Davis', email: 'emilyd@example.com', status: 'Pending', joinedOn: '2024-05-23T00:00:00Z', totalEarned: 0 },
+      { referrerId: '6a10cc2151f6a0a1d2981526', fullname: 'David Wilson', email: 'davidw@example.com', status: 'Active', joinedOn: '2024-05-20T00:00:00Z', totalEarned: 500 },
+      { referrerId: '6a10cc2151f6a0a1d2981526', fullname: 'Jessica Taylor', email: 'jessicat@example.com', status: 'Completed', joinedOn: '2024-05-18T00:00:00Z', totalEarned: 500 }
+    ]));
+
+    localStorage.setItem('cw_offline_db_initialized', 'true');
+  }
+};
+
+const getOfflineUsers = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_users') || '[]'); };
+const saveOfflineUsers = (users) => localStorage.setItem('cw_offline_users', JSON.stringify(users));
+
+const getOfflineWallets = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_wallets') || '{}'); };
+const saveOfflineWallets = (wallets) => localStorage.setItem('cw_offline_wallets', JSON.stringify(wallets));
+
+const getOfflineTasks = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_tasks') || '[]'); };
+const saveOfflineTasks = (tasks) => localStorage.setItem('cw_offline_tasks', JSON.stringify(tasks));
+
+const getOfflineSubmissions = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_submissions') || '[]'); };
+const saveOfflineSubmissions = (subs) => localStorage.setItem('cw_offline_submissions', JSON.stringify(subs));
+
+const getOfflineTransactions = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_transactions') || '[]'); };
+const saveOfflineTransactions = (txs) => localStorage.setItem('cw_offline_transactions', JSON.stringify(txs));
+
+const getOfflineNotifications = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_notifications') || '[]'); };
+const saveOfflineNotifications = (notifs) => localStorage.setItem('cw_offline_notifications', JSON.stringify(notifs));
+
+const getOfflineStreaks = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_streaks') || '{}'); };
+const saveOfflineStreaks = (streaks) => localStorage.setItem('cw_offline_streaks', JSON.stringify(streaks));
+
+const getOfflineWithdrawals = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_withdrawals') || '[]'); };
+const saveOfflineWithdrawals = (withdrawals) => localStorage.setItem('cw_offline_withdrawals', JSON.stringify(withdrawals));
+
+const getOfflineReferrals = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_referrals') || '[]'); };
+const saveOfflineReferrals = (refs) => localStorage.setItem('cw_offline_referrals', JSON.stringify(refs));
+
+const getActiveUserIdOffline = () => {
+  const token = localStorage.getItem('canyuwork_token');
+  if (!token) return null;
+  if (token === 'mock_jwt_token_123') return '6a10cc2151f6a0a1d2981526';
+  return token;
+};
+
 export const api = {
   // Authentication
   login: async (email, password) => {
@@ -246,9 +383,16 @@ export const api = {
       return data;
     } catch (e) {
       // Mock Fallback
+      const users = getOfflineUsers();
+      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() || u.username.toLowerCase() === email.toLowerCase());
+      if (user) {
+        localStorage.setItem('canyuwork_token', user._id);
+        return { success: true, user, token: user._id };
+      }
       if (email.includes('johng') || email.includes('john@')) {
-        localStorage.setItem('canyuwork_token', 'mock_jwt_token_123');
-        return { success: true, user: MOCK_USER, token: 'mock_jwt_token_123' };
+        const john = users.find(u => u.username === 'johng');
+        localStorage.setItem('canyuwork_token', john._id);
+        return { success: true, user: john, token: john._id };
       }
       return { success: false, message: 'Invalid credentials or offline.' };
     }
@@ -268,9 +412,103 @@ export const api = {
       return data;
     } catch (e) {
       // Mock Fallback
-      localStorage.setItem('canyuwork_token', 'mock_jwt_token_123');
-      const newUser = { ...MOCK_USER, fullname, username, email, phone, country };
-      return { success: true, user: newUser, token: 'mock_jwt_token_123' };
+      const users = getOfflineUsers();
+      if (users.some(u => u.email.toLowerCase() === email.toLowerCase() || u.username.toLowerCase() === username.toLowerCase())) {
+        return { success: false, message: 'Username or email already exists' };
+      }
+      
+      const newUserId = 'mock_user_' + Math.random().toString(36).substr(2, 9);
+      const referralCode = username.toLowerCase() + Math.floor(100 + Math.random() * 900);
+      
+      const newUser = {
+        _id: newUserId,
+        fullname,
+        username,
+        email,
+        phone,
+        country,
+        referralCode,
+        referredBy: referredBy || null,
+        isVerified: true,
+        socialAccounts: {
+          instagramUsername: '',
+          tiktokUsername: '',
+          twitterUsername: '',
+          facebookUsername: '',
+          telegramUsername: '',
+          youtubeChannel: ''
+        },
+        notificationPreferences: {
+          taskAlerts: true,
+          bonusRewards: true,
+          withdrawalAlerts: true,
+          referrals: true,
+          leaderboard: true,
+          systemUpdates: true,
+          marketing: false
+        },
+        doNotDisturb: {
+          enabled: false,
+          quietHoursStart: '22:00',
+          quietHoursEnd: '07:00'
+        }
+      };
+
+      users.push(newUser);
+      saveOfflineUsers(users);
+
+      const wallets = getOfflineWallets();
+      wallets[newUserId] = {
+        availableBalance: 200.0,
+        pendingBalance: 0.0,
+        totalEarnings: 200.0,
+        totalWithdrawn: 0.0
+      };
+      saveOfflineWallets(wallets);
+
+      const txs = getOfflineTransactions();
+      txs.push({
+        _id: 'tx_signup_' + Date.now(),
+        userId: newUserId,
+        type: 'challenge_bonus',
+        description: 'Sign Up Bonus: Profile created successfully',
+        amount: 200,
+        status: 'Completed',
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineTransactions(txs);
+
+      const notifs = getOfflineNotifications();
+      notifs.push({
+        _id: 'notif_signup_' + Date.now(),
+        userId: newUserId,
+        title: 'Bonus Earned! 🎉',
+        message: 'You earned ₦200 for completing your profile sign up bonus.',
+        type: 'bonus',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineNotifications(notifs);
+
+      const streaks = getOfflineStreaks();
+      streaks[newUserId] = {
+        streakCount: 0,
+        checkedInToday: false,
+        lastCheckedIn: null,
+        streakList: [
+          { day: 'Mon', checked: false },
+          { day: 'Tue', checked: false },
+          { day: 'Wed', checked: false },
+          { day: 'Thu', checked: false },
+          { day: 'Fri', checked: false },
+          { day: 'Sat', checked: false },
+          { day: 'Sun', checked: false }
+        ]
+      };
+      saveOfflineStreaks(streaks);
+
+      localStorage.setItem('canyuwork_token', newUserId);
+      return { success: true, user: newUser, token: newUserId };
     }
   },
 
@@ -278,56 +516,78 @@ export const api = {
     localStorage.removeItem('canyuwork_token');
   },
 
-  // Dashboard overview metrics
   getDashboard: async () => {
     try {
       const res = await fetch(`${BASE_URL}/dashboard/overview`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
+      const userId = getActiveUserIdOffline();
+      const users = getOfflineUsers();
+      const user = users.find(u => u._id === userId) || users[0];
+      if (!user) return { success: false, message: 'Offline user not found' };
+
+      const wallets = getOfflineWallets();
+      const wallet = wallets[user._id] || { availableBalance: 0, pendingBalance: 0, totalEarnings: 0, totalWithdrawn: 0 };
+
+      const subs = getOfflineSubmissions().filter(s => s.userId === user._id);
+      const approvedCount = subs.filter(s => s.status === 'approved').length;
+      const pendingCount = subs.filter(s => s.status === 'pending').length;
+
+      const refs = getOfflineReferrals().filter(r => r.referrerId === user._id);
+
+      const tasks = getOfflineTasks();
+      const recentTasks = subs.slice(0, 5).map(sub => {
+        const t = tasks.find(task => task._id === sub.taskId);
+        return {
+          _id: sub._id,
+          title: t ? t.title : 'Task Completion',
+          reward: t ? t.rewardAmount : 0,
+          status: sub.status === 'approved' ? 'Completed' : sub.status === 'pending' ? 'Pending' : 'Rejected',
+          date: sub.createdAt
+        };
+      });
+
+      const txs = getOfflineTransactions().filter(tx => tx.userId === user._id && tx.type !== 'withdrawal');
+      const earningsThisMonth = txs.reduce((sum, tx) => sum + tx.amount, 0);
+
       return {
         success: true,
         overview: {
-          fullname: MOCK_USER.fullname,
-          username: MOCK_USER.username,
-          walletBalance: MOCK_USER.balance,
-          earningsThisMonth: MOCK_USER.totalEarnings * 0.75,
-          tasksCompleted: 320,
-          availableForWithdrawal: MOCK_USER.balance - MOCK_USER.pendingBalance,
-          isVerified: MOCK_USER.isVerified
+          fullname: user.fullname,
+          username: user.username,
+          walletBalance: wallet.availableBalance,
+          earningsThisMonth: earningsThisMonth,
+          tasksCompleted: approvedCount,
+          availableForWithdrawal: wallet.availableBalance - wallet.pendingBalance,
+          isVerified: user.isVerified
         },
-        recentTasks: [
-          { _id: 's1', title: 'Follow @techworld on Instagram', reward: 10, status: 'Completed', date: new Date() },
-          { _id: 's2', title: 'Like & Share this Facebook Post', reward: 15, status: 'Completed', date: new Date() },
-          { _id: 's3', title: 'Watch this YouTube Video', reward: 20, status: 'Completed', date: new Date() },
-          { _id: 's4', title: 'Join our Telegram Channel', reward: 10, status: 'Completed', date: new Date() },
-          { _id: 's5', title: 'Comment on this Instagram Post', reward: 20, status: 'Pending', date: new Date() }
-        ],
+        recentTasks,
         earningsOverviewGraph: [
-          { date: 'May 1', amount: 5000 },
-          { date: 'May 8', amount: 15000 },
-          { date: 'May 15', amount: 28000 },
-          { date: 'May 22', amount: 39000 },
-          { date: 'May 31', amount: 48250 }
+          { date: 'May 1', amount: earningsThisMonth * 0.1 },
+          { date: 'May 8', amount: earningsThisMonth * 0.35 },
+          { date: 'May 15', amount: earningsThisMonth * 0.6 },
+          { date: 'May 22', amount: earningsThisMonth * 0.85 },
+          { date: 'May 31', amount: earningsThisMonth }
         ],
         bottomStats: {
-          totalReferrals: 25,
-          referralEarnings: 5250,
-          tasksInProgress: 2,
-          totalWithdrawn: 36800
+          totalReferrals: refs.length,
+          referralEarnings: refs.filter(r => r.status === 'Active' || r.status === 'Completed').length * 210,
+          tasksInProgress: pendingCount,
+          totalWithdrawn: wallet.totalWithdrawn
         }
       };
     }
   },
 
-  // Tasks
   getTasks: async (platform = 'All Tasks') => {
     try {
       const res = await fetch(`${BASE_URL}/tasks?platform=${platform}`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
-      let list = MOCK_TASKS;
+      const tasks = getOfflineTasks();
+      let list = tasks;
       if (platform !== 'All Tasks' && platform !== 'all') {
-        list = MOCK_TASKS.filter(t => t.platform.toLowerCase() === platform.toLowerCase());
+        list = tasks.filter(t => t.platform.toLowerCase() === platform.toLowerCase());
       }
       return { success: true, tasks: list };
     }
@@ -338,8 +598,11 @@ export const api = {
       const res = await fetch(`${BASE_URL}/tasks/${id}`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
-      const task = MOCK_TASKS.find(t => t._id === id);
-      return { success: true, task, submitted: false };
+      const tasks = getOfflineTasks();
+      const task = tasks.find(t => t._id === id);
+      const userId = getActiveUserIdOffline();
+      const submitted = getOfflineSubmissions().some(s => s.taskId === id && s.userId === userId);
+      return { success: true, task, submitted };
     }
   },
 
@@ -353,7 +616,7 @@ export const api = {
       }
       
       const headers = getHeaders();
-      delete headers['Content-Type']; // Let browser set boundary for multipart
+      delete headers['Content-Type'];
 
       const res = await fetch(`${BASE_URL}/tasks/${id}/submit`, {
         method: 'POST',
@@ -362,6 +625,40 @@ export const api = {
       });
       return await res.json();
     } catch (e) {
+      const userId = getActiveUserIdOffline();
+      const subs = getOfflineSubmissions();
+      
+      const tasks = getOfflineTasks();
+      const taskIdx = tasks.findIndex(t => t._id === id);
+      if (taskIdx !== -1) {
+        tasks[taskIdx].remainingSlots = Math.max(0, tasks[taskIdx].remainingSlots - 1);
+        saveOfflineTasks(tasks);
+      }
+
+      const newSub = {
+        _id: 'sub_' + Date.now(),
+        taskId: id,
+        userId: userId,
+        socialUsername,
+        proofText,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      };
+      subs.push(newSub);
+      saveOfflineSubmissions(subs);
+
+      const notifs = getOfflineNotifications();
+      notifs.push({
+        _id: 'notif_sub_' + Date.now(),
+        userId: userId,
+        title: 'Task Proof Submitted',
+        message: 'Your proof for task has been submitted and is pending review.',
+        type: 'task',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineNotifications(notifs);
+
       return { success: true, message: 'Proof submitted successfully (Simulated offline Mode)' };
     }
   },
@@ -380,39 +677,51 @@ export const api = {
       const res = await fetch(`${BASE_URL}/tasks/my-logs`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
-      return {
-        success: true,
-        grouped: {
-          pending: [
-            { _id: 's5', taskId: { title: 'Comment on this Instagram Post', rewardAmount: 20 }, status: 'pending', createdAt: new Date() }
-          ],
-          approved: [
-            { _id: 's1', taskId: { title: 'Follow @techworld on Instagram', rewardAmount: 10 }, status: 'approved', createdAt: new Date() }
-          ],
-          rejected: []
-        }
+      const userId = getActiveUserIdOffline();
+      const subs = getOfflineSubmissions().filter(s => s.userId === userId);
+      const tasks = getOfflineTasks();
+      
+      const populatedSubs = subs.map(sub => {
+        const t = tasks.find(task => task._id === sub.taskId) || { title: 'Unknown Task', rewardAmount: 0 };
+        return {
+          _id: sub._id,
+          taskId: { title: t.title, rewardAmount: t.rewardAmount },
+          status: sub.status,
+          createdAt: sub.createdAt
+        };
+      });
+
+      const grouped = {
+        pending: populatedSubs.filter(s => s.status === 'pending'),
+        approved: populatedSubs.filter(s => s.status === 'approved'),
+        rejected: populatedSubs.filter(s => s.status === 'rejected')
       };
+
+      return { success: true, grouped };
     }
   },
 
-  // Wallet
   getWallet: async () => {
     try {
       const res = await fetch(`${BASE_URL}/wallet`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const EXCHANGE_RATE = 1523.0;
+      const userId = getActiveUserIdOffline();
+      const wallets = getOfflineWallets();
+      const wallet = wallets[userId] || { availableBalance: 0, pendingBalance: 0, totalEarnings: 0, totalWithdrawn: 0 };
+      
       return {
         success: true,
         balances: {
-          availableBalance: MOCK_USER.balance,
-          availableBalanceUSD: MOCK_USER.balance / EXCHANGE_RATE,
-          pendingBalance: MOCK_USER.pendingBalance,
-          pendingBalanceUSD: MOCK_USER.pendingBalance / EXCHANGE_RATE,
-          totalEarned: MOCK_USER.totalEarnings,
-          totalEarnedUSD: MOCK_USER.totalEarnings / EXCHANGE_RATE,
-          totalWithdrawn: MOCK_USER.totalWithdrawn,
-          totalWithdrawnUSD: MOCK_USER.totalWithdrawn / EXCHANGE_RATE
+          availableBalance: wallet.availableBalance,
+          availableBalanceUSD: wallet.availableBalance / EXCHANGE_RATE,
+          pendingBalance: wallet.pendingBalance,
+          pendingBalanceUSD: wallet.pendingBalance / EXCHANGE_RATE,
+          totalEarned: wallet.totalEarnings,
+          totalEarnedUSD: wallet.totalEarnings / EXCHANGE_RATE,
+          totalWithdrawn: wallet.totalWithdrawn,
+          totalWithdrawnUSD: wallet.totalWithdrawn / EXCHANGE_RATE
         }
       };
     }
@@ -423,7 +732,10 @@ export const api = {
       const res = await fetch(`${BASE_URL}/wallet/transactions`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
-      return { success: true, transactions: MOCK_TRANSACTIONS };
+      const userId = getActiveUserIdOffline();
+      const txs = getOfflineTransactions().filter(tx => tx.userId === userId);
+      txs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return { success: true, transactions: txs };
     }
   },
 
@@ -436,6 +748,62 @@ export const api = {
       });
       return await res.json();
     } catch (e) {
+      const userId = getActiveUserIdOffline();
+      const wallets = getOfflineWallets();
+      const wallet = wallets[userId];
+      
+      if (!wallet || wallet.availableBalance < amount) {
+        return { success: false, message: 'Insufficient funds.' };
+      }
+
+      wallet.availableBalance -= amount;
+      wallet.pendingBalance += amount;
+      wallets[userId] = wallet;
+      saveOfflineWallets(wallets);
+
+      const txs = getOfflineTransactions();
+      txs.push({
+        _id: 'tx_w_' + Date.now(),
+        userId: userId,
+        type: 'withdrawal',
+        description: `Pending Payout via ${method} (${accountDetails})`,
+        amount: -amount,
+        status: 'Pending',
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineTransactions(txs);
+
+      const withdrawals = getOfflineWithdrawals();
+      withdrawals.push({
+        _id: 'w_' + Date.now(),
+        userId: userId,
+        amount: amount,
+        method: method,
+        accountDetails: accountDetails,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineWithdrawals(withdrawals);
+
+      const users = getOfflineUsers();
+      const userIdx = users.findIndex(u => u._id === userId);
+      if (userIdx !== -1) {
+        users[userIdx].balance = wallet.availableBalance;
+        saveOfflineUsers(users);
+      }
+
+      const notifs = getOfflineNotifications();
+      notifs.push({
+        _id: 'notif_w_' + Date.now(),
+        userId: userId,
+        title: 'Withdrawal Request Received',
+        message: `Your withdrawal request of ₦${amount} via ${method} has been submitted.`,
+        type: 'withdrawal',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineNotifications(notifs);
+
       return { success: true, message: `Withdrawal request of ₦${amount} via ${method} submitted successfully.` };
     }
   },
@@ -445,53 +813,92 @@ export const api = {
       const res = await fetch(`${BASE_URL}/withdrawals`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
-      return {
-        success: true,
-        withdrawals: [
-          { _id: 'w1', amount: 30460, method: 'PayPal', accountDetails: 'john@example.com', status: 'paid', createdAt: '2024-05-24T16:45:00Z' },
-          { _id: 'w2', amount: 76150, method: 'Bank Transfer', accountDetails: 'Access Bank - 0123456789', status: 'paid', createdAt: '2024-05-10T09:10:00Z' },
-          { _id: 'w3', amount: 45690, method: 'Payoneer', accountDetails: 'payoneer@example.com', status: 'paid', createdAt: '2024-04-28T15:30:00Z' }
-        ]
-      };
+      const userId = getActiveUserIdOffline();
+      const withdrawals = getOfflineWithdrawals().filter(w => w.userId === userId);
+      withdrawals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return { success: true, withdrawals };
     }
   },
 
-  // Referrals
   getReferrals: async () => {
     try {
       const res = await fetch(`${BASE_URL}/referrals`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
+      const userId = getActiveUserIdOffline();
+      const users = getOfflineUsers();
+      const user = users.find(u => u._id === userId) || users[0];
+      
+      const refs = getOfflineReferrals().filter(r => r.referrerId === user._id);
+      const activeCount = refs.filter(r => r.status === 'Active' || r.status === 'Completed').length;
+      const earnings = activeCount * 210;
+
       return {
         success: true,
-        referralCode: MOCK_USER.referralCode,
-        referralLink: `https://canyuwork.com?ref=${MOCK_USER.referralCode}`,
+        referralCode: user.referralCode,
+        referralLink: `https://canyuwork.com?ref=${user.referralCode}`,
         stats: {
-          totalReferrals: 28,
-          activeReferrals: 19,
-          totalEarnings: 9350,
-          pendingEarnings: 1250
+          totalReferrals: refs.length,
+          activeReferrals: activeCount,
+          totalEarnings: earnings,
+          pendingEarnings: refs.filter(r => r.status === 'Pending').length * 210
         },
         earningsBreakdown: {
-          totalEarnings: 9350,
-          paidToWallet: 8100,
-          pending: 1250
+          totalEarnings: earnings,
+          paidToWallet: earnings,
+          pending: refs.filter(r => r.status === 'Pending').length * 210
         },
-        referralHistory: MOCK_REFERRALS_LIST
+        referralHistory: refs
       };
     }
   },
 
-  // Leaderboard
   getLeaderboard: async () => {
     try {
       const res = await fetch(`${BASE_URL}/leaderboard`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
+      const userId = getActiveUserIdOffline();
+      const users = getOfflineUsers();
+      
+      const list = users.map((u, index) => {
+        const subsCount = getOfflineSubmissions().filter(s => s.userId === u._id && s.status === 'approved').length;
+        const totalEarnings = u.totalEarnings || u.balance || 0;
+        return {
+          fullname: u.fullname,
+          username: u.username,
+          country: u.country,
+          tasksCompleted: subsCount || (u.username === 'johng' ? 156 : 10),
+          totalEarnings: totalEarnings
+        };
+      });
+
+      const combinedList = [...list];
+      for (const mockItem of MOCK_LEADERBOARD) {
+        if (!combinedList.some(item => item.username === mockItem.username)) {
+          combinedList.push(mockItem);
+        }
+      }
+
+      combinedList.sort((a, b) => b.totalEarnings - a.totalEarnings);
+
+      const rankedList = combinedList.map((item, index) => ({
+        rank: index + 1,
+        ...item
+      }));
+
+      const activeUser = users.find(u => u._id === userId) || users[0];
+      const activeUserRanked = rankedList.find(item => item.username === activeUser.username) || {
+        rank: 23,
+        fullname: activeUser.fullname,
+        tasksCompleted: 0,
+        totalEarnings: 0
+      };
+
       return {
         success: true,
         stats: {
-          totalUsers: 12458,
+          totalUsers: Math.max(12458, rankedList.length),
           totalTasksCompleted: 245672,
           totalRewardsPaid: 2500000
         },
@@ -502,50 +909,68 @@ export const api = {
           otherPlaces: 10000
         },
         currentRank: {
-          rank: 23,
-          fullname: 'John G.',
-          tasksCompleted: 156,
-          totalEarnings: 15230
+          rank: activeUserRanked.rank,
+          fullname: activeUserRanked.fullname,
+          tasksCompleted: activeUserRanked.tasksCompleted,
+          totalEarnings: activeUserRanked.totalEarnings
         },
-        list: MOCK_LEADERBOARD
+        list: rankedList.slice(0, 10)
       };
     }
   },
 
-  // Bonuses & challenges
   getBonuses: async () => {
     try {
       const res = await fetch(`${BASE_URL}/bonuses/progress`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
+      const userId = getActiveUserIdOffline();
+      const users = getOfflineUsers();
+      const user = users.find(u => u._id === userId) || users[0];
+      
+      const streaks = getOfflineStreaks();
+      const userStreak = streaks[user._id] || {
+        streakCount: 0,
+        checkedInToday: false,
+        streakList: [
+          { day: 'Mon', checked: false },
+          { day: 'Tue', checked: false },
+          { day: 'Wed', checked: false },
+          { day: 'Thu', checked: false },
+          { day: 'Fri', checked: false },
+          { day: 'Sat', checked: false },
+          { day: 'Sun', checked: false }
+        ]
+      };
+
+      const wallets = getOfflineWallets();
+      const wallet = wallets[user._id] || { availableBalance: 0, pendingBalance: 0, totalEarnings: 0, totalWithdrawn: 0 };
+
+      const txs = getOfflineTransactions().filter(tx => tx.userId === user._id);
+      const bonusTxs = txs.filter(tx => ['check_in_bonus', 'challenge_bonus', 'referral_bonus'].includes(tx.type));
+      const totalBonusEarned = bonusTxs.reduce((sum, tx) => sum + tx.amount, 0);
+
+      const approvedCount = getOfflineSubmissions().filter(s => s.userId === user._id && s.status === 'approved').length;
+      const referralsCount = getOfflineReferrals().filter(r => r.referrerId === user._id).length;
+
+      const bonuses = [
+        { id: 'signup_bonus', title: 'Sign Up Bonus', description: 'Complete your profile and verify your email', reward: 200, type: 'One Time', status: 'Completed', progress: 1, target: 1 },
+        { id: 'invite_5', title: 'Invite 5 Friends', description: 'Invite 5 friends to join using your referral link', reward: 300, type: 'Challenge', status: referralsCount >= 5 ? 'Completed' : 'In Progress', progress: Math.min(referralsCount, 5), target: 5 },
+        { id: 'complete_50', title: 'Complete 50 Tasks', description: 'Complete 50 tasks to unlock this bonus', reward: 500, type: 'Challenge', status: approvedCount >= 50 ? 'Completed' : 'In Progress', progress: Math.min(approvedCount, 50), target: 50 },
+        { id: 'daily_checkin_bonus', title: 'Daily Check-in', description: 'Check in every day and earn bonus', reward: 10, type: 'Daily', status: userStreak.checkedInToday ? 'Checked' : 'Check In', progress: userStreak.checkedInToday ? 1 : 0, target: 1 },
+        { id: 'weekend_bonus', title: 'Weekend Bonus', description: 'Complete any 10 tasks this weekend', reward: 150, type: 'Limited Time', status: approvedCount >= 10 ? 'Completed' : 'In Progress', progress: Math.min(approvedCount, 10), target: 10, timeLeft: '1d 12h 45m' },
+        { id: 'watch_5_videos', title: 'Watch 5 Videos Bonus', description: 'Watch 5 videos and earn extra', reward: 50, type: 'Offer', status: 'In Progress', progress: 0, target: 5 }
+      ];
+
       return {
         success: true,
-        streak: {
-          streakCount: 7,
-          checkedInToday: true,
-          streakList: [
-            { day: 'Mon', checked: true },
-            { day: 'Tue', checked: true },
-            { day: 'Wed', checked: true },
-            { day: 'Thu', checked: true },
-            { day: 'Fri', checked: true },
-            { day: 'Sat', checked: true },
-            { day: 'Sun', checked: false }
-          ]
-        },
+        streak: userStreak,
         summary: {
-          totalBonusEarned: 1850,
-          pendingBonuses: 650,
-          availableToWithdraw: 1200
+          totalBonusEarned: totalBonusEarned,
+          pendingBonuses: wallet.pendingBalance * 0.1,
+          availableToWithdraw: wallet.availableBalance
         },
-        bonuses: [
-          { id: 'signup_bonus', title: 'Sign Up Bonus', description: 'Complete your profile and verify your email', reward: 200, type: 'One Time', status: 'Completed', progress: 1, target: 1 },
-          { id: 'invite_5', title: 'Invite 5 Friends', description: 'Invite 5 friends to join using your referral link', reward: 300, type: 'Challenge', status: 'In Progress', progress: 3, target: 5 },
-          { id: 'complete_50', title: 'Complete 50 Tasks', description: 'Complete 50 tasks to unlock this bonus', reward: 500, type: 'Challenge', status: 'In Progress', progress: 28, target: 50 },
-          { id: 'daily_checkin_bonus', title: 'Daily Check-in', description: 'Check in every day and earn bonus', reward: 10, type: 'Daily', status: 'Check In', progress: 0, target: 1 },
-          { id: 'weekend_bonus', title: 'Weekend Bonus', description: 'Complete any 10 tasks this weekend', reward: 150, type: 'Limited Time', status: 'In Progress', progress: 0, target: 10, timeLeft: '1d 12h 45m' },
-          { id: 'watch_5_videos', title: 'Watch 5 Videos Bonus', description: 'Watch 5 videos and earn extra', reward: 50, type: 'Offer', status: 'In Progress', progress: 2, target: 5 }
-        ]
+        bonuses
       };
     }
   },
@@ -555,21 +980,94 @@ export const api = {
       const res = await fetch(`${BASE_URL}/bonuses/check-in`, { method: 'POST', headers: getHeaders() });
       return await res.json();
     } catch (e) {
-      return { success: true, message: 'Checked in successfully! (Simulated)', streakCount: 7, rewardAmount: 10 };
+      const userId = getActiveUserIdOffline();
+      const streaks = getOfflineStreaks();
+      const userStreak = streaks[userId];
+
+      if (!userStreak) return { success: false, message: 'Streak state not found.' };
+
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+
+      if (userStreak.lastCheckedIn === todayStr || userStreak.checkedInToday) {
+        return { success: false, message: 'You have already checked in today.' };
+      }
+
+      userStreak.streakCount = (userStreak.streakCount >= 7) ? 1 : userStreak.streakCount + 1;
+      userStreak.checkedInToday = true;
+      userStreak.lastCheckedIn = todayStr;
+
+      const dayOfWeekIdx = now.getDay() === 0 ? 6 : now.getDay() - 1;
+      if (userStreak.streakList[dayOfWeekIdx]) {
+        userStreak.streakList[dayOfWeekIdx].checked = true;
+      }
+      
+      streaks[userId] = userStreak;
+      saveOfflineStreaks(streaks);
+
+      const wallets = getOfflineWallets();
+      const wallet = wallets[userId];
+      if (wallet) {
+        wallet.availableBalance += 10.0;
+        wallet.totalEarnings += 10.0;
+        wallets[userId] = wallet;
+        saveOfflineWallets(wallets);
+      }
+
+      const txs = getOfflineTransactions();
+      txs.push({
+        _id: 'tx_checkin_' + Date.now(),
+        userId: userId,
+        type: 'check_in_bonus',
+        description: `Daily check-in (Day ${userStreak.streakCount})`,
+        amount: 10.0,
+        status: 'Completed',
+        createdAt: now.toISOString()
+      });
+      saveOfflineTransactions(txs);
+
+      const notifs = getOfflineNotifications();
+      notifs.push({
+        _id: 'notif_checkin_' + Date.now(),
+        userId: userId,
+        title: 'Check-in Reward Earned! 🌟',
+        message: `You earned ₦10 for checking in Day ${userStreak.streakCount}.`,
+        type: 'bonus',
+        isRead: false,
+        createdAt: now.toISOString()
+      });
+      saveOfflineNotifications(notifs);
+
+      const users = getOfflineUsers();
+      const userIdx = users.findIndex(u => u._id === userId);
+      if (userIdx !== -1) {
+        users[userIdx].balance = wallet ? wallet.availableBalance : users[userIdx].balance;
+        saveOfflineUsers(users);
+      }
+
+      return {
+        success: true,
+        message: 'Checked in successfully!',
+        streakCount: userStreak.streakCount,
+        rewardAmount: 10,
+        balance: wallet ? wallet.availableBalance : 0
+      };
     }
   },
 
-  // Notifications
   getNotifications: async (type = 'All') => {
     try {
       const res = await fetch(`${BASE_URL}/notifications?type=${type}`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
-      let list = MOCK_NOTIFICATIONS;
+      const userId = getActiveUserIdOffline();
+      const allNotifs = getOfflineNotifications().filter(n => n.userId === userId);
+      let list = allNotifs;
       if (type !== 'All') {
-        list = MOCK_NOTIFICATIONS.filter(n => n.type.toLowerCase() === type.toLowerCase());
+        list = allNotifs.filter(n => n.type.toLowerCase() === type.toLowerCase());
       }
-      return { success: true, unreadCount: 3, notifications: list };
+      const unreadCount = allNotifs.filter(n => !n.isRead).length;
+      return { success: true, unreadCount, notifications: list };
     }
   },
 
@@ -582,6 +1080,22 @@ export const api = {
       });
       return await res.json();
     } catch (e) {
+      const userId = getActiveUserIdOffline();
+      const notifs = getOfflineNotifications();
+      let updated = false;
+
+      for (const n of notifs) {
+        if (n.userId === userId) {
+          if (!id || n._id === id) {
+            n.isRead = true;
+            updated = true;
+          }
+        }
+      }
+
+      if (updated) {
+        saveOfflineNotifications(notifs);
+      }
       return { success: true, message: 'Marked as read' };
     }
   },
@@ -591,7 +1105,14 @@ export const api = {
       const res = await fetch(`${BASE_URL}/notifications/preferences`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
-      return { success: true, notificationPreferences: MOCK_USER.notificationPreferences, doNotDisturb: MOCK_USER.doNotDisturb };
+      const userId = getActiveUserIdOffline();
+      const users = getOfflineUsers();
+      const user = users.find(u => u._id === userId) || users[0];
+      return {
+        success: true,
+        notificationPreferences: user.notificationPreferences,
+        doNotDisturb: user.doNotDisturb
+      };
     }
   },
 
@@ -604,17 +1125,38 @@ export const api = {
       });
       return await res.json();
     } catch (e) {
+      const userId = getActiveUserIdOffline();
+      const users = getOfflineUsers();
+      const userIdx = users.findIndex(u => u._id === userId);
+      
+      if (userIdx !== -1) {
+        if (notificationPreferences) {
+          users[userIdx].notificationPreferences = {
+            ...users[userIdx].notificationPreferences,
+            ...notificationPreferences
+          };
+        }
+        if (doNotDisturb) {
+          users[userIdx].doNotDisturb = {
+            ...users[userIdx].doNotDisturb,
+            ...doNotDisturb
+          };
+        }
+        saveOfflineUsers(users);
+      }
       return { success: true, message: 'Preferences updated successfully (Simulated)' };
     }
   },
 
-  // Settings / Profile
   getProfile: async () => {
     try {
       const res = await fetch(`${BASE_URL}/user/profile`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
-      return { success: true, user: MOCK_USER };
+      const userId = getActiveUserIdOffline();
+      const users = getOfflineUsers();
+      const user = users.find(u => u._id === userId) || users[0];
+      return { success: true, user };
     }
   },
 
@@ -627,6 +1169,24 @@ export const api = {
       });
       return await res.json();
     } catch (e) {
+      const userId = getActiveUserIdOffline();
+      const users = getOfflineUsers();
+      const userIdx = users.findIndex(u => u._id === userId);
+
+      if (userIdx !== -1) {
+        if (fullname) users[userIdx].fullname = fullname;
+        if (username) users[userIdx].username = username;
+        if (email) users[userIdx].email = email;
+        if (phone) users[userIdx].phone = phone;
+        if (country) users[userIdx].country = country;
+        if (socialAccounts) {
+          users[userIdx].socialAccounts = {
+            ...users[userIdx].socialAccounts,
+            ...socialAccounts
+          };
+        }
+        saveOfflineUsers(users);
+      }
       return { success: true, message: 'Profile updated successfully (Simulated)' };
     }
   }

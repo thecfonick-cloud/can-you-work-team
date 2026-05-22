@@ -1,8 +1,19 @@
+// Intercept require('mongoose') to use our custom mock
+const path = require('path');
+const mockMongoose = require('./mongoose-mock');
+const Module = require('module');
+const originalRequire = Module.prototype.require;
+Module.prototype.require = function(request) {
+  if (request === 'mongoose') {
+    return mockMongoose;
+  }
+  return originalRequire.apply(this, arguments);
+};
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const path = require('path');
 require('dotenv').config();
 
 const connectDB = require('./config/db');

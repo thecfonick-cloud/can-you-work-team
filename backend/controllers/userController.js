@@ -41,8 +41,11 @@ const updateProfile = async (req, res) => {
     if (country) user.country = country;
 
     if (socialAccounts) {
+      const currentSocial = user.socialAccounts ? 
+        (typeof user.socialAccounts.toObject === 'function' ? user.socialAccounts.toObject() : user.socialAccounts) 
+        : {};
       user.socialAccounts = {
-        ...user.socialAccounts.toObject(),
+        ...currentSocial,
         ...socialAccounts
       };
     }

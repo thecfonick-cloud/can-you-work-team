@@ -127,8 +127,8 @@ const getBonusProgress = async (req, res) => {
         streakList
       },
       summary: {
-        totalBonusEarned: totalBonusEarned[0] ? totalBonusEarned[0].sum : 200, // fallback to signup bonus
-        pendingBonuses: wallet.pendingBalance > 0 ? wallet.pendingBalance * 0.1 : 50, // mock pending check
+        totalBonusEarned: totalBonusEarned[0] ? totalBonusEarned[0].sum : 0,
+        pendingBonuses: wallet.pendingBalance > 0 ? wallet.pendingBalance * 0.1 : 0,
         availableToWithdraw: wallet.availableBalance
       },
       bonuses
