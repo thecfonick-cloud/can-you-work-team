@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, TrendingUp, Users, DollarSign, Award, ShieldAlert } from 'lucide-react';
+import { ArrowRight, CheckCircle2, TrendingUp, Users, DollarSign, Award, ShieldAlert, Sparkles } from 'lucide-react';
 import Footer from '../components/Footer';
 
 const LandingPage = () => {
@@ -38,11 +38,23 @@ const LandingPage = () => {
 
   return (
     <div className="landing-page-container">
+      {/* Top Promo Notice Bar */}
+      <div className="promo-notice-bar">
+        <span>📢 Get paid for simple tasks online. Join thousands of members earning daily!</span>
+        <button onClick={() => navigate('/register')} className="promo-notice-btn">Join Now &rarr;</button>
+      </div>
+
       {/* Navigation Header */}
       <header className="landing-header">
-        <div className="logo-container">
-          <div className="logo-icon">W</div>
-          <span className="logo-text">CanYouWork</span>
+        <div className="logo-container footer-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+          <div className="logo-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="3">
+              <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
+            </svg>
+          </div>
+          <span className="logo-text" style={{ color: '#ffffff', background: 'none', WebkitTextFillColor: 'initial' }}>
+            CanYou<span style={{ color: '#8b5cf6' }}>Work</span>
+          </span>
         </div>
         <nav className="landing-nav">
           <a href="#features">Features</a>
@@ -56,7 +68,9 @@ const LandingPage = () => {
       {/* Hero Section */}
       <section className="landing-hero-section">
         <div className="hero-content">
-          <div className="hero-badge">🎉 Get ₦200 instant signup bonus</div>
+          <div className="hero-badge">
+            <Sparkles size={14} style={{ marginRight: '6px' }} /> Get ₦200 instant signup bonus
+          </div>
           <h1>Earn Rewards for Simple Social & Survey Tasks</h1>
           <p>
             CanYouWork connects brands with real users. Complete simple microtasks—follow on Instagram, share on Facebook, watch YouTube videos, or answer surveys—and earn real cash.
@@ -86,28 +100,89 @@ const LandingPage = () => {
             </div>
           </div>
         </div>
+        
+        {/* High Fidelity Phone Dashboard Mockup */}
         <div className="hero-visual">
-          <div className="hero-dashboard-mockup">
-            <div className="mockup-header">
-              <span className="dot dot-r"></span>
-              <span className="dot dot-y"></span>
-              <span className="dot dot-g"></span>
-            </div>
-            <div className="mockup-body">
-              <div className="mockup-sidebar"></div>
-              <div className="mockup-main">
-                <div className="mockup-row-1">
-                  <div className="mockup-card-sm"></div>
-                  <div className="mockup-card-sm"></div>
+          <div className="phone-mockup-frame">
+            <div className="phone-speaker"></div>
+            <div className="phone-notch"></div>
+            <div className="phone-screen">
+              <div className="phone-status-bar">
+                <span className="phone-time">09:41</span>
+                <div className="phone-status-icons">
+                  <span style={{ fontSize: '10px', marginRight: '4px' }}>📶</span>
+                  <span style={{ fontSize: '10px' }}>🔋</span>
                 </div>
-                <div className="mockup-card-lg"></div>
-                <div className="mockup-row-2">
-                  <div className="mockup-list-item"></div>
-                  <div className="mockup-list-item"></div>
+              </div>
+              
+              <div className="phone-app-header">
+                <div className="phone-user-profile">
+                  <div className="phone-user-avatar">JG</div>
+                  <div className="phone-user-info">
+                    <span className="phone-username">john_goodluck</span>
+                    <span className="phone-badge-verify">Verified Account</span>
+                  </div>
+                </div>
+                <div className="phone-bell-icon">🔔</div>
+              </div>
+              
+              <div className="phone-balance-card">
+                <span className="card-label">Main Balance</span>
+                <span className="card-amount">₦2,450.00</span>
+                <div className="card-sub-stats">
+                  <span>Pending: ₦300.00</span>
+                  <span>Streak: 5 🔥</span>
+                </div>
+              </div>
+              
+              <div className="phone-section-title">
+                <span>Active Microtasks</span>
+                <span className="view-all">All (6)</span>
+              </div>
+              
+              <div className="phone-tasks-list">
+                <div className="phone-task-item">
+                  <div className="task-brand-icon instagram">IG</div>
+                  <div className="task-details">
+                    <span className="task-title">Follow @canyuwork</span>
+                    <span className="task-reward">+₦15.00</span>
+                  </div>
+                  <button className="phone-task-btn">Start</button>
+                </div>
+                
+                <div className="phone-task-item">
+                  <div className="task-brand-icon youtube">YT</div>
+                  <div className="task-details">
+                    <span className="task-title">Like Promo Video</span>
+                    <span className="task-reward">+₦12.00</span>
+                  </div>
+                  <button className="phone-task-btn">Start</button>
+                </div>
+
+                <div className="phone-task-item premium">
+                  <div className="task-brand-icon lucky">🎁</div>
+                  <div className="task-details">
+                    <span className="task-title">Lucky Reward Task</span>
+                    <span className="task-reward highlight">+₦10,000.00</span>
+                  </div>
+                  <button className="phone-task-btn claim">Claim</button>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Brand Logos Bar */}
+      <section className="brand-logos-bar">
+        <div className="brand-logos-container">
+          <span className="brand-logo-text">1XBET</span>
+          <span className="brand-logo-text">OPay</span>
+          <span className="brand-logo-text">PalmPay</span>
+          <span className="brand-logo-text">Binance</span>
+          <span className="brand-logo-text">Moniepoint</span>
+          <span className="brand-logo-text">Kuda</span>
+          <span className="brand-logo-text">BetKing</span>
         </div>
       </section>
 
@@ -130,6 +205,58 @@ const LandingPage = () => {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Task Categories Grid */}
+      <section className="categories-section">
+        <div className="section-header-center">
+          <h2>Earn From Multiple Channels</h2>
+          <p>We support various microtask categories to maximize your daily earnings.</p>
+        </div>
+        <div className="categories-grid">
+          <div className="category-card">
+            <div className="category-icon-wrapper" style={{ background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', color: 'white' }}>
+              IG
+            </div>
+            <h4>Instagram Tasks</h4>
+            <p>Likes, Comments, Follows</p>
+          </div>
+          <div className="category-card">
+            <div className="category-icon-wrapper" style={{ background: '#1877f2', color: 'white' }}>
+              FB
+            </div>
+            <h4>Facebook Tasks</h4>
+            <p>Page Likes, Shares, Comments</p>
+          </div>
+          <div className="category-card">
+            <div className="category-icon-wrapper" style={{ background: '#ff0000', color: 'white' }}>
+              YT
+            </div>
+            <h4>YouTube Tasks</h4>
+            <p>Subscribes, Likes, Watch Time</p>
+          </div>
+          <div className="category-card">
+            <div className="category-icon-wrapper" style={{ background: '#0088cc', color: 'white' }}>
+              TG
+            </div>
+            <h4>Telegram Tasks</h4>
+            <p>Channel Joins, Group Invites</p>
+          </div>
+          <div className="category-card">
+            <div className="category-icon-wrapper" style={{ background: '#000000', color: 'white' }}>
+              TK
+            </div>
+            <h4>TikTok Tasks</h4>
+            <p>Video Likes, Follows, Shares</p>
+          </div>
+          <div className="category-card">
+            <div className="category-icon-wrapper" style={{ background: '#10b981', color: 'white' }}>
+              SV
+            </div>
+            <h4>Market Surveys</h4>
+            <p>Simple Forms, Opinion Polls</p>
+          </div>
         </div>
       </section>
 

@@ -127,249 +127,339 @@ const Settings = ({ refreshUser }) => {
 
   return (
     <div className="settings-page-view-container">
-      {/* Tab navigation */}
-      <div className="settings-tab-bar card">
-        <button 
-          className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('profile'); setMsg({ type: '', text: '' }); }}
-        >
-          <User size={16} /> Profile Details
-        </button>
-        <button 
-          className={`tab-btn ${activeTab === 'socials' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('socials'); setMsg({ type: '', text: '' }); }}
-        >
-          <Instagram size={16} /> Social Handles
-        </button>
-        <button 
-          className={`tab-btn ${activeTab === 'security' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('security'); setMsg({ type: '', text: '' }); }}
-        >
-          <ShieldCheck size={16} /> Account Security
-        </button>
-      </div>
-
-      <div className="settings-form-layout card">
-        {msg.text && (
-          <div className={`auth-alert alert-${msg.type}`}>
-            {msg.type === 'error' ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
-            <span>{msg.text}</span>
+      <div className="settings-grid-row">
+        {/* Left main column: Tabs and Forms */}
+        <div className="settings-main-column">
+          {/* Tab navigation */}
+          <div className="settings-tab-bar card">
+            <button 
+              className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('profile'); setMsg({ type: '', text: '' }); }}
+            >
+              <User size={16} /> Profile Details
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'socials' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('socials'); setMsg({ type: '', text: '' }); }}
+            >
+              <Instagram size={16} /> Social Handles
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'security' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('security'); setMsg({ type: '', text: '' }); }}
+            >
+              <ShieldCheck size={16} /> Account Security
+            </button>
           </div>
-        )}
 
-        {activeTab === 'profile' && (
-          <form className="settings-profile-form" onSubmit={handleUpdateProfile}>
-            <h3>Personal Information</h3>
-            <p className="subtitle-text">Keep your email and phone details updated to ensure smooth payouts.</p>
-            
-            <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="fullname">Full Name</label>
-                <input
-                  type="text"
-                  id="fullname"
-                  value={fullname}
-                  onChange={(e) => setFullname(e.target.value)}
-                  disabled={saving}
-                />
+          <div className="settings-form-layout card">
+            {msg.text && (
+              <div className={`auth-alert alert-${msg.type}`}>
+                {msg.type === 'error' ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
+                <span>{msg.text}</span>
               </div>
+            )}
 
-              <div className="form-group">
-                <label htmlFor="username">Username</label>
-                <input
-                  type="text"
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  disabled={saving}
-                />
-              </div>
-            </div>
+            {activeTab === 'profile' && (
+              <form className="settings-profile-form" onSubmit={handleUpdateProfile}>
+                <h3>Personal Information</h3>
+                <p className="subtitle-text">Keep your email and phone details updated to ensure smooth payouts.</p>
+                
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label htmlFor="fullname">Full Name</label>
+                    <input
+                      type="text"
+                      id="fullname"
+                      value={fullname}
+                      onChange={(e) => setFullname(e.target.value)}
+                      disabled={saving}
+                    />
+                  </div>
 
-            <div className="form-group">
-              <label htmlFor="email">Email Address</label>
-              <div className="input-with-icon">
-                <Mail size={16} className="input-icon" />
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={saving}
-                />
-              </div>
-            </div>
+                  <div className="form-group">
+                    <label htmlFor="username">Username</label>
+                    <input
+                      type="text"
+                      id="username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      disabled={saving}
+                    />
+                  </div>
+                </div>
 
-            <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="country">Country</label>
-                <input
-                  type="text"
-                  id="country"
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  disabled={saving}
-                />
-              </div>
+                <div className="form-group">
+                  <label htmlFor="email">Email Address</label>
+                  <div className="input-with-icon">
+                    <Mail size={16} className="input-icon" />
+                    <input
+                      type="email"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={saving}
+                    />
+                  </div>
+                </div>
 
-              <div className="form-group">
-                <label htmlFor="phone">Phone Number</label>
-                <div className="input-with-icon">
-                  <Phone size={16} className="input-icon" />
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label htmlFor="country">Country</label>
+                    <input
+                      type="text"
+                      id="country"
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      disabled={saving}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="phone">Phone Number</label>
+                    <div className="input-with-icon">
+                      <Phone size={16} className="input-icon" />
+                      <input
+                        type="tel"
+                        id="phone"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        disabled={saving}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" className="btn btn-primary save-btn" disabled={saving}>
+                  {saving ? 'Saving Details...' : 'Save Profile Details'}
+                </button>
+              </form>
+            )}
+
+            {activeTab === 'socials' && (
+              <form className="settings-socials-form" onSubmit={handleUpdateProfile}>
+                <h3>Social Verification Links</h3>
+                <p className="subtitle-text">Provide the user handles that will be used by admins to verify screenshot proof submissions.</p>
+
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label htmlFor="instagram"><Instagram size={14} className="inline-icon text-instagram" /> Instagram Handle</label>
+                    <input
+                      type="text"
+                      id="instagram"
+                      placeholder="@username"
+                      value={instagram}
+                      onChange={(e) => setInstagram(e.target.value)}
+                      disabled={saving}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="tiktok">TikTok Username</label>
+                    <input
+                      type="text"
+                      id="tiktok"
+                      placeholder="@username"
+                      value={tiktok}
+                      onChange={(e) => setTiktok(e.target.value)}
+                      disabled={saving}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label htmlFor="twitter">Twitter / X Username</label>
+                    <input
+                      type="text"
+                      id="twitter"
+                      placeholder="@username"
+                      value={twitter}
+                      onChange={(e) => setTwitter(e.target.value)}
+                      disabled={saving}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="facebook">Facebook Account Link</label>
+                    <input
+                      type="text"
+                      id="facebook"
+                      placeholder="Profile URL or ID"
+                      value={facebook}
+                      onChange={(e) => setFacebook(e.target.value)}
+                      disabled={saving}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label htmlFor="telegram"><Send size={14} className="inline-icon text-telegram" /> Telegram Handle</label>
+                    <input
+                      type="text"
+                      id="telegram"
+                      placeholder="@username"
+                      value={telegram}
+                      onChange={(e) => setTelegram(e.target.value)}
+                      disabled={saving}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="youtube"><Youtube size={14} className="inline-icon text-youtube" /> YouTube Channel Link</label>
+                    <input
+                      type="text"
+                      id="youtube"
+                      placeholder="Channel URL"
+                      value={youtube}
+                      onChange={(e) => setYoutube(e.target.value)}
+                      disabled={saving}
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" className="btn btn-primary save-btn" disabled={saving}>
+                  {saving ? 'Saving Links...' : 'Save Handles'}
+                </button>
+              </form>
+            )}
+
+            {activeTab === 'security' && (
+              <form className="settings-security-form" onSubmit={handlePasswordChange}>
+                <h3>Change Account Password</h3>
+                <p className="subtitle-text">Keep your password strong and secure. Do not share your credentials.</p>
+
+                <div className="form-group">
+                  <label htmlFor="current-pass">Current Password</label>
                   <input
-                    type="tel"
-                    id="phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    type="password"
+                    id="current-pass"
+                    placeholder="Enter current password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
                     disabled={saving}
                   />
+                </div>
+
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label htmlFor="new-pass">New Password</label>
+                    <input
+                      type="password"
+                      id="new-pass"
+                      placeholder="Min 6 characters"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      disabled={saving}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="confirm-pass">Confirm New Password</label>
+                    <input
+                      type="password"
+                      id="confirm-pass"
+                      placeholder="Re-enter new password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      disabled={saving}
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" className="btn btn-primary save-btn" disabled={saving}>
+                  {saving ? 'Updating Password...' : 'Change Password'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+
+        {/* Right sidebar column: Profile Verification Stats & Quick Links */}
+        <div className="settings-sidebar-column">
+          <div className="card settings-status-card">
+            <div className="settings-avatar-wrapper">
+              <div className="settings-avatar-container">
+                <img 
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${fullname || 'John'}`} 
+                  alt="Profile Avatar" 
+                  className="settings-avatar" 
+                />
+                <div className="avatar-edit-badge" title="Upload New Avatar">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-camera"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                </div>
+              </div>
+              <div className="settings-profile-info">
+                <div className="settings-name-badge-row">
+                  <h4>{fullname || 'John Goodluck'}</h4>
+                  <span className="vip-badge">VIP Gold</span>
+                </div>
+                <p className="settings-username-display">@{username || 'johng'}</p>
+                <div className="verification-status-pill verified">
+                  <ShieldCheck size={12} />
+                  <span>Fully Verified Account</span>
                 </div>
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary save-btn" disabled={saving}>
-              {saving ? 'Saving Details...' : 'Save Profile Details'}
-            </button>
-          </form>
-        )}
+            <div className="divider-line" style={{ margin: '1.25rem 0' }}></div>
 
-        {activeTab === 'socials' && (
-          <form className="settings-socials-form" onSubmit={handleUpdateProfile}>
-            <h3>Social Verification Links</h3>
-            <p className="subtitle-text">Provide the user handles that will be used by admins to verify screenshot proof submissions.</p>
-
-            <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="instagram"><Instagram size={14} className="inline-icon text-instagram" /> Instagram Handle</label>
-                <input
-                  type="text"
-                  id="instagram"
-                  placeholder="@username"
-                  value={instagram}
-                  onChange={(e) => setInstagram(e.target.value)}
-                  disabled={saving}
-                />
+            <div className="settings-stats-row">
+              <div className="settings-stat-box">
+                <span className="stat-label">Success Rate</span>
+                <strong className="stat-value text-indigo">98.4%</strong>
               </div>
-
-              <div className="form-group">
-                <label htmlFor="tiktok">TikTok Username</label>
-                <input
-                  type="text"
-                  id="tiktok"
-                  placeholder="@username"
-                  value={tiktok}
-                  onChange={(e) => setTiktok(e.target.value)}
-                  disabled={saving}
-                />
+              <div className="settings-stat-box">
+                <span className="stat-label">Tasks Done</span>
+                <strong className="stat-value">42</strong>
+              </div>
+              <div className="settings-stat-box">
+                <span className="stat-label">Referrals</span>
+                <strong className="stat-value">12</strong>
               </div>
             </div>
 
-            <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="twitter">Twitter / X Username</label>
-                <input
-                  type="text"
-                  id="twitter"
-                  placeholder="@username"
-                  value={twitter}
-                  onChange={(e) => setTwitter(e.target.value)}
-                  disabled={saving}
-                />
+            <div className="vip-progress-section" style={{ marginTop: '1.5rem' }}>
+              <div className="vip-progress-labels" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.4rem', fontWeight: 'bold' }}>
+                <span>Next Tier: VIP Platinum</span>
+                <span>85%</span>
               </div>
-
-              <div className="form-group">
-                <label htmlFor="facebook">Facebook Account Link</label>
-                <input
-                  type="text"
-                  id="facebook"
-                  placeholder="Profile URL or ID"
-                  value={facebook}
-                  onChange={(e) => setFacebook(e.target.value)}
-                  disabled={saving}
-                />
+              <div className="vip-progress-bar" style={{ height: '6px', backgroundColor: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
+                <div className="progress-fill" style={{ width: '85%', height: '100%', background: 'var(--purple-grad)', borderRadius: '3px' }}></div>
               </div>
             </div>
+          </div>
 
-            <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="telegram"><Send size={14} className="inline-icon text-telegram" /> Telegram Handle</label>
-                <input
-                  type="text"
-                  id="telegram"
-                  placeholder="@username"
-                  value={telegram}
-                  onChange={(e) => setTelegram(e.target.value)}
-                  disabled={saving}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="youtube"><Youtube size={14} className="inline-icon text-youtube" /> YouTube Channel Link</label>
-                <input
-                  type="text"
-                  id="youtube"
-                  placeholder="Channel URL"
-                  value={youtube}
-                  onChange={(e) => setYoutube(e.target.value)}
-                  disabled={saving}
-                />
-              </div>
+          <div className="card settings-quick-links-card">
+            <h4>Security & Integration</h4>
+            <p className="subtitle-text">Manage third-party integrations and active device sessions.</p>
+            
+            <div className="security-health-badge-row" style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '0.5rem 0.75rem', borderRadius: '6px', color: 'var(--success)', fontSize: '0.8rem', fontWeight: 'bold' }}>
+              <ShieldCheck size={16} />
+              <span>Health Score: 90% (Very Secure)</span>
             </div>
 
-            <button type="submit" className="btn btn-primary save-btn" disabled={saving}>
-              {saving ? 'Saving Links...' : 'Save Handles'}
-            </button>
-          </form>
-        )}
-
-        {activeTab === 'security' && (
-          <form className="settings-security-form" onSubmit={handlePasswordChange}>
-            <h3>Change Account Password</h3>
-            <p className="subtitle-text">Keep your password strong and secure. Do not share your credentials.</p>
-
-            <div className="form-group">
-              <label htmlFor="current-pass">Current Password</label>
-              <input
-                type="password"
-                id="current-pass"
-                placeholder="Enter current password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                disabled={saving}
-              />
-            </div>
-
-            <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="new-pass">New Password</label>
-                <input
-                  type="password"
-                  id="new-pass"
-                  placeholder="Min 6 characters"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  disabled={saving}
-                />
+            <div className="quick-links-list" style={{ marginTop: '1.25rem' }}>
+              <div className="quick-link-item" style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
+                <span className="link-title" style={{ fontWeight: '500' }}>Link Discord/Telegram Bot</span>
+                <span className="link-action text-indigo" style={{ cursor: 'pointer', fontWeight: '700' }}>Connect</span>
               </div>
-
-              <div className="form-group">
-                <label htmlFor="confirm-pass">Confirm New Password</label>
-                <input
-                  type="password"
-                  id="confirm-pass"
-                  placeholder="Re-enter new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={saving}
-                />
+              <div className="quick-link-item" style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
+                <span className="link-title" style={{ fontWeight: '500' }}>Active Sessions (Lagos, NG)</span>
+                <span className="link-action" style={{ color: 'var(--text-light)', fontWeight: '600' }}>3 Active</span>
+              </div>
+              <div className="quick-link-item" style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
+                <span className="link-title" style={{ fontWeight: '500' }}>Two-Factor Auth (2FA)</span>
+                <span className="link-action text-success" style={{ fontWeight: '700' }}>Enabled</span>
+              </div>
+              <div className="quick-link-item danger-link" style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0', fontSize: '0.85rem' }}>
+                <span className="link-title" style={{ fontWeight: '500', color: 'var(--danger)' }}>Request Data Deletion</span>
+                <span className="link-action text-danger" style={{ cursor: 'pointer', fontWeight: '700' }}>Delete</span>
               </div>
             </div>
-
-            <button type="submit" className="btn btn-primary save-btn" disabled={saving}>
-              {saving ? 'Updating Password...' : 'Change Password'}
-            </button>
-          </form>
-        )}
+          </div>
+        </div>
       </div>
     </div>
   );

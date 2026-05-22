@@ -19,6 +19,7 @@ const Wallet = () => {
   const [transactions, setTransactions] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
   const [historyTab, setHistoryTab] = useState('transactions');
+  const [showUSD, setShowUSD] = useState(false);
 
   useEffect(() => {
     fetchWalletDetails();
@@ -60,6 +61,30 @@ const Wallet = () => {
 
   return (
     <div className="wallet-view-container">
+      {/* Dynamic Header with Currency Switcher */}
+      <div className="wallet-header-actions" style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '2rem',
+        flexWrap: 'wrap',
+        gap: '1.25rem'
+      }}>
+        <div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-white)' }}>Financial Wallet</h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+            Manage Naira balances, track conversion rates, and audit microtask payouts.
+          </p>
+        </div>
+        <button 
+          className="btn btn-secondary" 
+          onClick={() => setShowUSD(!showUSD)}
+          style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', fontWeight: '700' }}
+        >
+          View in {showUSD ? '₦ Naira' : '$ USD'}
+        </button>
+      </div>
+
       {/* Balances summary row */}
       <div className="wallet-balances-summary-grid">
         <div className="card balance-summary-card available">
@@ -67,10 +92,20 @@ const Wallet = () => {
             <CreditCard size={20} />
           </div>
           <span className="balance-label">Available Balance</span>
-          <h2>₦{wallet.availableBalance.toLocaleString()}</h2>
-          <span className="balance-sub">${wallet.availableBalanceUSD.toFixed(2)} USD</span>
+          <h2>
+            {showUSD 
+              ? `$${wallet.availableBalanceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+              : `₦${wallet.availableBalance.toLocaleString()}`
+            }
+          </h2>
+          <span className="balance-sub">
+            {showUSD 
+              ? `₦${wallet.availableBalance.toLocaleString()} Naira` 
+              : `$${wallet.availableBalanceUSD.toFixed(2)} USD`
+            }
+          </span>
           <button className="btn btn-primary withdraw-cta-btn" onClick={() => navigate('/withdraw')}>
-            Withdraw Funds <Download size={14} />
+            Withdraw Funds <Download size={14} style={{ marginLeft: '4px' }} />
           </button>
         </div>
 
@@ -79,9 +114,19 @@ const Wallet = () => {
             <Clock size={20} />
           </div>
           <span className="balance-label">Pending Reviews</span>
-          <h2>₦{wallet.pendingBalance.toLocaleString()}</h2>
-          <span className="balance-sub">${wallet.pendingBalanceUSD.toFixed(2)} USD</span>
-          <p className="pending-hint-text">Will credit once verified by admin.</p>
+          <h2>
+            {showUSD 
+              ? `$${wallet.pendingBalanceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+              : `₦${wallet.pendingBalance.toLocaleString()}`
+            }
+          </h2>
+          <span className="balance-sub">
+            {showUSD 
+              ? `₦${wallet.pendingBalance.toLocaleString()} Naira` 
+              : `$${wallet.pendingBalanceUSD.toFixed(2)} USD`
+            }
+          </span>
+          <p className="pending-hint-text">Credited post campaign check-in verification.</p>
         </div>
 
         <div className="card balance-summary-card total-earned">
@@ -89,9 +134,19 @@ const Wallet = () => {
             <TrendingUp size={20} />
           </div>
           <span className="balance-label">Total Earnings</span>
-          <h2>₦{wallet.totalEarned.toLocaleString()}</h2>
-          <span className="balance-sub">${wallet.totalEarnedUSD.toFixed(2)} USD</span>
-          <p className="pending-hint-text">All-time reward payouts.</p>
+          <h2>
+            {showUSD 
+              ? `$${wallet.totalEarnedUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+              : `₦${wallet.totalEarned.toLocaleString()}`
+            }
+          </h2>
+          <span className="balance-sub">
+            {showUSD 
+              ? `₦${wallet.totalEarned.toLocaleString()} Naira` 
+              : `$${wallet.totalEarnedUSD.toFixed(2)} USD`
+            }
+          </span>
+          <p className="pending-hint-text">All-time campaign rewards.</p>
         </div>
 
         <div className="card balance-summary-card withdrawn">
@@ -99,9 +154,19 @@ const Wallet = () => {
             <CheckCircle2 size={20} />
           </div>
           <span className="balance-label">Total Withdrawn</span>
-          <h2>₦{wallet.totalWithdrawn.toLocaleString()}</h2>
-          <span className="balance-sub">${wallet.totalWithdrawnUSD.toFixed(2)} USD</span>
-          <p className="pending-hint-text">Successful payout transfers.</p>
+          <h2>
+            {showUSD 
+              ? `$${wallet.totalWithdrawnUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+              : `₦${wallet.totalWithdrawn.toLocaleString()}`
+            }
+          </h2>
+          <span className="balance-sub">
+            {showUSD 
+              ? `₦${wallet.totalWithdrawn.toLocaleString()} Naira` 
+              : `$${wallet.totalWithdrawnUSD.toFixed(2)} USD`
+            }
+          </span>
+          <p className="pending-hint-text">Successfully processed bank transfers.</p>
         </div>
       </div>
 
