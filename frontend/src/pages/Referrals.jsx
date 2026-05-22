@@ -101,7 +101,7 @@ const Referrals = () => {
       {/* Friends logs list */}
       <div className="referrals-history-card card">
         <div className="card-header-row">
-          <h3>Your Replaced Referrals ({referralHistory.length})</h3>
+          <h3>Your Referrals ({referralHistory.length})</h3>
         </div>
 
         {referralHistory.length === 0 ? (

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Send } from 'lucide-react';
 
@@ -31,12 +31,40 @@ const YoutubeIcon = ({ size = 16 }) => (
 
 const Footer = () => {
   const navigate = useNavigate();
+  const footerRef = useRef(null);
+
+  // Scroll-reveal for footer sections
+  useEffect(() => {
+    const container = footerRef.current;
+    if (!container) return;
+
+    const elements = container.querySelectorAll('.scroll-reveal');
+    if (elements.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const delay = entry.target.dataset.revealDelay || 0;
+            setTimeout(() => {
+              entry.target.classList.add('revealed');
+            }, Number(delay));
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -20px 0px' }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <footer className="app-footer">
+    <footer className="app-footer" ref={footerRef}>
       <div className="footer-content">
         <div className="footer-grid">
-          <div className="footer-brand-section">
+          <div className="footer-brand-section scroll-reveal" data-reveal-delay="0">
             <div className="logo-container footer-logo" onClick={() => navigate('/')}>
               <div className="logo-icon">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="3">
@@ -59,7 +87,7 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="footer-links-col">
+          <div className="footer-links-col scroll-reveal" data-reveal-delay="100">
             <h4>Quick Links</h4>
             <ul>
               <li><a href="#home">Home</a></li>
@@ -72,19 +100,19 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div className="footer-links-col">
+          <div className="footer-links-col scroll-reveal" data-reveal-delay="200">
             <h4>For Users</h4>
             <ul>
               <li><span onClick={() => navigate('/login')} className="footer-nav-link-btn">Log In</span></li>
               <li><span onClick={() => navigate('/register')} className="footer-nav-link-btn">Sign Up</span></li>
               <li><a href="#faq">FAQ</a></li>
-              <li><a href="#terms">Terms of Service</a></li>
-              <li><a href="#privacy">Privacy Policy</a></li>
-              <li><a href="#refund">Refund Policy</a></li>
+              <li><span onClick={() => navigate('/terms')} className="footer-nav-link-btn">Terms of Service</span></li>
+              <li><span onClick={() => navigate('/privacy')} className="footer-nav-link-btn">Privacy Policy</span></li>
+              <li><span onClick={() => navigate('/refund')} className="footer-nav-link-btn">Refund Policy</span></li>
             </ul>
           </div>
 
-          <div className="footer-links-col">
+          <div className="footer-links-col scroll-reveal" data-reveal-delay="300">
             <h4>For Advertisers</h4>
             <ul>
               <li><a href="#advertise">Advertise With Us</a></li>
@@ -95,7 +123,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div className="footer-links-col subscribe-col">
+          <div className="footer-links-col subscribe-col scroll-reveal" data-reveal-delay="400">
             <h4>Subscribe</h4>
             <p className="subscribe-desc">Get the latest updates and earning tips straight to your mail.</p>
             <form className="footer-subscribe-form" onSubmit={(e) => e.preventDefault()}>
@@ -110,7 +138,7 @@ const Footer = () => {
 
         <div className="footer-divider"></div>
 
-        <div className="footer-bottom">
+        <div className="footer-bottom scroll-reveal" data-reveal-delay="100">
           <p className="copyright-text">&copy; 2026 CanYouWork. All Rights Reserved.</p>
           <div className="footer-payment-methods">
             <span className="pay-logo visa">VISA</span>
@@ -132,7 +160,7 @@ const Footer = () => {
         </div>
 
         {/* Huge centered CANYOUWORK text at the bottom */}
-        <div className="footer-giant-logo-container">
+        <div className="footer-giant-logo-container scroll-reveal reveal-scale" data-reveal-delay="200">
           <span className="giant-canyou">CANYOU</span>
           <span className="giant-work">WORK</span>
         </div>
@@ -142,3 +170,4 @@ const Footer = () => {
 };
 
 export default Footer;
+

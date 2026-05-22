@@ -27,16 +27,13 @@ const createWithdrawal = async (req, res) => {
     // Min withdrawal rules based on design:
     // PayPal: Min $1 (₦1,500)
     // Others: Min $5 (₦7,500)
-    const EXCHANGE_RATE = 1523.0; // matching designs
-    const amountInUSD = amountNum / EXCHANGE_RATE;
-
     if (method === 'PayPal') {
-      if (amountInUSD < 1.0) {
+      if (amountNum < 1500) {
         return res.status(400).json({ success: false, message: 'Minimum withdrawal for PayPal is $1.00 (₦1,500)' });
       }
     } else {
-      if (amountInUSD < 5.0) {
-        return res.status(400).json({ success: false, message: `Minimum withdrawal for ${method} is $5.00 (₦7,615)` });
+      if (amountNum < 7500) {
+        return res.status(400).json({ success: false, message: `Minimum withdrawal for ${method} is $5.00 (₦7,500)` });
       }
     }
 

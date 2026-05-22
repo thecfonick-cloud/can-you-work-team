@@ -19,6 +19,9 @@ import Bonus from './pages/Bonus';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
 import HelpSupport from './pages/HelpSupport';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import Refund from './pages/Refund';
 
 // Wrapper to set topbar titles and load notification badge count
 const AppLayout = ({ user, handleLogout, theme, toggleTheme, children }) => {
@@ -130,6 +133,9 @@ function App() {
         <Route path="/" element={user ? <Navigate to="/dashboard" /> : <LandingPage />} />
         <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login onLoginSuccess={handleLoginSuccess} />} />
         <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <SignUp onLoginSuccess={handleLoginSuccess} />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/refund" element={<Refund />} />
 
         {/* Private Shell Routes */}
         <Route 

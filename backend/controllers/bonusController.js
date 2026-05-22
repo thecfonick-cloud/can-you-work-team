@@ -35,7 +35,8 @@ const getBonusProgress = async (req, res) => {
     
     let checkedInToday = false;
     if (user.dailyStreak.lastCheckInDate) {
-      checkedInToday = user.dailyStreak.lastCheckInDate.toDateString() === todayStr;
+      const checkInDate = new Date(user.dailyStreak.lastCheckInDate);
+      checkedInToday = checkInDate.toDateString() === todayStr;
     }
 
     // Determine current streak progress list (Mon-Sun check status)
@@ -151,7 +152,8 @@ const checkIn = async (req, res) => {
     const todayStr = now.toDateString();
 
     if (user.dailyStreak.lastCheckInDate) {
-      const lastCheckInStr = user.dailyStreak.lastCheckInDate.toDateString();
+      const checkInDate = new Date(user.dailyStreak.lastCheckInDate);
+      const lastCheckInStr = checkInDate.toDateString();
       if (lastCheckInStr === todayStr) {
         return res.status(400).json({ success: false, message: 'You have already checked in today.' });
       }
@@ -160,10 +162,11 @@ const checkIn = async (req, res) => {
     // Determine streak increments
     let currentStreak = user.dailyStreak.streakCount;
     if (user.dailyStreak.lastCheckInDate) {
+      const checkInDate = new Date(user.dailyStreak.lastCheckInDate);
       const yesterday = new Date();
       yesterday.setDate(now.getDate() - 1);
       
-      if (user.dailyStreak.lastCheckInDate.toDateString() === yesterday.toDateString()) {
+      if (checkInDate.toDateString() === yesterday.toDateString()) {
         currentStreak = currentStreak >= 7 ? 1 : currentStreak + 1;
       } else {
         currentStreak = 1; // broke streak, reset

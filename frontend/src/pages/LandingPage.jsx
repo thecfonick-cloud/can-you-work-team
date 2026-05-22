@@ -1,10 +1,129 @@
-import React from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, TrendingUp, Users, DollarSign, Award, ShieldAlert, Sparkles } from 'lucide-react';
 import Footer from '../components/Footer';
 
+// ─── Animated Counter Hook ────────────────────────────
+function useCountUp(target, duration = 2000, startOnView = true) {
+  const [count, setCount] = useState(0);
+  const [started, setStarted] = useState(!startOnView);
+  const ref = useRef(null);
+
+  const start = useCallback(() => setStarted(true), []);
+
+  useEffect(() => {
+    if (!started) return;
+    let startTime = null;
+    let rafId;
+
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(eased * target));
+      if (progress < 1) {
+        rafId = requestAnimationFrame(animate);
+      }
+    };
+
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
+  }, [target, duration, started]);
+
+  return { count, ref, start };
+}
+
+// ─── Scroll Reveal Hook ───────────────────────────────
+function useScrollReveal() {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const elements = container.querySelectorAll('.scroll-reveal');
+    if (elements.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Add stagger delay based on data attribute
+            const delay = entry.target.dataset.revealDelay || 0;
+            setTimeout(() => {
+              entry.target.classList.add('revealed');
+            }, Number(delay));
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  return containerRef;
+}
+
+// ─── 3D Tilt Handler ──────────────────────────────────
+function handleTilt(e) {
+  const card = e.currentTarget;
+  const rect = card.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const centerX = rect.width / 2;
+  const centerY = rect.height / 2;
+  const rotateX = ((y - centerY) / centerY) * -8;
+  const rotateY = ((x - centerX) / centerX) * 8;
+  card.style.setProperty('--tilt-x', `${rotateX}deg`);
+  card.style.setProperty('--tilt-y', `${rotateY}deg`);
+}
+
+function handleTiltReset(e) {
+  const card = e.currentTarget;
+  card.style.setProperty('--tilt-x', '0deg');
+  card.style.setProperty('--tilt-y', '0deg');
+}
+
 const LandingPage = () => {
   const navigate = useNavigate();
+  const pageRef = useScrollReveal();
+
+  // Animated counters
+  const counter1 = useCountUp(2500000, 2200);
+  const counter2 = useCountUp(240000, 2000);
+  const counter3 = useCountUp(12000, 1800);
+  const [countersStarted, setCountersStarted] = useState(false);
+  const statsRef = useRef(null);
+
+  // Start counters when stats section comes into view
+  useEffect(() => {
+    const el = statsRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !countersStarted) {
+          setCountersStarted(true);
+          counter1.start();
+          counter2.start();
+          counter3.start();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [countersStarted]);
+
+  function formatCount(n) {
+    if (n >= 1000000) return `₦${(n / 1000000).toFixed(1)}M+`;
+    if (n >= 1000) return `${(n / 1000).toFixed(0)}K+`;
+    return n.toString();
+  }
 
   const features = [
     {
@@ -36,8 +155,10 @@ const LandingPage = () => {
     { num: '04', title: 'Withdraw Earnings', desc: 'Request your money once you reach the low withdrawal minimums.' }
   ];
 
+  const brandNames = ['1XBET', 'OPay', 'PalmPay', 'Binance', 'Moniepoint', 'Kuda', 'BetKing'];
+
   return (
-    <div className="landing-page-container">
+    <div className="landing-page-container" ref={pageRef}>
       {/* Top Promo Notice Bar */}
       <div className="promo-notice-bar">
         <span>📢 Get paid for simple tasks online. Join thousands of members earning daily!</span>
@@ -67,7 +188,19 @@ const LandingPage = () => {
 
       {/* Hero Section */}
       <section className="landing-hero-section">
-        <div className="hero-content">
+        {/* Floating particles background */}
+        <div className="hero-particles">
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+          <div className="particle"></div>
+        </div>
+
+        <div className="hero-content" style={{ position: 'relative', zIndex: 1 }}>
           <div className="hero-badge">
             <Sparkles size={14} style={{ marginRight: '6px' }} /> Get ₦200 instant signup bonus
           </div>
@@ -83,26 +216,26 @@ const LandingPage = () => {
               Advertiser Login
             </button>
           </div>
-          <div className="hero-stats">
+          <div className="hero-stats" ref={statsRef}>
             <div className="hero-stat-box">
-              <h3>₦2.5M+</h3>
+              <h3>{formatCount(counter1.count)}</h3>
               <p>Rewards Paid Out</p>
             </div>
             <div className="hero-stat-divider"></div>
             <div className="hero-stat-box">
-              <h3>240K+</h3>
+              <h3>{formatCount(counter2.count)}</h3>
               <p>Tasks Completed</p>
             </div>
             <div className="hero-stat-divider"></div>
             <div className="hero-stat-box">
-              <h3>12K+</h3>
+              <h3>{formatCount(counter3.count)}</h3>
               <p>Active Earners</p>
             </div>
           </div>
         </div>
         
         {/* High Fidelity Phone Dashboard Mockup */}
-        <div className="hero-visual">
+        <div className="hero-visual" style={{ position: 'relative', zIndex: 1 }}>
           <div className="phone-mockup-frame">
             <div className="phone-speaker"></div>
             <div className="phone-notch"></div>
@@ -173,22 +306,19 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Brand Logos Bar */}
+      {/* Brand Logos Marquee */}
       <section className="brand-logos-bar">
         <div className="brand-logos-container">
-          <span className="brand-logo-text">1XBET</span>
-          <span className="brand-logo-text">OPay</span>
-          <span className="brand-logo-text">PalmPay</span>
-          <span className="brand-logo-text">Binance</span>
-          <span className="brand-logo-text">Moniepoint</span>
-          <span className="brand-logo-text">Kuda</span>
-          <span className="brand-logo-text">BetKing</span>
+          {/* Duplicate the list for seamless infinite scroll */}
+          {[...brandNames, ...brandNames, ...brandNames, ...brandNames].map((name, idx) => (
+            <span className="brand-logo-text" key={idx}>{name}</span>
+          ))}
         </div>
       </section>
 
-      {/* Core Features */}
+      {/* Core Features — scroll reveal + 3D tilt */}
       <section id="features" className="landing-features-section">
-        <div className="section-header-center">
+        <div className="section-header-center scroll-reveal" data-reveal-delay="0">
           <h2>Why Choose CanYouWork?</h2>
           <p>We offer the most user-friendly microtask experience with zero advertiser hurdles.</p>
         </div>
@@ -196,7 +326,13 @@ const LandingPage = () => {
           {features.map((f, idx) => {
             const Icon = f.icon;
             return (
-              <div className="feature-card" key={idx}>
+              <div
+                className="feature-card scroll-reveal"
+                data-reveal-delay={idx * 100}
+                key={idx}
+                onMouseMove={handleTilt}
+                onMouseLeave={handleTiltReset}
+              >
                 <div className="feature-icon-container">
                   <Icon size={24} className="feature-icon" />
                 </div>
@@ -208,67 +344,41 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Task Categories Grid */}
+      {/* Task Categories Grid — scroll reveal */}
       <section className="categories-section">
-        <div className="section-header-center">
+        <div className="section-header-center scroll-reveal" data-reveal-delay="0">
           <h2>Earn From Multiple Channels</h2>
           <p>We support various microtask categories to maximize your daily earnings.</p>
         </div>
         <div className="categories-grid">
-          <div className="category-card">
-            <div className="category-icon-wrapper" style={{ background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', color: 'white' }}>
-              IG
+          {[
+            { code: 'IG', name: 'Instagram Tasks', sub: 'Likes, Comments, Follows', bg: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)' },
+            { code: 'FB', name: 'Facebook Tasks', sub: 'Page Likes, Shares, Comments', bg: '#1877f2' },
+            { code: 'YT', name: 'YouTube Tasks', sub: 'Subscribes, Likes, Watch Time', bg: '#ff0000' },
+            { code: 'TG', name: 'Telegram Tasks', sub: 'Channel Joins, Group Invites', bg: '#0088cc' },
+            { code: 'TK', name: 'TikTok Tasks', sub: 'Video Likes, Follows, Shares', bg: '#000000' },
+            { code: 'SV', name: 'Market Surveys', sub: 'Simple Forms, Opinion Polls', bg: '#10b981' }
+          ].map((cat, idx) => (
+            <div className="category-card scroll-reveal" data-reveal-delay={idx * 60} key={idx}>
+              <div className="category-icon-wrapper" style={{ background: cat.bg, color: 'white' }}>
+                {cat.code}
+              </div>
+              <h4>{cat.name}</h4>
+              <p>{cat.sub}</p>
             </div>
-            <h4>Instagram Tasks</h4>
-            <p>Likes, Comments, Follows</p>
-          </div>
-          <div className="category-card">
-            <div className="category-icon-wrapper" style={{ background: '#1877f2', color: 'white' }}>
-              FB
-            </div>
-            <h4>Facebook Tasks</h4>
-            <p>Page Likes, Shares, Comments</p>
-          </div>
-          <div className="category-card">
-            <div className="category-icon-wrapper" style={{ background: '#ff0000', color: 'white' }}>
-              YT
-            </div>
-            <h4>YouTube Tasks</h4>
-            <p>Subscribes, Likes, Watch Time</p>
-          </div>
-          <div className="category-card">
-            <div className="category-icon-wrapper" style={{ background: '#0088cc', color: 'white' }}>
-              TG
-            </div>
-            <h4>Telegram Tasks</h4>
-            <p>Channel Joins, Group Invites</p>
-          </div>
-          <div className="category-card">
-            <div className="category-icon-wrapper" style={{ background: '#000000', color: 'white' }}>
-              TK
-            </div>
-            <h4>TikTok Tasks</h4>
-            <p>Video Likes, Follows, Shares</p>
-          </div>
-          <div className="category-card">
-            <div className="category-icon-wrapper" style={{ background: '#10b981', color: 'white' }}>
-              SV
-            </div>
-            <h4>Market Surveys</h4>
-            <p>Simple Forms, Opinion Polls</p>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* How it Works */}
+      {/* How it Works — scroll reveal with slide-left */}
       <section id="how-it-works" className="landing-how-section">
-        <div className="section-header-center">
+        <div className="section-header-center scroll-reveal" data-reveal-delay="0">
           <h2>Get Started in 4 Easy Steps</h2>
           <p>It takes less than 3 minutes to set up your account and start claiming active tasks.</p>
         </div>
         <div className="steps-container">
           {steps.map((s, idx) => (
-            <div className="step-card" key={idx}>
+            <div className="step-card scroll-reveal reveal-left" data-reveal-delay={idx * 120} key={idx}>
               <div className="step-number">{s.num}</div>
               <h3>{s.title}</h3>
               <p>{s.desc}</p>
@@ -277,8 +387,8 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Fraud Warning / Safety Banner */}
-      <section className="safety-banner-section">
+      {/* Fraud Warning / Safety Banner — scroll reveal */}
+      <section className="safety-banner-section scroll-reveal">
         <div className="safety-banner-content">
           <ShieldAlert className="safety-icon" size={32} />
           <div className="safety-text">
@@ -290,49 +400,35 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Testimonials — scroll reveal with scale */}
       <section id="testimonials" className="landing-testimonials-section">
-        <div className="section-header-center">
+        <div className="section-header-center scroll-reveal" data-reveal-delay="0">
           <h2>What Our Earners Say</h2>
           <p>Join thousands of users who earn pocket money daily during their free time.</p>
         </div>
         <div className="testimonials-grid">
-          <div className="testimonial-card">
-            <p>"CanYouWork is incredibly easy. I follow some pages on Instagram during my daily commute and get paid direct to my bank account. Highly recommended!"</p>
-            <div className="testimonial-user">
-              <div className="user-avatar-placeholder">T</div>
-              <div>
-                <h4>Tunde A.</h4>
-                <p>Lagos, Nigeria</p>
+          {[
+            { text: '"CanYouWork is incredibly easy. I follow some pages on Instagram during my daily commute and get paid direct to my bank account. Highly recommended!"', name: 'Tunde A.', loc: 'Lagos, Nigeria', initial: 'T' },
+            { text: '"The referral commissions are amazing! I invited 10 friends, and now I earn passive income as they complete tasks, plus milestone bonuses. Best microtask site!"', name: 'Sarah J.', loc: 'Johannesburg, SA', initial: 'S' },
+            { text: '"I received a Lucky Task of ₦5,000 for filling out a simple marketing survey. I couldn\'t believe it when it was approved and credited within 2 hours."', name: 'Michael B.', loc: 'Nairobi, Kenya', initial: 'M' }
+          ].map((t, idx) => (
+            <div className="testimonial-card scroll-reveal reveal-scale" data-reveal-delay={idx * 120} key={idx}>
+              <p>{t.text}</p>
+              <div className="testimonial-user">
+                <div className="user-avatar-placeholder">{t.initial}</div>
+                <div>
+                  <h4>{t.name}</h4>
+                  <p>{t.loc}</p>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="testimonial-card">
-            <p>"The referral commissions are amazing! I invited 10 friends, and now I earn passive income as they complete tasks, plus milestone bonuses. Best microtask site!"</p>
-            <div className="testimonial-user">
-              <div className="user-avatar-placeholder">S</div>
-              <div>
-                <h4>Sarah J.</h4>
-                <p>Johannesburg, SA</p>
-              </div>
-            </div>
-          </div>
-          <div className="testimonial-card">
-            <p>"I received a Lucky Task of ₦5,000 for filling out a simple marketing survey. I couldn't believe it when it was approved and credited within 2 hours."</p>
-            <div className="testimonial-user">
-              <div className="user-avatar-placeholder">M</div>
-              <div>
-                <h4>Michael B.</h4>
-                <p>Nairobi, Kenya</p>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* Newsletter */}
+      {/* Newsletter — scroll reveal */}
       <section className="landing-newsletter-section">
-        <div className="newsletter-card">
+        <div className="newsletter-card scroll-reveal">
           <h2>Never Miss a High-Paying Campaign</h2>
           <p>Subscribe to our newsletter to receive notifications when premium lucky tasks or high-budget campaigns launch.</p>
           <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>

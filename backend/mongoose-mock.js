@@ -81,14 +81,27 @@ function matchQuery(doc, query) {
             const list = Array.isArray(opVal) ? opVal : [];
             const docValStr = docVal !== undefined && docVal !== null ? docVal.toString() : '';
             if (list.some(item => (item !== undefined && item !== null ? item.toString() : '') === docValStr)) return false;
-          } else if (op === '$gt') {
-            if (!(docVal > opVal)) return false;
-          } else if (op === '$gte') {
-            if (!(docVal >= opVal)) return false;
-          } else if (op === '$lt') {
-            if (!(docVal < opVal)) return false;
-          } else if (op === '$lte') {
-            if (!(docVal <= opVal)) return false;
+          } else if (op === '$gt' || op === '$gte' || op === '$lt' || op === '$lte') {
+            // Normalize both sides to comparable values
+            // If either operand looks like a date, compare as timestamps
+            let left = docVal;
+            let right = opVal;
+            const isDateLike = (v) => {
+              if (v instanceof Date) return true;
+              if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v)) {
+                return !isNaN(new Date(v).getTime());
+              }
+              return false;
+            };
+            if (isDateLike(left) || isDateLike(right)) {
+              left = new Date(left).getTime();
+              right = new Date(right).getTime();
+              if (isNaN(left) || isNaN(right)) return false;
+            }
+            if (op === '$gt' && !(left > right)) return false;
+            if (op === '$gte' && !(left >= right)) return false;
+            if (op === '$lt' && !(left < right)) return false;
+            if (op === '$lte' && !(left <= right)) return false;
           } else if (op === '$ne') {
             const docValStr = docVal !== undefined && docVal !== null ? docVal.toString() : '';
             const opValStr = opVal !== undefined && opVal !== null ? opVal.toString() : '';
