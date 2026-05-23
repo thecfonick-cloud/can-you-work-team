@@ -4767,6 +4767,59 @@ a {
   }
   .app-sidebar {
     transform: translateX(-100%);
+    position: fixed;
+    height: 100vh;
+    z-index: 1000;
+  }
+  .app-sidebar.open {
+    transform: translateX(0);
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--radius-md);
+    transition: background-color 0.2s ease;
+  }
+  .sidebar-close-btn:hover {
+    background-color: var(--border-color);
+  }
+  .sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sidebar-mobile-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+  }
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--radius-md);
+    margin-right: 0.75rem;
+    transition: background-color 0.2s ease;
+  }
+  .mobile-menu-toggle:hover {
+    background-color: var(--border-color);
   }
   .landing-hero-section {
     grid-template-columns: 1fr;
@@ -4782,5 +4835,158 @@ a {
     grid-template-columns: 1fr;
     gap: 1rem;
     text-align: center;
+  }
+}
+
+/* Desktop Defaults (hiding mobile components) */
+.mobile-menu-toggle, .sidebar-close-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Landing Header */
+  .landing-nav a {
+    display: none;
+  }
+  .landing-header {
+    padding: 1rem;
+  }
+  .landing-nav {
+    gap: 0.75rem;
+  }
+  .landing-nav .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  /* Promo Notice Bar */
+  .promo-notice-bar {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    font-size: 0.75rem;
+  }
+  .promo-notice-btn {
+    width: 100%;
+    max-width: 200px;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* Sizing and Typography */
+  .hero-content h1 {
+    font-size: 2.25rem !important;
+  }
+  .section-header-center h2 {
+    font-size: 1.75rem !important;
+  }
+
+  /* Dashboard Welcome Banner */
+  .dashboard-welcome-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+  .dashboard-welcome-banner h1 {
+    font-size: 1.5rem;
+  }
+
+  /* Topbar Responsive */
+  .app-topbar {
+    padding-bottom: 0.5rem;
+    height: auto;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .topbar-user-details {
+    display: none;
+  }
+  .topbar-right {
+    gap: 0.75rem;
+  }
+  .topbar-actions {
+    gap: 0.5rem;
+  }
+
+  /* Legal Pages Content Card */
+  .legal-header {
+    padding: 1.5rem 1rem;
+    gap: 1rem;
+  }
+  .legal-header h2 {
+    font-size: 1.25rem;
+  }
+  .legal-content {
+    margin: 1.5rem 1rem;
+    padding: 1.5rem 1rem;
+  }
+
+  /* Footer responsiveness */
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2rem;
+    text-align: center;
+  }
+  .footer-brand-section {
+    align-items: center;
+  }
+  .footer-socials {
+    justify-content: center;
+  }
+  .footer-links-col ul {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+  }
+  .footer-bottom {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  .footer-payment-methods {
+    justify-content: center;
+  }
+  
+  .footer-giant-logo-container {
+    font-size: clamp(2.5rem, 9.5vw, 8rem);
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar-balance-card {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Hero Phone Mockup scale down to fit */
+  .phone-mockup-frame {
+    transform: scale(0.85);
+    transform-origin: top center;
+    margin-bottom: -70px; /* Adjust layout overflow from scaling */
+  }
+  .hero-content h1 {
+    font-size: 2rem !important;
+  }
+  .hero-cta-buttons {
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  .hero-cta-buttons .btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+  .hero-stats {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+    text-align: center;
+  }
+  .hero-stat-divider {
+    width: 100%;
+    height: 1px;
   }
 }

@@ -14,10 +14,11 @@ import {
   HelpCircle,
   LogOut,
   ShieldCheck,
-  Globe
+  Globe,
+  X
 } from 'lucide-react';
 
-const Sidebar = ({ user, handleLogout }) => {
+const Sidebar = ({ user, handleLogout, isOpen, setIsOpen }) => {
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Tasks', path: '/tasks', icon: CheckSquare },
@@ -33,12 +34,15 @@ const Sidebar = ({ user, handleLogout }) => {
   ];
 
   return (
-    <aside className="app-sidebar">
+    <aside className={`app-sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
         <div className="logo-container">
           <div className="logo-icon">W</div>
           <span className="logo-text">CanYouWork</span>
         </div>
+        <button className="sidebar-close-btn" onClick={() => setIsOpen(false)} title="Close Menu">
+          <X size={20} />
+        </button>
       </div>
 
       {user && (
@@ -79,6 +83,7 @@ const Sidebar = ({ user, handleLogout }) => {
               className={({ isActive }) =>
                 `sidebar-nav-link ${isActive ? 'active' : ''}`
               }
+              onClick={() => setIsOpen(false)}
             >
               <Icon size={18} className="nav-icon" />
               <span>{item.name}</span>
@@ -88,7 +93,7 @@ const Sidebar = ({ user, handleLogout }) => {
       </nav>
 
       <div className="sidebar-footer">
-        <button className="sidebar-logout-btn" onClick={handleLogout}>
+        <button className="sidebar-logout-btn" onClick={() => { setIsOpen(false); handleLogout(); }}>
           <LogOut size={18} />
           <span>Logout</span>
         </button>

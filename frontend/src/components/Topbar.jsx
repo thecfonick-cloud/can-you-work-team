@@ -1,8 +1,8 @@
 import React from 'react';
-import { Sun, Moon, Bell, User, Wallet } from 'lucide-react';
+import { Sun, Moon, Bell, User, Wallet, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const Topbar = ({ pageTitle, user, theme, toggleTheme, unreadNotificationsCount }) => {
+const Topbar = ({ pageTitle, user, theme, toggleTheme, unreadNotificationsCount, onToggleSidebar }) => {
   const navigate = useNavigate();
   const EXCHANGE_RATE = 1523.0; // naira to 1 USD
   const balanceUSD = user ? (user.balance / EXCHANGE_RATE).toFixed(2) : '0.00';
@@ -10,6 +10,9 @@ const Topbar = ({ pageTitle, user, theme, toggleTheme, unreadNotificationsCount 
   return (
     <header className="app-topbar">
       <div className="topbar-left">
+        <button className="mobile-menu-toggle" onClick={onToggleSidebar} title="Open Menu">
+          <Menu size={20} />
+        </button>
         <h2 className="topbar-title">{pageTitle}</h2>
       </div>
 

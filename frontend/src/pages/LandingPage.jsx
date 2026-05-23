@@ -306,11 +306,11 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Brand Logos Marquee */}
+      {/* Brand Logos Bar */}
       <section className="brand-logos-bar">
         <div className="brand-logos-container">
           {/* Duplicate the list for seamless infinite scroll */}
-          {[...brandNames, ...brandNames, ...brandNames, ...brandNames].map((name, idx) => (
+          {[...brandNames, ...brandNames].map((name, idx) => (
             <span className="brand-logo-text" key={idx}>{name}</span>
           ))}
         </div>

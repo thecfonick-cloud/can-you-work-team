@@ -1,32 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { api } from './api';
 
-// Components & Pages imports
+// Components
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
-import LandingPage from './pages/LandingPage';
-import Login from './pages/Login';
-import SignUp from './pages/SignUp';
-import Dashboard from './pages/Dashboard';
-import Tasks from './pages/Tasks';
-import MyTasks from './pages/MyTasks';
-import Wallet from './pages/Wallet';
-import Withdraw from './pages/Withdraw';
-import Referrals from './pages/Referrals';
-import Leaderboard from './pages/Leaderboard';
-import Bonus from './pages/Bonus';
-import Notifications from './pages/Notifications';
-import Settings from './pages/Settings';
-import HelpSupport from './pages/HelpSupport';
-import Terms from './pages/Terms';
-import Privacy from './pages/Privacy';
-import Refund from './pages/Refund';
+
+// Pages Lazy Imports
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const Login = lazy(() => import('./pages/Login'));
+const SignUp = lazy(() => import('./pages/SignUp'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Tasks = lazy(() => import('./pages/Tasks'));
+const MyTasks = lazy(() => import('./pages/MyTasks'));
+const Wallet = lazy(() => import('./pages/Wallet'));
+const Withdraw = lazy(() => import('./pages/Withdraw'));
+const Referrals = lazy(() => import('./pages/Referrals'));
+const Leaderboard = lazy(() => import('./pages/Leaderboard'));
+const Bonus = lazy(() => import('./pages/Bonus'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const Settings = lazy(() => import('./pages/Settings'));
+const HelpSupport = lazy(() => import('./pages/HelpSupport'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Refund = lazy(() => import('./pages/Refund'));
 
 // Wrapper to set topbar titles and load notification badge count
 const AppLayout = ({ user, handleLogout, theme, toggleTheme, children }) => {
   const location = useLocation();
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     fetchUnreadCount();
@@ -58,7 +61,10 @@ const AppLayout = ({ user, handleLogout, theme, toggleTheme, children }) => {
 
   return (
     <div className="app-container">
-      <Sidebar user={user} handleLogout={handleLogout} />
+      <Sidebar user={user} handleLogout={handleLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      {sidebarOpen && (
+        <div className="sidebar-mobile-backdrop" onClick={() => setSidebarOpen(false)}></div>
+      )}
       <div className="main-content">
         <Topbar
           pageTitle={getPageTitle(location.pathname)}
@@ -66,6 +72,7 @@ const AppLayout = ({ user, handleLogout, theme, toggleTheme, children }) => {
           theme={theme}
           toggleTheme={toggleTheme}
           unreadNotificationsCount={unreadNotifications}
+          onToggleSidebar={() => setSidebarOpen(prev => !prev)}
         />
         <div className="page-view-wrapper">
           {children}
@@ -128,130 +135,132 @@ function App() {
 
   return (
     <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={user ? <Navigate to="/dashboard" /> : <LandingPage />} />
-        <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login onLoginSuccess={handleLoginSuccess} />} />
-        <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <SignUp onLoginSuccess={handleLoginSuccess} />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/refund" element={<Refund />} />
+      <Suspense fallback={<div className="loading-spinner-container">Loading...</div>}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={user ? <Navigate to="/dashboard" /> : <LandingPage />} />
+          <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login onLoginSuccess={handleLoginSuccess} />} />
+          <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <SignUp onLoginSuccess={handleLoginSuccess} />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/refund" element={<Refund />} />
 
-        {/* Private Shell Routes */}
-        <Route 
-          path="/dashboard" 
-          element={
-            user ? (
-              <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
-                <Dashboard user={user} refreshUser={refreshUser} />
-              </AppLayout>
-            ) : <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/tasks" 
-          element={
-            user ? (
-              <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
-                <Tasks refreshUser={refreshUser} />
-              </AppLayout>
-            ) : <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/my-tasks" 
-          element={
-            user ? (
-              <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
-                <MyTasks />
-              </AppLayout>
-            ) : <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/wallet" 
-          element={
-            user ? (
-              <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
-                <Wallet />
-              </AppLayout>
-            ) : <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/withdraw" 
-          element={
-            user ? (
-              <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
-                <Withdraw refreshUser={refreshUser} />
-              </AppLayout>
-            ) : <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/referrals" 
-          element={
-            user ? (
-              <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
-                <Referrals />
-              </AppLayout>
-            ) : <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/leaderboard" 
-          element={
-            user ? (
-              <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
-                <Leaderboard />
-              </AppLayout>
-            ) : <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/bonus" 
-          element={
-            user ? (
-              <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
-                <Bonus refreshUser={refreshUser} />
-              </AppLayout>
-            ) : <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/notifications" 
-          element={
-            user ? (
-              <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
-                <Notifications />
-              </AppLayout>
-            ) : <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/settings" 
-          element={
-            user ? (
-              <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
-                <Settings refreshUser={refreshUser} />
-              </AppLayout>
-            ) : <Navigate to="/login" />
-          } 
-        />
-        <Route 
-          path="/help" 
-          element={
-            user ? (
-              <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
-                <HelpSupport />
-              </AppLayout>
-            ) : <Navigate to="/login" />
-          } 
-        />
+          {/* Private Shell Routes */}
+          <Route 
+            path="/dashboard" 
+            element={
+              user ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <Dashboard user={user} refreshUser={refreshUser} />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/tasks" 
+            element={
+              user ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <Tasks refreshUser={refreshUser} />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/my-tasks" 
+            element={
+              user ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <MyTasks />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/wallet" 
+            element={
+              user ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <Wallet />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/withdraw" 
+            element={
+              user ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <Withdraw refreshUser={refreshUser} />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/referrals" 
+            element={
+              user ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <Referrals />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/leaderboard" 
+            element={
+              user ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <Leaderboard />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/bonus" 
+            element={
+              user ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <Bonus refreshUser={refreshUser} />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/notifications" 
+            element={
+              user ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <Notifications />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/settings" 
+            element={
+              user ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <Settings refreshUser={refreshUser} />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/help" 
+            element={
+              user ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <HelpSupport />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Suspense>
     </Router>
   );
 }
