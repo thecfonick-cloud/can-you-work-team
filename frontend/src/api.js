@@ -187,14 +187,14 @@ const MOCK_TRANSACTIONS = [
 ];
 
 const MOCK_NOTIFICATIONS = [
-  { _id: 'n1', title: 'Bonus Earned! 🎉', message: 'You earned ₦200 for completing your daily check-in.', type: 'bonus', isRead: false, createdAt: new Date(Date.now() - 2 * 60 * 1000) },
-  { _id: 'n2', title: 'Task Completed', message: 'Great job! You earned ₦0.20 for completing "Watch YouTube Video".', type: 'task', isRead: false, createdAt: new Date(Date.now() - 15 * 60 * 1000) },
-  { _id: 'n3', title: 'Withdrawal Successful', message: 'Your withdrawal of ₦1,000 to PayPal was successful.', type: 'withdrawal', isRead: true, createdAt: new Date(Date.now() - 60 * 60 * 1000) },
-  { _id: 'n4', title: 'You moved up the leaderboard! 🚀', message: 'You are now in the top 25. Keep it up!', type: 'leaderboard', isRead: false, createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000) },
-  { _id: 'n5', title: 'New Referral Joined', message: 'Sarah Johnson joined using your referral link.', type: 'referral', isRead: true, createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000) },
-  { _id: 'n6', title: 'Bonus Available', message: 'You have ₦1,200 available to withdraw.', type: 'bonus', isRead: true, createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-  { _id: 'n7', title: 'New Task Available', message: 'A new task "Like Facebook Page" is available. Start earning now!', type: 'task', isRead: false, createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-  { _id: 'n8', title: 'System Update', message: "We've improved our platform for a better experience. Check it out!", type: 'system', isRead: true, createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) }
+  { _id: 'n1', userId: '6a10cc2151f6a0a1d2981526', title: 'Bonus Earned! 🎉', message: 'You earned ₦200 for completing your daily check-in.', type: 'bonus', isRead: false, createdAt: new Date(Date.now() - 2 * 60 * 1000) },
+  { _id: 'n2', userId: '6a10cc2151f6a0a1d2981526', title: 'Task Completed', message: 'Great job! You earned ₦0.20 for completing "Watch YouTube Video".', type: 'task', isRead: false, createdAt: new Date(Date.now() - 15 * 60 * 1000) },
+  { _id: 'n3', userId: '6a10cc2151f6a0a1d2981526', title: 'Withdrawal Successful', message: 'Your withdrawal of ₦1,000 to PayPal was successful.', type: 'withdrawal', isRead: true, createdAt: new Date(Date.now() - 60 * 60 * 1000) },
+  { _id: 'n4', userId: '6a10cc2151f6a0a1d2981526', title: 'You moved up the leaderboard! 🚀', message: 'You are now in the top 25. Keep it up!', type: 'leaderboard', isRead: false, createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000) },
+  { _id: 'n5', userId: '6a10cc2151f6a0a1d2981526', title: 'New Referral Joined', message: 'Sarah Johnson joined using your referral link.', type: 'referral', isRead: true, createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000) },
+  { _id: 'n6', userId: '6a10cc2151f6a0a1d2981526', title: 'Bonus Available', message: 'You have ₦1,200 available to withdraw.', type: 'bonus', isRead: true, createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+  { _id: 'n7', userId: '6a10cc2151f6a0a1d2981526', title: 'New Task Available', message: 'A new task "Like Facebook Page" is available. Start earning now!', type: 'task', isRead: false, createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+  { _id: 'n8', userId: '6a10cc2151f6a0a1d2981526', title: 'System Update', message: "We've improved our platform for a better experience. Check it out!", type: 'system', isRead: true, createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) }
 ];
 
 const MOCK_LEADERBOARD = [
@@ -412,9 +412,9 @@ export const api = {
             john.totalEarnings = wallet.totalEarnings;
             john.totalWithdrawn = wallet.totalWithdrawn;
           }
+          localStorage.setItem('canyuwork_token', john._id);
+          return { success: true, user: john, token: john._id };
         }
-        localStorage.setItem('canyuwork_token', john._id);
-        return { success: true, user: john, token: john._id };
       }
       return { success: false, message: 'Invalid credentials or offline.' };
     }

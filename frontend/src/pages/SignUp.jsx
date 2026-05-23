@@ -43,25 +43,35 @@ const SignUp = ({ onLoginSuccess }) => {
       setError('Please fill all required fields');
       return;
     }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
     setError('');
     setLoading(true);
 
-    const res = await api.register(
-      fullname, 
-      username, 
-      email, 
-      phone, 
-      country, 
-      password, 
-      referredBy
-    );
-    setLoading(false);
+    try {
+      const res = await api.register(
+        fullname, 
+        username, 
+        email, 
+        phone, 
+        country, 
+        password, 
+        referredBy
+      );
+      setLoading(false);
 
-    if (res.success) {
-      onLoginSuccess(res.user);
-      navigate('/dashboard');
-    } else {
-      setError(res.message || 'Registration failed');
+      if (res.success) {
+        onLoginSuccess(res.user);
+        navigate('/dashboard');
+      } else {
+        setError(res.message || 'Registration failed');
+      }
+    } catch (err) {
+      setLoading(false);
+      setError('An unexpected error occurred. Please try again.');
+      console.error("Registration error:", err);
     }
   };
 

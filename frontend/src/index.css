@@ -662,8 +662,7 @@ a {
 .landing-page-container .feature-card,
 .landing-page-container .step-card,
 .landing-page-container .testimonial-card,
-.landing-page-container .category-card,
-.landing-page-container .newsletter-card {
+.landing-page-container .category-card {
   background-color: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   color: #0f172a !important;
@@ -673,16 +672,14 @@ a {
 .landing-page-container .feature-card h3,
 .landing-page-container .step-card h3,
 .landing-page-container .testimonial-card h4,
-.landing-page-container .category-card h4,
-.landing-page-container .newsletter-card h2 {
+.landing-page-container .category-card h4 {
   color: #0f172a !important;
 }
 
 .landing-page-container .feature-card p,
 .landing-page-container .step-card p,
 .landing-page-container .testimonial-card p,
-.landing-page-container .category-card p,
-.landing-page-container .newsletter-card p {
+.landing-page-container .category-card p {
   color: #475569 !important;
 }
 
@@ -2295,21 +2292,21 @@ a {
 }
 
 /* Rounded inputs inside forms */
-.input-with-icon {
+.auth-page-container .input-with-icon {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.input-with-icon .input-icon {
+.auth-page-container .input-with-icon .input-icon {
   position: absolute;
   left: 0.85rem;
   color: var(--text-light);
   pointer-events: none;
 }
 
-.input-with-icon input,
-.input-with-icon select {
+.auth-page-container .input-with-icon input,
+.auth-page-container .input-with-icon select {
   width: 100%;
   padding: 0.65rem 0.85rem 0.65rem 2.25rem;
   border: 1px solid var(--border-color);
@@ -2321,8 +2318,8 @@ a {
   transition: var(--transition-fast);
 }
 
-.input-with-icon input:focus,
-.input-with-icon select:focus {
+.auth-page-container .input-with-icon input:focus,
+.auth-page-container .input-with-icon select:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
 }
@@ -5822,4 +5819,201 @@ a {
   .mobile-hamburger-btn {
     display: flex;
   }
+}
+
+/* ==========================================================================
+   PREMIUM 3D PERSPECTIVE, GLASSMORPHISM & FLIP CARD ANIMATIONS
+   ========================================================================== */
+
+/* 1. Phone Mockup 3D Perspective Tilt */
+.phone-mockup-floating-wrapper {
+  animation: floatPhone 4s 1.2s ease-in-out infinite;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.hero-visual .phone-mockup-frame {
+  animation: none !important; /* disable Y-float so wrapper floats and frame tilts */
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* 2. Glassmorphic 3D Stats Cards */
+.hero-stats {
+  display: flex;
+  align-items: stretch;
+  gap: 2rem;
+}
+
+.hero-stat-box {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  padding: 1.5rem 1.8rem !important;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.4s ease;
+  flex: 1;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+[data-theme="dark"] .hero-stat-box {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+}
+
+.hero-stat-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 50%);
+  pointer-events: none;
+}
+
+.hero-stat-box:hover {
+  transform: translateY(-8px) translateZ(20px) scale(1.04);
+  box-shadow: 0 20px 30px -10px rgba(139, 92, 246, 0.2), 0 10px 15px -5px rgba(139, 92, 246, 0.15) !important;
+  border-color: rgba(139, 92, 246, 0.4) !important;
+}
+
+/* Staggered floating effect for stats */
+.hero-stat-box:nth-child(1) {
+  animation: statsFloat1 6s ease-in-out infinite alternate;
+}
+.hero-stat-box:nth-child(3) {
+  animation: statsFloat2 7s ease-in-out infinite alternate;
+}
+.hero-stat-box:nth-child(5) {
+  animation: statsFloat3 8s ease-in-out infinite alternate;
+}
+
+.hero-stat-divider {
+  display: none !important; /* Hide old separators as we now have gorgeous cards */
+}
+
+@keyframes statsFloat1 {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-8px); }
+}
+@keyframes statsFloat2 {
+  0% { transform: translateY(-5px); }
+  100% { transform: translateY(3px); }
+}
+@keyframes statsFloat3 {
+  0% { transform: translateY(3px); }
+  100% { transform: translateY(-5px); }
+}
+
+/* 3. Core Features 3D Card Flips */
+.feature-card-wrapper {
+  background: transparent;
+  perspective: 1000px;
+  height: 290px;
+}
+
+.feature-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: left;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.feature-card-wrapper:hover .feature-card-inner {
+  transform: rotateY(180deg);
+}
+
+.feature-card-front, .feature-card-back {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: 2.2rem 2rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card-front {
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  z-index: 2;
+  /* preserve-3d content */
+  transform: rotateY(0deg);
+}
+
+.feature-card-back {
+  background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+  color: #ffffff;
+  transform: rotateY(180deg);
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);
+}
+
+[data-theme="light"] .feature-card-back {
+  background: linear-gradient(135deg, #2e1065 0%, #0f172a 100%);
+}
+
+.feature-card-back h3 {
+  color: #ffffff !important;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+}
+
+.feature-card-back .expanded-desc {
+  color: #cbd5e1 !important;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: auto;
+}
+
+.feature-card-back .btn-sm {
+  align-self: flex-start;
+  margin-top: 1rem;
+}
+
+.flip-hint {
+  margin-top: auto;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Light overrides for the front-face card when inside landing-page-container */
+.landing-page-container .feature-card-front {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01) !important;
+}
+
+.landing-page-container .feature-card-front h3 {
+  color: #0f172a !important;
+}
+
+.landing-page-container .feature-card-front p {
+  color: #475569 !important;
 }

@@ -26,14 +26,20 @@ const Login = ({ onLoginSuccess }) => {
       localStorage.setItem('canyuwork_fingerprint', fingerprint);
     }
 
-    const res = await api.login(email, password);
-    setLoading(false);
+    try {
+      const res = await api.login(email, password);
+      setLoading(false);
 
-    if (res.success) {
-      onLoginSuccess(res.user);
-      navigate('/dashboard');
-    } else {
-      setError(res.message || 'Login failed');
+      if (res.success) {
+        onLoginSuccess(res.user);
+        navigate('/dashboard');
+      } else {
+        setError(res.message || 'Login failed');
+      }
+    } catch (err) {
+      setLoading(false);
+      setError('An unexpected error occurred. Please try again.');
+      console.error("Login error:", err);
     }
   };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy, useCallback } from 'react';
+import React, { useState, useEffect, Suspense, lazy, useCallback, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { api } from './api';
 
@@ -36,9 +36,13 @@ const AppLayout = ({ user, handleLogout, theme, toggleTheme, children }) => {
   }, [location]);
 
   const fetchUnreadCount = async () => {
-    const res = await api.getNotifications();
-    if (res.success) {
-      setUnreadNotifications(res.unreadCount || 0);
+    try {
+      const res = await api.getNotifications();
+      if (res.success) {
+        setUnreadNotifications(res.unreadCount || 0);
+      }
+    } catch (err) {
+      console.error("Error fetching unread notifications:", err);
     }
   };
 
@@ -89,6 +93,9 @@ function App() {
 
   useEffect(() => {
     checkAuth();
+  }, []);
+
+  useEffect(() => {
     // Set theme attribute on html node
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
@@ -276,9 +283,27 @@ const GlobalMascot = ({ user }) => {
   const [mascotClass, setMascotClass] = useState("");
   const [currentPath, setCurrentPath] = useState(location.pathname);
 
+  const bubbleTimeoutRef = useRef(null);
+  const mascotTimeoutRef = useRef(null);
+  const scrollTicking = useRef(false);
+  const speechTextRef = useRef("");
+
+  // Keep speechTextRef updated to avoid stale values in useCallback
+  useEffect(() => {
+    speechTextRef.current = speechText;
+  }, [speechText]);
+
+  // Clean up all timers on unmount
+  useEffect(() => {
+    return () => {
+      if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
+      if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
+    };
+  }, []);
+
   // Context-aware speech texts
   const getSpeechTextForRoute = (path, userProfile) => {
-    const name = userProfile ? userProfile.fullname.split(' ')[0] : 'Earner';
+    const name = userProfile?.fullname ? userProfile.fullname.split(' ')[0] : 'Earner';
     switch (path) {
       case '/':
         return `👋 Hey! Join now and get a ₦200 instant sign-up bonus!`;
@@ -322,7 +347,7 @@ const GlobalMascot = ({ user }) => {
       setBubbleAnim(true);
     }, 1000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [location.pathname, user]);
 
   // Trigger flight animation on route change
   useEffect(() => {
@@ -355,36 +380,40 @@ const GlobalMascot = ({ user }) => {
       // If user profile updates (e.g. balance updates)
       setSpeechText(getSpeechTextForRoute(location.pathname, user));
     }
-  }, [location.pathname, user]);
+  }, [location.pathname, user, currentPath]);
 
   const handleScroll = useCallback(() => {
     if (location.pathname !== '/') return;
-    const scrollPos = window.scrollY;
-    let currentText = "👋 Hey! Join now and get a ₦200 instant sign-up bonus!";
-    
-    const featuresEl = document.getElementById('features');
-    const howEl = document.getElementById('how-it-works');
-    const safetyEl = document.querySelector('.safety-banner-section');
-    const testimonialsEl = document.getElementById('testimonials');
+    if (!scrollTicking.current) {
+      window.requestAnimationFrame(() => {
+        const scrollPos = window.scrollY;
+        let currentText = "👋 Hey! Join now and get a ₦200 instant sign-up bonus!";
+        
+        const featuresEl = document.getElementById('features');
+        const howEl = document.getElementById('how-it-works');
+        const safetyEl = document.querySelector('.safety-banner-section');
+        const testimonialsEl = document.getElementById('testimonials');
 
-    if (testimonialsEl && scrollPos >= testimonialsEl.offsetTop - 400) {
-      currentText = "⭐️ Hear from our 12,000+ happy earners worldwide!";
-    } else if (safetyEl && scrollPos >= safetyEl.offsetTop - 400) {
-      currentText = "🛡️ Warning: No VPNs or proxy networks allowed, please!";
-    } else if (howEl && scrollPos >= howEl.offsetTop - 400) {
-      currentText = "🎯 Just register, follow task rules, upload proof, and get paid!";
-    } else if (featuresEl && scrollPos >= featuresEl.offsetTop - 400) {
-      currentText = "💡 Earn up to ₦10,000 with premium Lucky Tasks!";
+        if (testimonialsEl && scrollPos >= testimonialsEl.offsetTop - 400) {
+          currentText = "⭐️ Hear from our 12,000+ happy earners worldwide!";
+        } else if (safetyEl && scrollPos >= safetyEl.offsetTop - 400) {
+          currentText = "🛡️ Warning: No VPNs or proxy networks allowed, please!";
+        } else if (howEl && scrollPos >= howEl.offsetTop - 400) {
+          currentText = "🎯 Just register, follow task rules, upload proof, and get paid!";
+        } else if (featuresEl && scrollPos >= featuresEl.offsetTop - 400) {
+          currentText = "💡 Earn up to ₦10,000 with premium Lucky Tasks!";
+        }
+
+        if (speechTextRef.current !== currentText) {
+          setBubbleAnim(false);
+          setSpeechText(currentText);
+          if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
+          bubbleTimeoutRef.current = setTimeout(() => setBubbleAnim(true), 50);
+        }
+        scrollTicking.current = false;
+      });
+      scrollTicking.current = true;
     }
-
-    setSpeechText((prev) => {
-      if (prev !== currentText) {
-        setBubbleAnim(false);
-        setTimeout(() => setBubbleAnim(true), 50);
-        return currentText;
-      }
-      return prev;
-    });
   }, [location.pathname]);
 
   useEffect(() => {
@@ -417,9 +446,11 @@ const GlobalMascot = ({ user }) => {
 
     setSpeechText(clickText);
     setBubbleAnim(false);
-    setTimeout(() => setBubbleAnim(true), 50);
+    if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
+    bubbleTimeoutRef.current = setTimeout(() => setBubbleAnim(true), 50);
 
-    setTimeout(() => {
+    if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
+    mascotTimeoutRef.current = setTimeout(() => {
       setMascotClass("");
     }, 1600); // matches fly-loop duration
   };

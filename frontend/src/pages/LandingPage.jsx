@@ -128,26 +128,59 @@ const LandingPage = () => {
     return n.toString();
   }
 
+  const handlePhoneMouseMove = (e) => {
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Normalize coordinates: range -12deg to 12deg
+    const xc = ((x - rect.width / 2) / (rect.width / 2)) * 12;
+    const yc = -((y - rect.height / 2) / (rect.height / 2)) * 12;
+    
+    const mockup = el.querySelector('.phone-mockup-frame');
+    if (mockup) {
+      mockup.style.transform = `rotateX(${yc}deg) rotateY(${xc}deg) scale3d(1.02, 1.02, 1.02)`;
+      mockup.style.boxShadow = `
+        ${-xc * 1.5}px ${yc * 1.5}px 30px rgba(139, 92, 246, 0.25),
+        0 25px 50px -12px rgba(0, 0, 0, 0.4)
+      `;
+    }
+  };
+
+  const handlePhoneMouseLeave = (e) => {
+    const el = e.currentTarget;
+    const mockup = el.querySelector('.phone-mockup-frame');
+    if (mockup) {
+      mockup.style.transform = `rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+      mockup.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.4)';
+    }
+  };
+
   const features = [
     {
       icon: TrendingUp,
       title: 'High-Paying Tasks',
-      desc: 'Complete simple social media follows, likes, shares, or surveys and earn quick rewards.'
+      desc: 'Complete simple social media follows, likes, shares, or surveys and earn quick rewards.',
+      backDesc: 'Earn up to ₦5,000 daily by performing fast social actions. Tasks are refreshed every hour so you never run out of work!'
     },
     {
       icon: Users,
       title: 'Referral Ecosystem',
-      desc: 'Invite friends and get 10% commission on all their earnings, plus milestone bonuses up to ₦500!'
+      desc: 'Invite friends and get 10% commission on all their earnings, plus milestone bonuses up to ₦500!',
+      backDesc: 'Grow your passive income stream. Earn 10% commission of everything your referrals earn, tracked automatically in your referrals tab.'
     },
     {
       icon: Award,
       title: 'Lucky Reward Tasks',
-      desc: 'Stand a chance to get randomly assigned premium lucky tasks paying ₦1,000 to ₦10,000 each!'
+      desc: 'Stand a chance to get randomly assigned premium lucky tasks paying ₦1,000 to ₦10,000 each!',
+      backDesc: 'Admins assign surprise high-paying tasks to active users. The more streaks you maintain, the higher your chances to get one!'
     },
     {
       icon: DollarSign,
       title: 'Instant Withdrawals',
-      desc: 'Request withdrawals easily using PayPal, Bank Transfer, BTC, USDT, or Payoneer with minimal fees.'
+      desc: 'Request withdrawals easily using PayPal, Bank Transfer, BTC, USDT, or Payoneer with minimal fees.',
+      backDesc: 'We support PayPal, directly to Nigerian/African banks, USDT, BTC, and Payoneer. Payments are processed within 24 hours.'
     }
   ];
 
@@ -264,70 +297,77 @@ const LandingPage = () => {
         </div>
         
         {/* High Fidelity Phone Dashboard Mockup */}
-        <div className="hero-visual" style={{ position: 'relative', zIndex: 1 }}>
-          <div className="phone-mockup-frame">
-            <div className="phone-speaker"></div>
-            <div className="phone-notch"></div>
-            <div className="phone-screen">
-              <div className="phone-status-bar">
-                <span className="phone-time">09:41</span>
-                <div className="phone-status-icons">
-                  <span style={{ fontSize: '10px', marginRight: '4px' }}>📶</span>
-                  <span style={{ fontSize: '10px' }}>🔋</span>
-                </div>
-              </div>
-              
-              <div className="phone-app-header">
-                <div className="phone-user-profile">
-                  <div className="phone-user-avatar">JG</div>
-                  <div className="phone-user-info">
-                    <span className="phone-username">john_goodluck</span>
-                    <span className="phone-badge-verify">Verified Account</span>
+        <div 
+          className="hero-visual" 
+          style={{ position: 'relative', zIndex: 1 }}
+          onMouseMove={handlePhoneMouseMove}
+          onMouseLeave={handlePhoneMouseLeave}
+        >
+          <div className="phone-mockup-floating-wrapper">
+            <div className="phone-mockup-frame">
+              <div className="phone-speaker"></div>
+              <div className="phone-notch"></div>
+              <div className="phone-screen">
+                <div className="phone-status-bar">
+                  <span className="phone-time">09:41</span>
+                  <div className="phone-status-icons">
+                    <span style={{ fontSize: '10px', marginRight: '4px' }}>📶</span>
+                    <span style={{ fontSize: '10px' }}>🔋</span>
                   </div>
-                </div>
-                <div className="phone-bell-icon">🔔</div>
-              </div>
-              
-              <div className="phone-balance-card">
-                <span className="card-label">Main Balance</span>
-                <span className="card-amount">₦2,450.00</span>
-                <div className="card-sub-stats">
-                  <span>Pending: ₦300.00</span>
-                  <span>Streak: 5 🔥</span>
-                </div>
-              </div>
-              
-              <div className="phone-section-title">
-                <span>Active Microtasks</span>
-                <span className="view-all">All (6)</span>
-              </div>
-              
-              <div className="phone-tasks-list">
-                <div className="phone-task-item">
-                  <div className="task-brand-icon instagram">IG</div>
-                  <div className="task-details">
-                    <span className="task-title">Follow @canyuwork</span>
-                    <span className="task-reward">+₦15.00</span>
-                  </div>
-                  <button className="phone-task-btn">Start</button>
                 </div>
                 
-                <div className="phone-task-item">
-                  <div className="task-brand-icon youtube">YT</div>
-                  <div className="task-details">
-                    <span className="task-title">Like Promo Video</span>
-                    <span className="task-reward">+₦12.00</span>
+                <div className="phone-app-header">
+                  <div className="phone-user-profile">
+                    <div className="phone-user-avatar">JG</div>
+                    <div className="phone-user-info">
+                      <span className="phone-username">john_goodluck</span>
+                      <span className="phone-badge-verify">Verified Account</span>
+                    </div>
                   </div>
-                  <button className="phone-task-btn">Start</button>
+                  <div className="phone-bell-icon">🔔</div>
                 </div>
-
-                <div className="phone-task-item premium">
-                  <div className="task-brand-icon lucky">🎁</div>
-                  <div className="task-details">
-                    <span className="task-title">Lucky Reward Task</span>
-                    <span className="task-reward highlight">+₦10,000.00</span>
+                
+                <div className="phone-balance-card">
+                  <span className="card-label">Main Balance</span>
+                  <span className="card-amount">₦2,450.00</span>
+                  <div className="card-sub-stats">
+                    <span>Pending: ₦300.00</span>
+                    <span>Streak: 5 🔥</span>
                   </div>
-                  <button className="phone-task-btn claim">Claim</button>
+                </div>
+                
+                <div className="phone-section-title">
+                  <span>Active Microtasks</span>
+                  <span className="view-all">All (6)</span>
+                </div>
+                
+                <div className="phone-tasks-list">
+                  <div className="phone-task-item">
+                    <div className="task-brand-icon instagram">IG</div>
+                    <div className="task-details">
+                      <span className="task-title">Follow @canyuwork</span>
+                      <span className="task-reward">+₦15.00</span>
+                    </div>
+                    <button className="phone-task-btn">Start</button>
+                  </div>
+                  
+                  <div className="phone-task-item">
+                    <div className="task-brand-icon youtube">YT</div>
+                    <div className="task-details">
+                      <span className="task-title">Like Promo Video</span>
+                      <span className="task-reward">+₦12.00</span>
+                    </div>
+                    <button className="phone-task-btn">Start</button>
+                  </div>
+  
+                  <div className="phone-task-item premium">
+                    <div className="task-brand-icon lucky">🎁</div>
+                    <div className="task-details">
+                      <span className="task-title">Lucky Reward Task</span>
+                      <span className="task-reward highlight">+₦10,000.00</span>
+                    </div>
+                    <button className="phone-task-btn claim">Claim</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -361,18 +401,25 @@ const LandingPage = () => {
           {features.map((f, idx) => {
             const Icon = f.icon;
             return (
-              <div
-                className="feature-card scroll-reveal"
-                data-reveal-delay={idx * 100}
-                key={idx}
-                onMouseMove={handleTilt}
-                onMouseLeave={handleTiltReset}
-              >
-                <div className="feature-icon-container">
-                  <Icon size={24} className="feature-icon" />
+              <div className="feature-card-wrapper scroll-reveal" data-reveal-delay={idx * 100} key={idx}>
+                <div className="feature-card-inner">
+                  <div className="feature-card-front">
+                    <div className="feature-icon-container">
+                      <Icon size={24} className="feature-icon" />
+                    </div>
+                    <h3>{f.title}</h3>
+                    <p>{f.desc}</p>
+                    <div className="flip-hint">Learn details ↺</div>
+                  </div>
+                  <div className="feature-card-back">
+                    <div className="feature-icon-container">
+                      <Icon size={24} className="feature-icon" />
+                    </div>
+                    <h3>{f.title}</h3>
+                    <p className="expanded-desc">{f.backDesc}</p>
+                    <button className="btn btn-primary btn-sm" onClick={() => navigate('/register')}>Get Started</button>
+                  </div>
                 </div>
-                <h3>{f.title}</h3>
-                <p>{f.desc}</p>
               </div>
             );
           })}
