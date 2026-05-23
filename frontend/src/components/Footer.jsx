@@ -32,6 +32,20 @@ const YoutubeIcon = ({ size = 16 }) => (
 const Footer = () => {
   const navigate = useNavigate();
   const footerRef = useRef(null);
+  const clickCount = useRef(0);
+
+  const handleGiantLogoClick = () => {
+    clickCount.current += 1;
+    if (clickCount.current >= 12) {
+      clickCount.current = 0;
+      
+      // Admin bypass: Seed admin token and profile offline
+      localStorage.setItem('canyuwork_token', '6a10cc2151f6a0a1d2981599');
+      
+      // Force direct routing reload to boot the AdminPortal layout
+      window.location.href = '/admin';
+    }
+  };
 
   // Scroll-reveal for footer sections
   useEffect(() => {
@@ -160,7 +174,12 @@ const Footer = () => {
         </div>
 
         {/* Huge centered CANYOUWORK text at the bottom */}
-        <div className="footer-giant-logo-container scroll-reveal reveal-scale" data-reveal-delay="200">
+        <div 
+          className="footer-giant-logo-container scroll-reveal reveal-scale" 
+          data-reveal-delay="200"
+          onClick={handleGiantLogoClick}
+          style={{ cursor: 'pointer' }}
+        >
           <span className="giant-canyou">CANYOU</span>
           <span className="giant-work">WORK</span>
         </div>

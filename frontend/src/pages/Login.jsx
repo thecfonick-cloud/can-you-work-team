@@ -43,19 +43,21 @@ const Login = ({ onLoginSuccess }) => {
       setLoading(false);
 
       if (res.success) {
-        if (role === 'advertiser' && res.user.role !== 'advertiser') {
+        if (role === 'advertiser' && res.user.role !== 'advertiser' && res.user.role !== 'admin') {
           setError('This account is registered as an Earner. Please switch to the Earn Cash tab or register a new Advertiser account.');
           setLoading(false);
           return;
         }
-        if (role === 'user' && res.user.role !== 'user') {
+        if (role === 'user' && res.user.role !== 'user' && res.user.role !== 'admin') {
           setError('This account is registered as an Advertiser. Please switch to the Run Ads tab.');
           setLoading(false);
           return;
         }
 
         onLoginSuccess(res.user);
-        if (res.user.role === 'advertiser') {
+        if (res.user.role === 'admin') {
+          navigate('/admin');
+        } else if (res.user.role === 'advertiser') {
           navigate('/advertiser/dashboard');
         } else {
           navigate('/dashboard');
