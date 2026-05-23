@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Coins, CheckCircle, ArrowLeft, CreditCard, Building, ShieldCheck } from 'lucide-react';
+import { Coins, CheckCircle, ArrowLeft, CreditCard, Building, ShieldCheck, QrCode, Copy, Check } from 'lucide-react';
 import { api } from '../api';
 
 const FundWallet = ({ user, refreshUser }) => {
@@ -12,6 +12,9 @@ const FundWallet = ({ user, refreshUser }) => {
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
 
+  const [copied, setCopied] = useState(false);
+  const [txHash, setTxHash] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -20,6 +23,10 @@ const FundWallet = ({ user, refreshUser }) => {
     e.preventDefault();
     if (amount < 1000) {
       setError('Minimum deposit is ₦1,000');
+      return;
+    }
+    if (method === 'crypto' && !txHash) {
+      setError('Please provide the USDT ERC20 transaction hash or reference ID.');
       return;
     }
     setError('');
@@ -142,11 +149,31 @@ const FundWallet = ({ user, refreshUser }) => {
                 <CreditCard size={20} style={{ color: method === 'card' ? 'var(--primary)' : 'var(--text-light)' }} />
                 <span style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>Debit Card</span>
               </div>
+
+              <div 
+                onClick={() => setMethod('crypto')}
+                style={{
+                  flex: 1,
+                  padding: '1rem',
+                  borderRadius: 'var(--radius-md)',
+                  border: `2px solid ${method === 'crypto' ? 'var(--primary)' : 'var(--border-color)'}`,
+                  background: method === 'crypto' ? 'var(--primary-light)' : 'var(--bg-app)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <QrCode size={20} style={{ color: method === 'crypto' ? 'var(--primary)' : 'var(--text-light)' }} />
+                <span style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>Crypto USDT</span>
+              </div>
             </div>
           </div>
 
           {/* Dynamic Payment Form Panels */}
-          {method === 'bank' ? (
+          {method === 'bank' && (
             <div style={{ padding: '1.25rem', borderRadius: 'var(--radius-md)', background: 'var(--bg-app)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <h4 style={{ fontWeight: 'bold', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>🏦 Mock Account Details</h4>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -165,7 +192,9 @@ const FundWallet = ({ user, refreshUser }) => {
                 ℹ️ Transfer the exact amount above to this mock account. Clicking confirm will credit your budget.
               </div>
             </div>
-          ) : (
+          )}
+
+          {method === 'card' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.25rem', borderRadius: 'var(--radius-md)', background: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
               <h4 style={{ fontWeight: 'bold', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>💳 Mock Card Checkout</h4>
               
@@ -205,13 +234,76 @@ const FundWallet = ({ user, refreshUser }) => {
             </div>
           )}
 
+          {method === 'crypto' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1.25rem', borderRadius: 'var(--radius-md)', background: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+              <h4 style={{ fontWeight: 'bold', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>🪙 USDT (ERC20) Deposit</h4>
+
+              <div style={{ background: '#fffbeb', border: '1px solid #fef3c7', color: '#b45309', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', fontWeight: 600 }}>
+                ⚠️ Only send Tether USD (ERC20) assets to this address. Other assets will be lost forever.
+              </div>
+
+              {/* QR Code display */}
+              <div style={{ display: 'flex', justifyContent: 'center', margin: '0.25rem 0' }}>
+                <div style={{ padding: '0.5rem', background: '#ffffff', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                  <img 
+                    src="/crypto_qr.jpg" 
+                    alt="USDT ERC20 Deposit QR" 
+                    style={{ width: '180px', height: '180px', objectFit: 'contain', display: 'block' }}
+                  />
+                </div>
+              </div>
+
+              {/* Wallet Address Row */}
+              <div className="form-group">
+                <label>USDT ERC20 Deposit Address</label>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                  <input 
+                    type="text" 
+                    readOnly
+                    value="0xD5a1a4981cE444C4b0969A966088d7179A12C78D"
+                    style={{ flexGrow: 1, fontFamily: 'monospace', fontSize: '0.82rem', padding: '0.65rem 0.85rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    style={{ padding: '0 0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    onClick={() => {
+                      navigator.clipboard.writeText("0xD5a1a4981cE444C4b0969A966088d7179A12C78D");
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                  >
+                    {copied ? <Check size={16} style={{ color: '#10b981' }} /> : <Copy size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Transaction Hash Input */}
+              <div className="form-group">
+                <label htmlFor="txHash">Transaction Reference Hash (TxHash / Reference ID)</label>
+                <input 
+                  type="text" 
+                  id="txHash"
+                  placeholder="e.g. 0x8a92f7...3bcf1e or Transfer reference ID" 
+                  value={txHash}
+                  onChange={(e) => setTxHash(e.target.value)}
+                  disabled={loading || success}
+                  required
+                />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                  ℹ️ Paste the transaction hash or transfer reference code after completing the payment.
+                </span>
+              </div>
+            </div>
+          )}
+
           <button 
             type="submit" 
             className="btn btn-primary"
             style={{ padding: '0.9rem', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
             disabled={loading || success}
           >
-            {loading ? 'Processing...' : method === 'bank' ? 'Confirm Transfer Payment' : `Pay ₦${amount.toLocaleString()}`} <Coins size={18} />
+            {loading ? 'Processing...' : method === 'bank' ? 'Confirm Transfer Payment' : method === 'crypto' ? 'Confirm Crypto Deposit' : `Pay ₦${amount.toLocaleString()}`} <Coins size={18} />
           </button>
         </form>
 

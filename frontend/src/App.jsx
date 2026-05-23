@@ -338,6 +338,16 @@ function App() {
   );
 }
 
+// Predefined random screen positions for Canny the robot
+const POSITIONS = [
+  { name: 'bottom-right', style: { bottom: '2rem', right: '2rem', top: 'auto', left: 'auto' }, isLeft: false },
+  { name: 'bottom-left', style: { bottom: '2rem', left: '2rem', top: 'auto', right: 'auto' }, isLeft: true },
+  { name: 'top-right', style: { top: '6rem', right: '2rem', bottom: 'auto', left: 'auto' }, isLeft: false },
+  { name: 'top-left', style: { top: '6rem', left: '2rem', bottom: 'auto', right: 'auto' }, isLeft: true },
+  { name: 'mid-left', style: { top: '40%', left: '2rem', bottom: 'auto', right: 'auto' }, isLeft: true },
+  { name: 'mid-right', style: { top: '40%', right: '2rem', bottom: 'auto', left: 'auto' }, isLeft: false }
+];
+
 // Global Mascot Component
 const GlobalMascot = ({ user }) => {
   const location = useLocation();
@@ -347,6 +357,7 @@ const GlobalMascot = ({ user }) => {
   const [bubbleAnim, setBubbleAnim] = useState(false);
   const [mascotClass, setMascotClass] = useState("");
   const [currentPath, setCurrentPath] = useState(location.pathname);
+  const [currentPos, setCurrentPos] = useState(POSITIONS[0]);
 
   const bubbleTimeoutRef = useRef(null);
   const mascotTimeoutRef = useRef(null);
@@ -365,6 +376,27 @@ const GlobalMascot = ({ user }) => {
       if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
     };
   }, []);
+
+  // Periodic Random Position Movement
+  useEffect(() => {
+    if (!visible) return;
+    const interval = setInterval(() => {
+      const otherPositions = POSITIONS.filter(p => p.name !== currentPos.name);
+      const nextPos = otherPositions[Math.floor(Math.random() * otherPositions.length)];
+      
+      setMascotClass("mascot-fly-loop");
+      setCurrentPos(nextPos);
+      setBubbleAnim(false);
+      
+      if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
+      mascotTimeoutRef.current = setTimeout(() => {
+        setMascotClass("");
+        setBubbleAnim(true);
+      }, 1600);
+    }, 20000);
+
+    return () => clearInterval(interval);
+  }, [visible, currentPos]);
 
   // Advertiser Mascot Event Triggers
   useEffect(() => {
@@ -541,6 +573,11 @@ const GlobalMascot = ({ user }) => {
     // Play circle flight loop
     setMascotClass("mascot-fly-loop");
     
+    // Choose a random new position
+    const otherPositions = POSITIONS.filter(p => p.name !== currentPos.name);
+    const nextPos = otherPositions[Math.floor(Math.random() * otherPositions.length)];
+    setCurrentPos(nextPos);
+    
     // Custom click responses based on page
     let clickText = "🚀 Let's earn! Tap a button to proceed.";
     if (location.pathname === '/') {
@@ -577,7 +614,12 @@ const GlobalMascot = ({ user }) => {
 
   return (
     <div 
-      className={`mascot-tutor-container ${visible ? 'visible' : ''}`}
+      className={`mascot-tutor-container ${visible ? 'visible' : ''} ${currentPos.isLeft ? 'pos-left' : ''}`}
+      style={{
+        ...currentPos.style,
+        position: 'fixed',
+        zIndex: 999
+      }}
       onClick={handleMascotClick}
     >
       <button 

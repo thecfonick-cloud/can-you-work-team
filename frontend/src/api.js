@@ -1300,6 +1300,7 @@ export const api = {
         headers: getHeaders(),
         body: JSON.stringify({ amount })
       });
+      if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
@@ -1349,6 +1350,7 @@ export const api = {
         headers: getHeaders(),
         body: JSON.stringify({ title, platform, guidelines, rewardPerTask, totalBudget })
       });
+      if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
@@ -1415,6 +1417,7 @@ export const api = {
   getAdvertiserCampaigns: async () => {
     try {
       const res = await fetch(`${BASE_URL}/advertiser/campaigns`, { headers: getHeaders() });
+      if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
@@ -1427,6 +1430,7 @@ export const api = {
   getAdvertiserSubmissions: async () => {
     try {
       const res = await fetch(`${BASE_URL}/advertiser/submissions`, { headers: getHeaders() });
+      if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
@@ -1459,6 +1463,7 @@ export const api = {
         headers: getHeaders(),
         body: JSON.stringify({ submissionId, status })
       });
+      if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
       const subs = getOfflineSubmissions();

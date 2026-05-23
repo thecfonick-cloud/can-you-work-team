@@ -5426,6 +5426,20 @@ a {
   width: 0;
 }
 
+/* Override speech bubble tail when mascot is on left side of screen */
+.pos-left {
+  align-items: flex-start !important;
+}
+
+.pos-left .mascot-speech-bubble {
+  transform-origin: bottom left !important;
+}
+
+.pos-left .mascot-speech-bubble::after {
+  right: auto !important;
+  left: 24px !important;
+}
+
 /* SVG colors & details */
 .svg-shadow {
   fill: rgba(15, 23, 42, 0.15);
