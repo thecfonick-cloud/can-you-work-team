@@ -44,10 +44,15 @@ const Sidebar = ({ user, handleLogout, isOpen, setIsOpen }) => {
     { name: 'Help & Support', path: '/help', icon: HelpCircle }
   ];
 
-  const menuItems = user?.role === 'advertiser' ? [...advertiserItems] : [...earnerItems];
-
+  let menuItems = [];
   if (user?.role === 'admin') {
-    menuItems.unshift({ name: 'Admin Portal', path: '/admin', icon: ShieldCheck });
+    menuItems = [
+      { name: 'Admin Portal', path: '/admin', icon: ShieldCheck }
+    ];
+  } else if (user?.role === 'advertiser') {
+    menuItems = [...advertiserItems];
+  } else {
+    menuItems = [...earnerItems];
   }
 
   return (
