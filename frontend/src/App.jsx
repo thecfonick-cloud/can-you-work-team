@@ -350,14 +350,14 @@ function App() {
   );
 }
 
-// Predefined random screen positions for Canny the robot
+// Predefined random screen positions for the cute panda
 const POSITIONS = [
-  { name: 'bottom-right', style: { bottom: '2rem', right: '2rem', top: 'auto', left: 'auto' }, isLeft: false },
-  { name: 'bottom-left', style: { bottom: '2rem', left: '2rem', top: 'auto', right: 'auto' }, isLeft: true },
-  { name: 'top-right', style: { top: '6rem', right: '2rem', bottom: 'auto', left: 'auto' }, isLeft: false },
-  { name: 'top-left', style: { top: '6rem', left: '2rem', bottom: 'auto', right: 'auto' }, isLeft: true },
-  { name: 'mid-left', style: { top: '40%', left: '2rem', bottom: 'auto', right: 'auto' }, isLeft: true },
-  { name: 'mid-right', style: { top: '40%', right: '2rem', bottom: 'auto', left: 'auto' }, isLeft: false }
+  { name: 'bottom-right', style: { top: '80%', left: '85%' }, isLeft: false },
+  { name: 'bottom-left', style: { top: '80%', left: '5%' }, isLeft: true },
+  { name: 'top-right', style: { top: '12%', left: '85%' }, isLeft: false },
+  { name: 'top-left', style: { top: '12%', left: '5%' }, isLeft: true },
+  { name: 'mid-left', style: { top: '45%', left: '5%' }, isLeft: true },
+  { name: 'mid-right', style: { top: '45%', left: '85%' }, isLeft: false }
 ];
 
 // Global Mascot Component
@@ -371,7 +371,7 @@ const GlobalMascot = ({ user }) => {
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const [currentPos, setCurrentPos] = useState(POSITIONS[0]);
 
-  // Visor expressions, 3D cursor tilt, and Drag states
+  // Panda expressions, 3D cursor tilt, and Drag states
   const [emotion, setEmotion] = useState('normal'); // normal, happy, warning, thinking
   const [tiltStyle, setTiltStyle] = useState({});
   const [dragStyle, setDragStyle] = useState(null);
@@ -384,6 +384,11 @@ const GlobalMascot = ({ user }) => {
   const speechTextRef = useRef("");
   const dragStart = useRef({ x: 0, y: 0 });
   const elementStart = useRef({ x: 0, y: 0 });
+
+  // Clear dismissed flag on load to restore the mascot!
+  useEffect(() => {
+    localStorage.removeItem("canyuwork_mascot_dismissed");
+  }, []);
 
   // Keep speechTextRef updated to avoid stale values in useCallback
   useEffect(() => {
@@ -430,10 +435,10 @@ const GlobalMascot = ({ user }) => {
       const dist = Math.sqrt(dx * dx + dy * dy);
       
       if (dist < 350) {
-        const rotateX = -dy / 20;
-        const rotateY = dx / 20;
+        const rotateX = -dy / 15;
+        const rotateY = dx / 15;
         setTiltStyle({
-          transform: `perspective(500px) rotateX(${Math.max(-15, Math.min(15, rotateX))}deg) rotateY(${Math.max(-15, Math.min(15, rotateY))}deg)`
+          transform: `perspective(600px) rotateX(${Math.max(-20, Math.min(20, rotateX))}deg) rotateY(${Math.max(-20, Math.min(20, rotateY))}deg)`
         });
       } else {
         setTiltStyle({});
@@ -451,7 +456,7 @@ const GlobalMascot = ({ user }) => {
       const otherPositions = POSITIONS.filter(p => p.name !== currentPos.name);
       const nextPos = otherPositions[Math.floor(Math.random() * otherPositions.length)];
       
-      setMascotClass("mascot-fly-loop");
+      setMascotClass("mascot-walk");
       setCurrentPos(nextPos);
       setBubbleAnim(false);
       
@@ -459,7 +464,7 @@ const GlobalMascot = ({ user }) => {
       mascotTimeoutRef.current = setTimeout(() => {
         setMascotClass("");
         setBubbleAnim(true);
-      }, 1600);
+      }, 1200);
     }, 20000);
 
     return () => clearInterval(interval);
@@ -497,9 +502,9 @@ const GlobalMascot = ({ user }) => {
       const x = elementStart.current.x + (e.clientX - dragStart.current.x);
       const y = elementStart.current.y + (e.clientY - dragStart.current.y);
       const containerWidth = 80;
-      const containerHeight = 120;
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
+      const containerHeight = 96;
+      const vw = window.innerWidth || 1000;
+      const vh = window.innerHeight || 800;
 
       const distLeft = x;
       const distRight = vw - (x + containerWidth);
@@ -509,14 +514,17 @@ const GlobalMascot = ({ user }) => {
       const minDist = Math.min(distLeft, distRight, distTop, distBottom);
       let nextPos = currentPos;
 
+      const pctY = Math.max(10, Math.min(85, (y / vh) * 100));
+      const pctX = Math.max(5, Math.min(85, (x / vw) * 100));
+
       if (minDist === distLeft) {
-        nextPos = { name: 'dragged-left', style: { left: '2rem', top: `${Math.max(80, Math.min(vh - 150, y))}px`, right: 'auto', bottom: 'auto' }, isLeft: true };
+        nextPos = { name: 'dragged-left', style: { left: '5%', top: `${pctY}%` }, isLeft: true };
       } else if (minDist === distRight) {
-        nextPos = { name: 'dragged-right', style: { right: '2rem', top: `${Math.max(80, Math.min(vh - 150, y))}px`, left: 'auto', bottom: 'auto' }, isLeft: false };
+        nextPos = { name: 'dragged-right', style: { left: '85%', top: `${pctY}%` }, isLeft: false };
       } else if (minDist === distTop) {
-        nextPos = { name: 'dragged-top', style: { top: '6rem', left: `${Math.max(20, Math.min(vw - 100, x))}px`, right: 'auto', bottom: 'auto' }, isLeft: x < vw / 2 };
+        nextPos = { name: 'dragged-top', style: { top: '12%', left: `${pctX}%` }, isLeft: x < vw / 2 };
       } else {
-        nextPos = { name: 'dragged-bottom', style: { bottom: '2rem', left: `${Math.max(20, Math.min(vw - 100, x))}px`, right: 'auto', top: 'auto' }, isLeft: x < vw / 2 };
+        nextPos = { name: 'dragged-bottom', style: { top: '80%', left: `${pctX}%` }, isLeft: x < vw / 2 };
       }
 
       setCurrentPos(nextPos);
@@ -560,7 +568,7 @@ const GlobalMascot = ({ user }) => {
       if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
       bubbleTimeoutRef.current = setTimeout(() => setBubbleAnim(true), 50);
 
-      setMascotClass("mascot-fly-loop");
+      setMascotClass("mascot-walk");
       setEmotion("happy");
       if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
       emotionTimeoutRef.current = setTimeout(() => setEmotion("normal"), 5000);
@@ -640,7 +648,7 @@ const GlobalMascot = ({ user }) => {
     return () => clearTimeout(timer);
   }, [location.pathname, user]);
 
-  // Trigger flight animation on route change
+  // Trigger wobbly climb animation on route change
   useEffect(() => {
     const dismissed = localStorage.getItem("canyuwork_mascot_dismissed") === "true";
     if (dismissed) {
@@ -650,18 +658,18 @@ const GlobalMascot = ({ user }) => {
 
     if (location.pathname !== currentPath) {
       setBubbleAnim(false);
-      setMascotClass("mascot-fly-off");
+      setMascotClass("mascot-climb-off");
 
       const timer1 = setTimeout(() => {
         setCurrentPath(location.pathname);
         setSpeechText(getSpeechTextForRoute(location.pathname, user));
-        setMascotClass("mascot-fly-on");
+        setMascotClass("mascot-climb-on");
         setBubbleAnim(true);
-      }, 800); // matches fly-off duration
+      }, 900); // matches climb-off duration
 
       const timer2 = setTimeout(() => {
         setMascotClass("");
-      }, 1800); // clear class after on-animation completes
+      }, 2000); // clear class after on-animation completes
 
       return () => {
         clearTimeout(timer1);
@@ -715,13 +723,21 @@ const GlobalMascot = ({ user }) => {
   }, [location.pathname, handleScroll]);
 
   const handleMascotClick = () => {
-    // Play circle flight loop
-    setMascotClass("mascot-fly-loop");
+    // Play jump bounce and make it happy (chews faster, blushes)
+    setMascotClass("mascot-jump");
+    setEmotion("happy");
+    if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
+    emotionTimeoutRef.current = setTimeout(() => setEmotion("normal"), 4000);
     
-    // Choose a random new position
+    // Choose a random new position and walk waddle to it
     const otherPositions = POSITIONS.filter(p => p.name !== currentPos.name);
     const nextPos = otherPositions[Math.floor(Math.random() * otherPositions.length)];
-    setCurrentPos(nextPos);
+    
+    // Walk waddle state triggers after the initial jump (e.g. 500ms)
+    setTimeout(() => {
+      setMascotClass("mascot-walk");
+      setCurrentPos(nextPos);
+    }, 500);
     
     // Custom click responses based on page
     let clickText = "🚀 Let's earn! Tap a button to proceed.";
@@ -748,7 +764,7 @@ const GlobalMascot = ({ user }) => {
     if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
     mascotTimeoutRef.current = setTimeout(() => {
       setMascotClass("");
-    }, 1600); // matches fly-loop duration
+    }, 1800); // clear class after walk completes
   };
 
   const handleCloseMascot = (e) => {
@@ -784,82 +800,93 @@ const GlobalMascot = ({ user }) => {
       </div>
       
       <div className={`mascot-robot-wrapper ${mascotClass}`}>
-        <svg viewBox="0 0 100 120" width="80" height="96" className="mascot-svg">
-          <ellipse cx="50" cy="112" rx="20" ry="4" className="svg-shadow" />
-          <path d="M42 90 L50 108 L58 90 Z" className="svg-jet-flame" />
-          <circle cx="50" cy="98" r="8" className="svg-jet-glow" />
-          <rect x="18" y="55" width="8" height="24" rx="4" className="svg-arm arm-left" transform="rotate(-15 18 55)" />
-          <rect x="74" y="55" width="8" height="24" rx="4" className="svg-arm arm-right" transform="rotate(15 82 55)" />
-          <rect x="28" y="48" width="44" height="42" rx="12" className="svg-body-base" />
-          
-          {/* Torso Screen dynamic elements */}
-          {emotion === 'happy' ? (
-            <>
-              <rect x="36" y="56" width="28" height="26" rx="6" className="svg-body-screen" style={{ fill: 'rgba(16,185,129,0.15)', stroke: '#10b981', strokeWidth: 1.5 }} />
-              <text x="50" y="74" textAnchor="middle" fill="#10b981" fontSize="16" fontWeight="bold">$</text>
-            </>
-          ) : emotion === 'warning' ? (
-            <>
-              <rect x="36" y="56" width="28" height="26" rx="6" className="svg-body-screen" style={{ fill: 'rgba(239,68,68,0.15)', stroke: '#ef4444', strokeWidth: 1.5 }} />
-              <text x="50" y="74" textAnchor="middle" fill="#ef4444" fontSize="16" fontWeight="bold">!</text>
-            </>
-          ) : emotion === 'thinking' ? (
-            <>
-              <rect x="36" y="56" width="28" height="26" rx="6" className="svg-body-screen" style={{ fill: 'rgba(14,165,233,0.15)', stroke: '#0ea5e9', strokeWidth: 1.5 }} />
-              <circle cx="50" cy="69" r="5" stroke="#0ea5e9" strokeWidth="2.5" strokeDasharray="3,3" fill="none" className="spin-animation" />
-            </>
-          ) : (
-            <>
-              <rect x="36" y="56" width="28" height="26" rx="6" className="svg-body-screen" />
-              <rect x="42" y="66" width="16" height="6" rx="2" className="svg-screen-bar" />
-            </>
-          )}
+        <div className="mascot-panda-3d" style={{ position: 'relative', width: '80px', height: '96px', transformStyle: 'preserve-3d' }}>
+          {/* Layer 1: Back (Shadow, Ears) */}
+          <svg viewBox="0 0 100 100" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', transform: 'translateZ(0px)', pointerEvents: 'none' }} className="mascot-svg">
+            <ellipse cx="50" cy="94" rx="20" ry="4" className="svg-shadow" />
+            <circle cx="26" cy="22" r="10" fill="#2d3748" stroke="#1a202c" strokeWidth="1.5" className="panda-ear ear-left" />
+            <circle cx="74" cy="22" r="10" fill="#2d3748" stroke="#1a202c" strokeWidth="1.5" className="panda-ear ear-right" />
+          </svg>
 
-          <rect x="44" y="38" width="12" height="12" rx="2" className="svg-neck" />
-          <rect x="24" y="10" width="52" height="34" rx="16" className="svg-head-base" />
-          <circle cx="24" cy="27" r="4" className="svg-ear" />
-          <circle cx="76" cy="27" r="4" className="svg-ear" />
-          <line x1="50" y1="10" x2="50" y2="4" strokeWidth="3" className="svg-antenna-stem" />
-          
-          {/* Antenna tip color adapts to emotion */}
-          <circle cx="50" cy="2" r="3" className="svg-antenna-tip" style={emotion === 'warning' ? { fill: '#ef4444' } : emotion === 'thinking' ? { fill: '#0ea5e9' } : emotion === 'happy' ? { fill: '#10b981' } : {}} />
-          
-          <rect x="32" y="16" width="36" height="20" rx="8" className="svg-head-visor" />
-          
-          {/* Visor eyes expressions */}
-          {emotion === 'happy' ? (
-            <>
-              <path d="M38 27 Q43 21 48 27" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" />
-              <path d="M52 27 Q57 21 62 27" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" />
-            </>
-          ) : emotion === 'warning' ? (
-            <>
-              <line x1="38" y1="26" x2="48" y2="26" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
-              <line x1="52" y1="26" x2="62" y2="26" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
-            </>
-          ) : emotion === 'thinking' ? (
-            <>
-              <ellipse cx="43" cy="26" rx="4.5" ry="1.5" fill="#0ea5e9" />
-              <ellipse cx="57" cy="26" rx="4.5" ry="1.5" fill="#0ea5e9" />
-            </>
-          ) : (
-            <>
-              <circle cx="43" cy="26" r="3.5" className="svg-eye eye-left" />
-              <circle cx="57" cy="26" r="3.5" className="svg-eye eye-right" />
-            </>
-          )}
+          {/* Layer 2: Middle (Head Base, Body, Legs) */}
+          <svg viewBox="0 0 100 100" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', transform: 'translateZ(10px)', pointerEvents: 'none' }} className="mascot-svg">
+            {/* Body */}
+            <rect x="28" y="60" width="44" height="28" rx="14" fill="#2d3748" stroke="#1a202c" strokeWidth="1.5" className="panda-body" />
+            <ellipse cx="50" cy="74" rx="14" ry="10" fill="#ffffff" className="panda-belly" />
+            
+            {/* Legs */}
+            <ellipse cx="34" cy="86" rx="7" ry="5" fill="#1a202c" className="panda-leg leg-left" />
+            <ellipse cx="66" cy="86" rx="7" ry="5" fill="#1a202c" className="panda-leg leg-right" />
 
-          {/* Blush circles */}
-          <circle cx="36" cy="30" r="2" className="svg-blush" style={emotion === 'happy' ? { fill: 'rgba(16,185,129,0.5)' } : {}} />
-          <circle cx="64" cy="30" r="2" className="svg-blush" style={emotion === 'happy' ? { fill: 'rgba(16,185,129,0.5)' } : {}} />
-        </svg>
+            {/* Head Base */}
+            <circle cx="50" cy="40" r="28" fill="#ffffff" stroke="#2c3e50" strokeWidth="1.5" className="panda-head" />
+          </svg>
 
-        {/* Sparks particles exhaust tail */}
-        <div className="mascot-sparks-container">
-          <div className="mascot-booster-spark"></div>
-          <div className="mascot-booster-spark"></div>
-          <div className="mascot-booster-spark"></div>
-          <div className="mascot-booster-spark"></div>
+          {/* Layer 3: Front (Face Details, Arms, Chewing Bamboo) */}
+          <svg viewBox="0 0 100 100" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', transform: 'translateZ(20px)', pointerEvents: 'none' }} className="mascot-svg">
+            {/* Eye Patches */}
+            <ellipse cx="38" cy="38" rx="9" ry="7" transform="rotate(-15 38 38)" fill="#2d3748" className="panda-eye-patch patch-left" />
+            <ellipse cx="62" cy="38" rx="9" ry="7" transform="rotate(15 62 38)" fill="#2d3748" className="panda-eye-patch patch-right" />
+
+            {/* Face Eyes Details */}
+            {emotion === 'happy' ? (
+              <>
+                <path d="M 34 39 Q 38 34 42 39" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M 58 39 Q 62 34 66 39" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
+              </>
+            ) : emotion === 'warning' ? (
+              <>
+                <line x1="33" y1="38" x2="43" y2="38" stroke="#ef4444" strokeWidth="3.5" strokeLinecap="round" />
+                <line x1="57" y1="38" x2="67" y2="38" stroke="#ef4444" strokeWidth="3.5" strokeLinecap="round" />
+              </>
+            ) : emotion === 'thinking' ? (
+              <>
+                <circle cx="39" cy="36" r="3" fill="#ffffff" />
+                <circle cx="63" cy="36" r="3" fill="#ffffff" />
+              </>
+            ) : (
+              <>
+                <circle cx="38" cy="38" r="3.5" fill="#ffffff" className="panda-eye eye-left" />
+                <circle cx="62" cy="38" r="3.5" fill="#ffffff" className="panda-eye eye-right" />
+                <circle cx="39.5" cy="36.5" r="1.2" fill="#ffffff" />
+                <circle cx="63.5" cy="36.5" r="1.2" fill="#ffffff" />
+              </>
+            )}
+
+            {/* Nose */}
+            <ellipse cx="50" cy="46" rx="3" ry="2" fill="#1a202c" />
+
+            {/* Mouth */}
+            {emotion === 'warning' ? (
+              <circle cx="50" cy="52" r="3" fill="#2d3748" />
+            ) : emotion === 'thinking' ? (
+              <line x1="46" y1="51" x2="54" y2="51" stroke="#2d3748" strokeWidth="1.5" strokeLinecap="round" />
+            ) : (
+              <path d="M 46 51 Q 48 53 50 51 Q 52 53 54 51" fill="none" stroke="#2d3748" strokeWidth="1.5" strokeLinecap="round" />
+            )}
+
+            {/* Cheeks (Blush) */}
+            <circle cx="28" cy="45" r="3.5" fill="#ff8a9a" opacity={emotion === 'happy' ? 0.85 : 0.3} className="panda-blush" />
+            <circle cx="72" cy="45" r="3.5" fill="#ff8a9a" opacity={emotion === 'happy' ? 0.85 : 0.3} className="panda-blush" />
+
+            {/* Left Arm holding bamboo */}
+            <path d="M 28 66 Q 16 70 24 78" fill="none" stroke="#2d3748" strokeWidth="7" strokeLinecap="round" className="panda-arm arm-left" />
+
+            {/* Right Arm near mouth */}
+            <path d="M 72 66 Q 84 70 76 78" fill="none" stroke="#2d3748" strokeWidth="7" strokeLinecap="round" className="panda-arm arm-right" />
+
+            {/* Bamboo branch - placed in front of left arm */}
+            <g className="bamboo-group">
+              <path d="M 18 84 L 46 52" fill="none" stroke="#10b981" strokeWidth="3.5" strokeLinecap="round" className="bamboo-stalk" />
+              <line x1="25.5" y1="75.5" x2="28" y2="73" stroke="#059669" strokeWidth="1.5" />
+              <line x1="32.5" y1="67.5" x2="35" y2="65" stroke="#059669" strokeWidth="1.5" />
+              <path d="M 32 68 Q 28 60 20 64 Q 28 66 32 68 Z" fill="#10b981" />
+              <path d="M 40 59 Q 44 51 36 49 Q 38 56 40 59 Z" fill="#10b981" />
+            </g>
+
+            {/* Chewing Leaf at mouth */}
+            <path d="M 52 51 Q 57 47 62 50 Q 56 53 52 51 Z" fill="#10b981" className={`chewing-leaf ${emotion === 'happy' ? 'chew-fast' : ''}`} />
+          </svg>
         </div>
       </div>
     </div>
