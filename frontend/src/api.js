@@ -270,6 +270,37 @@ const initOfflineDb = () => {
           quietHoursEnd: '07:00'
         },
         password: 'password123'
+      },
+      {
+        _id: '6a10cc2151f6a0a1d2981599',
+        fullname: 'System Admin',
+        username: 'admin',
+        email: 'admin@canyuwork.com',
+        phone: '+234 800 000 0000',
+        country: 'Nigeria',
+        referralCode: 'AdminG',
+        isVerified: true,
+        role: 'admin',
+        balance: 0,
+        pendingBalance: 0,
+        totalEarnings: 0,
+        totalWithdrawn: 0,
+        socialAccounts: {},
+        notificationPreferences: {
+          taskAlerts: true,
+          bonusRewards: true,
+          withdrawalAlerts: true,
+          referrals: true,
+          leaderboard: true,
+          systemUpdates: true,
+          marketing: false
+        },
+        doNotDisturb: {
+          enabled: false,
+          quietHoursStart: '22:00',
+          quietHoursEnd: '07:00'
+        },
+        password: 'admin123'
       }
     ]));
 
@@ -279,6 +310,12 @@ const initOfflineDb = () => {
         pendingBalance: 1230.00,
         totalEarnings: 48250.00,
         totalWithdrawn: 36800.00
+      },
+      '6a10cc2151f6a0a1d2981599': {
+        availableBalance: 0.00,
+        pendingBalance: 0.00,
+        totalEarnings: 0.00,
+        totalWithdrawn: 0.00
       }
     }));
 
@@ -1293,33 +1330,29 @@ export const api = {
     }
   },
 
-  depositFunds: async (amount) => {
+  depositFunds: async (amount, txHash, receipt) => {
     try {
       const res = await fetch(`${BASE_URL}/advertiser/deposit`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ amount })
+        body: JSON.stringify({ amount, txHash, receipt })
       });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
-      const wallets = getOfflineWallets();
-      const wallet = wallets[userId];
-      if (wallet) {
-        wallet.availableBalance += Number(amount);
-        wallet.totalEarnings += Number(amount); // track total deposits
-        saveOfflineWallets(wallets);
-      }
       
       const txs = getOfflineTransactions();
+      const newTxId = 'tx_deposit_' + Date.now();
       txs.push({
-        _id: 'tx_deposit_' + Date.now(),
+        _id: newTxId,
         userId,
         type: 'deposit',
-        description: `Mock Deposit of ₦${Number(amount).toLocaleString()}`,
+        description: `Mock USDT Deposit (Hash: ${txHash || 'N/A'})`,
         amount: Number(amount),
-        status: 'Completed',
+        status: 'Pending',
+        txHash: txHash || '',
+        receipt: receipt || '',
         createdAt: new Date().toISOString()
       });
       saveOfflineTransactions(txs);
@@ -1328,18 +1361,15 @@ export const api = {
       notifs.push({
         _id: 'notif_dep_' + Date.now(),
         userId,
-        title: 'Wallet Funded! 💳',
-        message: `Successfully deposited ₦${Number(amount).toLocaleString()} mock funds.`,
+        title: 'Deposit Submitted 💳',
+        message: `Your deposit of ₦${Number(amount).toLocaleString()} is pending admin verification.`,
         type: 'withdrawal',
         isRead: false,
         createdAt: new Date().toISOString()
       });
       saveOfflineNotifications(notifs);
 
-      // Trigger Mascot animated indicator bounce
-      window.dispatchEvent(new CustomEvent('mascot-fund-success', { detail: { amount } }));
-
-      return { success: true, message: 'Deposit successful (Simulated)' };
+      return { success: true, message: 'Deposit submitted for verification (Simulated)' };
     }
   },
 
@@ -1549,6 +1579,321 @@ export const api = {
       }
 
       return { success: true, message: `Submission successfully ${status}` };
+    }
+  },
+
+  getPendingDeposits: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/admin/deposits`, { headers: getHeaders() });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch (e) {
+      const txs = getOfflineTransactions().filter(tx => tx.type === 'deposit' && tx.status === 'Pending');
+      const users = getOfflineUsers();
+      const populatedTxs = txs.map(tx => {
+        const u = users.find(user => user._id === tx.userId);
+        return {
+          ...tx,
+          fullname: u ? u.fullname : 'Unknown Advertiser',
+          username: u ? u.username : 'unknown'
+        };
+      });
+      return { success: true, deposits: populatedTxs };
+    }
+  },
+
+  approveDeposit: async (transactionId) => {
+    try {
+      const res = await fetch(`${BASE_URL}/admin/deposits/approve`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ transactionId })
+      });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch (e) {
+      const txs = getOfflineTransactions();
+      const txIdx = txs.findIndex(tx => tx._id === transactionId);
+      if (txIdx === -1) return { success: false, message: 'Transaction not found' };
+      
+      const tx = txs[txIdx];
+      if (tx.status !== 'Pending') return { success: false, message: 'Transaction is not pending' };
+      
+      txs[txIdx].status = 'Completed';
+      saveOfflineTransactions(txs);
+
+      // Credit wallet
+      const wallets = getOfflineWallets();
+      const wallet = wallets[tx.userId];
+      if (wallet) {
+        wallet.availableBalance += Number(tx.amount);
+        wallet.totalEarnings += Number(tx.amount);
+        saveOfflineWallets(wallets);
+      }
+
+      // Update cached user object balance
+      const users = getOfflineUsers();
+      const userIdx = users.findIndex(u => u._id === tx.userId);
+      if (userIdx !== -1) {
+        users[userIdx].balance = wallet ? wallet.availableBalance : users[userIdx].balance + Number(tx.amount);
+        saveOfflineUsers(users);
+      }
+
+      // Notify
+      const notifs = getOfflineNotifications();
+      notifs.push({
+        _id: 'notif_dep_appr_' + Date.now(),
+        userId: tx.userId,
+        title: 'Deposit Approved! 💳',
+        message: `Your deposit of ₦${Number(tx.amount).toLocaleString()} has been verified and credited.`,
+        type: 'withdrawal',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineNotifications(notifs);
+
+      // Dispatch event to mascot if active advertiser is the same
+      const token = localStorage.getItem('canyuwork_token');
+      if (token === tx.userId) {
+        window.dispatchEvent(new CustomEvent('mascot-fund-success', { detail: { amount: tx.amount } }));
+      }
+
+      return { success: true, message: 'Deposit approved and funded successfully' };
+    }
+  },
+
+  rejectDeposit: async (transactionId) => {
+    try {
+      const res = await fetch(`${BASE_URL}/admin/deposits/reject`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ transactionId })
+      });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch (e) {
+      const txs = getOfflineTransactions();
+      const txIdx = txs.findIndex(tx => tx._id === transactionId);
+      if (txIdx === -1) return { success: false, message: 'Transaction not found' };
+      
+      const tx = txs[txIdx];
+      if (tx.status !== 'Pending') return { success: false, message: 'Transaction is not pending' };
+      
+      txs[txIdx].status = 'Rejected';
+      saveOfflineTransactions(txs);
+
+      // Notify
+      const notifs = getOfflineNotifications();
+      notifs.push({
+        _id: 'notif_dep_rej_' + Date.now(),
+        userId: tx.userId,
+        title: 'Deposit Rejected ❌',
+        message: `Your deposit of ₦${Number(tx.amount).toLocaleString()} could not be verified by admin.`,
+        type: 'withdrawal',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineNotifications(notifs);
+
+      return { success: true, message: 'Deposit rejected successfully' };
+    }
+  },
+
+  getAllUsers: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/admin/users`, { headers: getHeaders() });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch (e) {
+      const users = getOfflineUsers();
+      return { success: true, users };
+    }
+  },
+
+  updateUserBalance: async (userId, balance) => {
+    try {
+      const res = await fetch(`${BASE_URL}/admin/users/update-balance`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ userId, balance })
+      });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch (e) {
+      const users = getOfflineUsers();
+      const userIdx = users.findIndex(u => u._id === userId);
+      if (userIdx !== -1) {
+        users[userIdx].balance = Number(balance);
+        saveOfflineUsers(users);
+      }
+
+      const wallets = getOfflineWallets();
+      if (wallets[userId]) {
+        wallets[userId].availableBalance = Number(balance);
+        saveOfflineWallets(wallets);
+      }
+
+      return { success: true, message: 'Balance updated successfully offline' };
+    }
+  },
+
+  getAllCampaigns: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/admin/campaigns`, { headers: getHeaders() });
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      return { success: true, campaigns: data.campaigns };
+    } catch (e) {
+      const tasks = getOfflineTasks();
+      return { success: true, campaigns: tasks };
+    }
+  },
+
+  updateCampaignStatus: async (campaignId, status) => {
+    try {
+      const res = await fetch(`${BASE_URL}/admin/campaigns/status`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ campaignId, status })
+      });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch (e) {
+      const tasks = getOfflineTasks();
+      if (status === 'deleted') {
+        const filtered = tasks.filter(t => t._id !== campaignId);
+        saveOfflineTasks(filtered);
+      } else {
+        const idx = tasks.findIndex(t => t._id === campaignId);
+        if (idx !== -1) {
+          tasks[idx].status = status;
+          saveOfflineTasks(tasks);
+        }
+      }
+      return { success: true, message: `Campaign status updated to ${status} offline` };
+    }
+  },
+
+  getAllSubmissions: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/admin/submissions`, { headers: getHeaders() });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch (e) {
+      const subs = getOfflineSubmissions();
+      const tasks = getOfflineTasks();
+      const users = getOfflineUsers();
+
+      const populated = subs.map(s => {
+        const t = tasks.find(task => task._id === s.taskId);
+        const u = users.find(user => user._id === s.userId);
+        return {
+          ...s,
+          taskTitle: t ? t.title : 'Deleted Task',
+          platform: t ? t.platform : 'Unknown',
+          reward: t ? t.rewardAmount || t.reward || 15 : 15,
+          username: u ? u.username : 'unknown',
+          fullname: u ? u.fullname : 'Unknown User'
+        };
+      });
+
+      return { success: true, submissions: populated };
+    }
+  },
+
+  getAllWithdrawals: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/admin/withdrawals`, { headers: getHeaders() });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch (e) {
+      const withdrawals = getOfflineWithdrawals();
+      const users = getOfflineUsers();
+      const populated = withdrawals.map(w => {
+        const u = users.find(user => user._id === w.userId);
+        return {
+          ...w,
+          fullname: u ? u.fullname : 'Unknown User',
+          username: u ? u.username : 'unknown'
+        };
+      });
+      return { success: true, withdrawals: populated };
+    }
+  },
+
+  reviewWithdrawalAdmin: async (withdrawalId, status, rejectionReason) => {
+    try {
+      const res = await fetch(`${BASE_URL}/admin/withdraw/approve`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ withdrawalId, status, rejectionReason })
+      });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch (e) {
+      const withdrawals = getOfflineWithdrawals();
+      const idx = withdrawals.findIndex(w => w._id === withdrawalId);
+      if (idx === -1) return { success: false, message: 'Withdrawal not found' };
+
+      const w = withdrawals[idx];
+      if (w.status !== 'pending') return { success: false, message: 'Withdrawal already processed' };
+
+      withdrawals[idx].status = status === 'approved' ? 'paid' : 'rejected';
+      saveOfflineWithdrawals(withdrawals);
+
+      const wallets = getOfflineWallets();
+      const wallet = wallets[w.userId];
+
+      if (wallet) {
+        if (status === 'approved') {
+          wallet.pendingBalance -= w.amount;
+          wallet.totalWithdrawn += w.amount;
+        } else {
+          wallet.availableBalance += w.amount;
+          wallet.pendingBalance -= w.amount;
+        }
+        saveOfflineWallets(wallets);
+      }
+
+      const users = getOfflineUsers();
+      const uIdx = users.findIndex(u => u._id === w.userId);
+      if (uIdx !== -1 && wallet) {
+        users[uIdx].balance = wallet.availableBalance;
+        users[uIdx].pendingBalance = wallet.pendingBalance;
+        users[uIdx].totalWithdrawn = wallet.totalWithdrawn;
+        saveOfflineUsers(users);
+      }
+
+      const txs = getOfflineTransactions();
+      if (status === 'approved') {
+        const txIdx = txs.findIndex(tx => tx.userId === w.userId && tx.type === 'withdrawal' && tx.status === 'Pending');
+        if (txIdx !== -1) {
+          txs[txIdx].status = 'Completed';
+        }
+      } else {
+        const txIdx = txs.findIndex(tx => tx.userId === w.userId && tx.type === 'withdrawal' && tx.status === 'Pending');
+        if (txIdx !== -1) {
+          txs[txIdx].status = 'failed';
+          txs[txIdx].description = `Withdrawal Rejected: ${rejectionReason || 'Invalid details'}`;
+        }
+      }
+      saveOfflineTransactions(txs);
+
+      const notifs = getOfflineNotifications();
+      notifs.push({
+        _id: 'notif_w_review_' + Date.now(),
+        userId: w.userId,
+        title: status === 'approved' ? 'Withdrawal Successful 💰' : 'Withdrawal Rejected ❌',
+        message: status === 'approved' 
+          ? `Your withdrawal of ₦${w.amount.toLocaleString()} via ${w.method} was successful.`
+          : `Your withdrawal request of ₦${w.amount.toLocaleString()} was rejected. Reason: ${rejectionReason || 'Invalid details'}.`,
+        type: 'withdrawal',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineNotifications(notifs);
+
+      return { success: true, message: `Withdrawal successfully reviewed as ${status}` };
     }
   }
 };

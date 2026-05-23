@@ -30,6 +30,7 @@ const CreateCampaign = lazy(() => import('./pages/CreateCampaign'));
 const ManageCampaigns = lazy(() => import('./pages/ManageCampaigns'));
 const VerifySubmissions = lazy(() => import('./pages/VerifySubmissions'));
 const FundWallet = lazy(() => import('./pages/FundWallet'));
+const AdminPortal = lazy(() => import('./pages/AdminPortal'));
 
 // Wrapper to set topbar titles and load notification badge count
 const AppLayout = ({ user, handleLogout, theme, toggleTheme, children }) => {
@@ -70,6 +71,7 @@ const AppLayout = ({ user, handleLogout, theme, toggleTheme, children }) => {
       case '/advertiser/manage-campaigns': return 'Manage Campaigns';
       case '/advertiser/verify-submissions': return 'Verify Submissions';
       case '/advertiser/fund-wallet': return 'Fund Campaign Budget';
+      case '/admin': return 'System Administration Portal';
       default: return 'CanYouWork Platform';
     }
   };
@@ -328,6 +330,16 @@ function App() {
               ) : <Navigate to="/login" />
             } 
           />
+          <Route 
+            path="/admin" 
+            element={
+              user && user.role === 'admin' ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <AdminPortal user={user} refreshUser={refreshUser} />
+                </AppLayout>
+              ) : <Navigate to="/" />
+            } 
+          />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" />} />
@@ -477,6 +489,8 @@ const GlobalMascot = ({ user }) => {
         return `🤝 Verify submissions! Review the proof submitted by earners and click 'Approve' to credit their wallets.`;
       case '/advertiser/fund-wallet':
         return `💳 Fund your campaign budget! You can mock-deposit Naira using Bank Transfer, Card, or Crypto.`;
+      case '/admin':
+        return `🛡️ System Admin Portal! Here you can check receipts, verify deposits, approve payouts, and override user or campaign settings.`;
       default:
         return `👋 Hello! Let's complete some microtasks and earn pocket money!`;
     }

@@ -510,6 +510,230 @@ const refreshLeaderboard = async (userId) => {
   }
 };
 
+// 8. Get pending deposits
+const getPendingDeposits = async (req, res) => {
+  try {
+    const deposits = await Transaction.find({ type: 'deposit', status: 'pending' }).populate('userId', 'fullname username');
+    const formattedDeposits = deposits.map(tx => {
+      const doc = tx.toObject ? tx.toObject() : tx;
+      return {
+        ...doc,
+        fullname: doc.userId ? doc.userId.fullname : 'Unknown Advertiser',
+        username: doc.userId ? doc.userId.username : 'unknown'
+      };
+    });
+    res.json({ success: true, deposits: formattedDeposits });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error fetching pending deposits' });
+  }
+};
+
+// 9. Approve deposit
+const approveDeposit = async (req, res) => {
+  try {
+    const { transactionId } = req.body;
+    if (!transactionId) {
+      return res.status(400).json({ success: false, message: 'Transaction ID is required' });
+    }
+
+    const tx = await Transaction.findById(transactionId);
+    if (!tx) {
+      return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+
+    if (tx.status !== 'pending' || tx.type !== 'deposit') {
+      return res.status(400).json({ success: false, message: 'Transaction is not pending or is not a deposit' });
+    }
+
+    tx.status = 'completed';
+    await tx.save();
+
+    const wallet = await Wallet.findOne({ userId: tx.userId });
+    if (wallet) {
+      wallet.availableBalance += tx.amount;
+      wallet.totalEarned += tx.amount;
+      await wallet.save();
+
+      const user = await User.findById(tx.userId);
+      if (user) {
+        user.balance = wallet.availableBalance;
+        user.totalEarnings = wallet.totalEarned;
+        await user.save();
+      }
+    }
+
+    await Notification.create({
+      userId: tx.userId,
+      title: 'Deposit Approved! 💳',
+      message: `Your deposit of ₦${Number(tx.amount).toLocaleString()} has been verified and credited.`,
+      type: 'withdrawal'
+    });
+
+    res.json({ success: true, message: 'Deposit approved and funded successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error approving deposit' });
+  }
+};
+
+// 10. Reject deposit
+const rejectDeposit = async (req, res) => {
+  try {
+    const { transactionId } = req.body;
+    if (!transactionId) {
+      return res.status(400).json({ success: false, message: 'Transaction ID is required' });
+    }
+
+    const tx = await Transaction.findById(transactionId);
+    if (!tx) {
+      return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+
+    if (tx.status !== 'pending' || tx.type !== 'deposit') {
+      return res.status(400).json({ success: false, message: 'Transaction is not pending or is not a deposit' });
+    }
+
+    tx.status = 'rejected';
+    await tx.save();
+
+    await Notification.create({
+      userId: tx.userId,
+      title: 'Deposit Rejected ❌',
+      message: `Your deposit of ₦${Number(tx.amount).toLocaleString()} could not be verified by admin.`,
+      type: 'withdrawal'
+    });
+
+    res.json({ success: true, message: 'Deposit rejected successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error rejecting deposit' });
+  }
+};
+
+// 11. Get all users
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.json({ success: true, users });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error fetching users' });
+  }
+};
+
+// 12. Update user balance
+const updateUserBalance = async (req, res) => {
+  try {
+    const { userId, balance } = req.body;
+    if (!userId || balance === undefined) {
+      return res.status(400).json({ success: false, message: 'User ID and balance are required' });
+    }
+
+    const wallet = await Wallet.findOne({ userId });
+    if (wallet) {
+      wallet.availableBalance = Number(balance);
+      await wallet.save();
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    user.balance = Number(balance);
+    await user.save();
+
+    res.json({ success: true, message: 'Balance updated successfully', user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error updating user balance' });
+  }
+};
+
+// 13. Get all campaigns
+const getAllCampaigns = async (req, res) => {
+  try {
+    const tasks = await Task.find({});
+    res.json({ success: true, campaigns: tasks });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error fetching campaigns' });
+  }
+};
+
+// 14. Update campaign status (or delete)
+const updateCampaignStatus = async (req, res) => {
+  try {
+    const { campaignId, status } = req.body;
+    if (!campaignId || !status) {
+      return res.status(400).json({ success: false, message: 'Campaign ID and status are required' });
+    }
+
+    if (status === 'deleted') {
+      await Task.findByIdAndDelete(campaignId);
+      return res.json({ success: true, message: 'Campaign deleted successfully' });
+    }
+
+    const task = await Task.findById(campaignId);
+    if (!task) {
+      return res.status(404).json({ success: false, message: 'Campaign not found' });
+    }
+
+    task.status = status;
+    await task.save();
+
+    res.json({ success: true, message: `Campaign status updated to ${status}`, campaign: task });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error updating campaign status' });
+  }
+};
+
+// 15. Get all submissions
+const getAllSubmissions = async (req, res) => {
+  try {
+    const submissions = await TaskSubmission.find({})
+      .populate('taskId', 'title platform rewardAmount')
+      .populate('userId', 'fullname username');
+    
+    const formatted = submissions.map(s => {
+      const doc = s.toObject ? s.toObject() : s;
+      return {
+        ...doc,
+        taskTitle: doc.taskId ? doc.taskId.title : 'Deleted Task',
+        platform: doc.taskId ? doc.taskId.platform : 'Unknown',
+        reward: doc.taskId ? doc.taskId.rewardAmount : 0,
+        username: doc.userId ? doc.userId.username : 'unknown',
+        fullname: doc.userId ? doc.userId.fullname : 'Unknown User'
+      };
+    });
+    
+    res.json({ success: true, submissions: formatted });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error fetching submissions' });
+  }
+};
+
+// 16. Get all withdrawals
+const getAllWithdrawals = async (req, res) => {
+  try {
+    const withdrawals = await Withdrawal.find({}).populate('userId', 'fullname username');
+    const formatted = withdrawals.map(w => {
+      const doc = w.toObject ? w.toObject() : w;
+      return {
+        ...doc,
+        fullname: doc.userId ? doc.userId.fullname : 'Unknown User',
+        username: doc.userId ? doc.userId.username : 'unknown'
+      };
+    });
+    res.json({ success: true, withdrawals: formatted });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error fetching withdrawals' });
+  }
+};
+
 module.exports = {
   createTask,
   editTask,
@@ -517,5 +741,14 @@ module.exports = {
   reviewWithdrawal,
   suspendUser,
   createBonus,
-  getAnalytics
+  getAnalytics,
+  getPendingDeposits,
+  approveDeposit,
+  rejectDeposit,
+  getAllUsers,
+  updateUserBalance,
+  getAllCampaigns,
+  updateCampaignStatus,
+  getAllSubmissions,
+  getAllWithdrawals
 };

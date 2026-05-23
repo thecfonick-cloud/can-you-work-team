@@ -6,7 +6,16 @@ const {
   reviewWithdrawal, 
   suspendUser, 
   createBonus, 
-  getAnalytics 
+  getAnalytics,
+  getPendingDeposits,
+  approveDeposit,
+  rejectDeposit,
+  getAllUsers,
+  updateUserBalance,
+  getAllCampaigns,
+  updateCampaignStatus,
+  getAllSubmissions,
+  getAllWithdrawals
 } = require('../controllers/adminController');
 const { protect, isAdmin } = require('../middleware/auth');
 const router = express.Router();
@@ -21,5 +30,22 @@ router.post('/withdraw/approve', reviewWithdrawal);
 router.post('/user/suspend', suspendUser);
 router.post('/bonus/create', createBonus);
 router.get('/analytics', getAnalytics);
+
+// Deposit routes
+router.get('/deposits', getPendingDeposits);
+router.post('/deposits/approve', approveDeposit);
+router.post('/deposits/reject', rejectDeposit);
+
+// User override routes
+router.get('/users', getAllUsers);
+router.post('/users/update-balance', updateUserBalance);
+
+// Campaign management routes
+router.get('/campaigns', getAllCampaigns);
+router.post('/campaigns/status', updateCampaignStatus);
+
+// Submissions & Withdrawals overview routes
+router.get('/submissions', getAllSubmissions);
+router.get('/withdrawals', getAllWithdrawals);
 
 module.exports = router;

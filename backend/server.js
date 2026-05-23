@@ -31,6 +31,7 @@ const bonusRoutes = require('./routes/bonusRoutes');
 const leaderboardRoutes = require('./routes/leaderboardRoutes');
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const advertiserRoutes = require('./routes/advertiserRoutes');
 
 // Initialize DB
 connectDB();
@@ -61,6 +62,7 @@ app.use('/api/bonuses', bonusRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/advertiser', advertiserRoutes);
 
 // Base Route
 app.get('/', (req, res) => {
