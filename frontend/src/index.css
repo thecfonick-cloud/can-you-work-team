@@ -5745,6 +5745,88 @@ a {
   }
 }
 
+/* Dragged state to override float animations */
+.mascot-dragged {
+  animation: none !important;
+  cursor: grabbing !important;
+}
+
+/* Elastic Pop transition for Speech Bubble */
+.mascot-speech-bubble {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease !important;
+  transform: scale(0);
+  opacity: 0;
+  transform-origin: bottom right;
+}
+.mascot-speech-bubble.pop {
+  transform: scale(1) !important;
+  opacity: 1 !important;
+}
+.pos-left .mascot-speech-bubble {
+  transform-origin: bottom left;
+}
+
+/* Rocket booster spark particle exhausts */
+.mascot-sparks-container {
+  position: absolute;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 40px;
+  pointer-events: none;
+  overflow: visible;
+  z-index: -1;
+}
+
+.mascot-booster-spark {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #00f0ff;
+  border-radius: 50%;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: sparkFall 1.2s infinite ease-out;
+  opacity: 0;
+  box-shadow: 0 0 8px #00f0ff;
+}
+.mascot-booster-spark:nth-child(1) { animation-delay: 0s; left: 35%; }
+.mascot-booster-spark:nth-child(2) { animation-delay: 0.3s; left: 55%; }
+.mascot-booster-spark:nth-child(3) { animation-delay: 0.6s; left: 45%; }
+.mascot-booster-spark:nth-child(4) { animation-delay: 0.9s; left: 65%; }
+
+@keyframes sparkFall {
+  0% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, 40px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Boosted sparks during flights */
+.mascot-fly-off .mascot-booster-spark,
+.mascot-fly-on .mascot-booster-spark,
+.mascot-fly-loop .mascot-booster-spark {
+  animation-duration: 0.5s;
+  background: #ff5500;
+  box-shadow: 0 0 12px #ff5500;
+}
+
+/* Spin animation for visor gear icons */
+.spin-animation {
+  animation: spinSlow 3s linear infinite;
+  transform-origin: 50px 69px;
+}
+@keyframes spinSlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Mobile Navigation Hamburger & Drawer Overlay Styles */
 .mobile-hamburger-btn {
   display: none;

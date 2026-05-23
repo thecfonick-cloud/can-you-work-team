@@ -371,10 +371,19 @@ const GlobalMascot = ({ user }) => {
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const [currentPos, setCurrentPos] = useState(POSITIONS[0]);
 
+  // Visor expressions, 3D cursor tilt, and Drag states
+  const [emotion, setEmotion] = useState('normal'); // normal, happy, warning, thinking
+  const [tiltStyle, setTiltStyle] = useState({});
+  const [dragStyle, setDragStyle] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+
   const bubbleTimeoutRef = useRef(null);
   const mascotTimeoutRef = useRef(null);
+  const emotionTimeoutRef = useRef(null);
   const scrollTicking = useRef(false);
   const speechTextRef = useRef("");
+  const dragStart = useRef({ x: 0, y: 0 });
+  const elementStart = useRef({ x: 0, y: 0 });
 
   // Keep speechTextRef updated to avoid stale values in useCallback
   useEffect(() => {
@@ -386,12 +395,58 @@ const GlobalMascot = ({ user }) => {
     return () => {
       if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
       if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
+      if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
     };
   }, []);
 
+  // Global Emotion Receiver
+  useEffect(() => {
+    const handleSetEmotion = (e) => {
+      const { newEmotion, duration } = e.detail;
+      setEmotion(newEmotion);
+      if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
+      if (newEmotion !== 'normal') {
+        emotionTimeoutRef.current = setTimeout(() => {
+          setEmotion('normal');
+        }, duration || 5000);
+      }
+    };
+    window.addEventListener('mascot-set-emotion', handleSetEmotion);
+    return () => window.removeEventListener('mascot-set-emotion', handleSetEmotion);
+  }, []);
+
+  // Mouse tilt tracking
+  useEffect(() => {
+    if (isDragging || !visible) return;
+
+    const handleMouseMove = (e) => {
+      const mascotEl = document.querySelector('.mascot-tutor-container');
+      if (!mascotEl) return;
+      const rect = mascotEl.getBoundingClientRect();
+      const mascotX = rect.left + rect.width / 2;
+      const mascotY = rect.top + rect.height / 2;
+      const dx = e.clientX - mascotX;
+      const dy = e.clientY - mascotY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      
+      if (dist < 350) {
+        const rotateX = -dy / 20;
+        const rotateY = dx / 20;
+        setTiltStyle({
+          transform: `perspective(500px) rotateX(${Math.max(-15, Math.min(15, rotateX))}deg) rotateY(${Math.max(-15, Math.min(15, rotateY))}deg)`
+        });
+      } else {
+        setTiltStyle({});
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [isDragging, visible]);
+
   // Periodic Random Position Movement
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || isDragging) return;
     const interval = setInterval(() => {
       const otherPositions = POSITIONS.filter(p => p.name !== currentPos.name);
       const nextPos = otherPositions[Math.floor(Math.random() * otherPositions.length)];
@@ -408,7 +463,75 @@ const GlobalMascot = ({ user }) => {
     }, 20000);
 
     return () => clearInterval(interval);
-  }, [visible, currentPos]);
+  }, [visible, currentPos, isDragging]);
+
+  const handleMouseDown = (e) => {
+    if (e.button !== 0) return;
+    if (e.target.closest('.mascot-close-btn')) return;
+    setIsDragging(true);
+    const rect = e.currentTarget.getBoundingClientRect();
+    elementStart.current = { x: rect.left, y: rect.top };
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    e.preventDefault();
+  };
+
+  // Drag physics logic
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e) => {
+      const dx = e.clientX - dragStart.current.x;
+      const dy = e.clientY - dragStart.current.y;
+      setDragStyle({
+        position: 'fixed',
+        left: `${elementStart.current.x + dx}px`,
+        top: `${elementStart.current.y + dy}px`,
+        bottom: 'auto',
+        right: 'auto'
+      });
+    };
+
+    const handleMouseUp = (e) => {
+      setIsDragging(false);
+
+      const x = elementStart.current.x + (e.clientX - dragStart.current.x);
+      const y = elementStart.current.y + (e.clientY - dragStart.current.y);
+      const containerWidth = 80;
+      const containerHeight = 120;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      const distLeft = x;
+      const distRight = vw - (x + containerWidth);
+      const distTop = y;
+      const distBottom = vh - (y + containerHeight);
+
+      const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+      let nextPos = currentPos;
+
+      if (minDist === distLeft) {
+        nextPos = { name: 'dragged-left', style: { left: '2rem', top: `${Math.max(80, Math.min(vh - 150, y))}px`, right: 'auto', bottom: 'auto' }, isLeft: true };
+      } else if (minDist === distRight) {
+        nextPos = { name: 'dragged-right', style: { right: '2rem', top: `${Math.max(80, Math.min(vh - 150, y))}px`, left: 'auto', bottom: 'auto' }, isLeft: false };
+      } else if (minDist === distTop) {
+        nextPos = { name: 'dragged-top', style: { top: '6rem', left: `${Math.max(20, Math.min(vw - 100, x))}px`, right: 'auto', bottom: 'auto' }, isLeft: x < vw / 2 };
+      } else {
+        nextPos = { name: 'dragged-bottom', style: { bottom: '2rem', left: `${Math.max(20, Math.min(vw - 100, x))}px`, right: 'auto', top: 'auto' }, isLeft: x < vw / 2 };
+      }
+
+      setCurrentPos(nextPos);
+      setDragStyle(null);
+      setMascotClass("mascot-jump");
+      setTimeout(() => setMascotClass(""), 1600);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, currentPos]);
 
   // Advertiser Mascot Event Triggers
   useEffect(() => {
@@ -420,6 +543,10 @@ const GlobalMascot = ({ user }) => {
       bubbleTimeoutRef.current = setTimeout(() => setBubbleAnim(true), 50);
 
       setMascotClass("mascot-jump");
+      setEmotion("happy");
+      if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
+      emotionTimeoutRef.current = setTimeout(() => setEmotion("normal"), 5000);
+
       if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
       mascotTimeoutRef.current = setTimeout(() => {
         setMascotClass("");
@@ -434,6 +561,10 @@ const GlobalMascot = ({ user }) => {
       bubbleTimeoutRef.current = setTimeout(() => setBubbleAnim(true), 50);
 
       setMascotClass("mascot-fly-loop");
+      setEmotion("happy");
+      if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
+      emotionTimeoutRef.current = setTimeout(() => setEmotion("normal"), 5000);
+
       if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
       mascotTimeoutRef.current = setTimeout(() => {
         setMascotClass("");
@@ -628,13 +759,16 @@ const GlobalMascot = ({ user }) => {
 
   return (
     <div 
-      className={`mascot-tutor-container ${visible ? 'visible' : ''} ${currentPos.isLeft ? 'pos-left' : ''}`}
+      className={`mascot-tutor-container ${visible ? 'visible' : ''} ${currentPos.isLeft ? 'pos-left' : ''} ${isDragging ? 'mascot-dragged' : ''}`}
       style={{
-        ...currentPos.style,
+        ...(dragStyle || currentPos.style),
+        ...tiltStyle,
         position: 'fixed',
-        zIndex: 999
+        zIndex: 999,
+        cursor: isDragging ? 'grabbing' : 'grab'
       }}
       onClick={handleMascotClick}
+      onMouseDown={handleMouseDown}
     >
       <button 
         className="mascot-close-btn"
@@ -657,20 +791,76 @@ const GlobalMascot = ({ user }) => {
           <rect x="18" y="55" width="8" height="24" rx="4" className="svg-arm arm-left" transform="rotate(-15 18 55)" />
           <rect x="74" y="55" width="8" height="24" rx="4" className="svg-arm arm-right" transform="rotate(15 82 55)" />
           <rect x="28" y="48" width="44" height="42" rx="12" className="svg-body-base" />
-          <rect x="36" y="56" width="28" height="26" rx="6" className="svg-body-screen" />
-          <rect x="42" y="66" width="16" height="6" rx="2" className="svg-screen-bar" />
+          
+          {/* Torso Screen dynamic elements */}
+          {emotion === 'happy' ? (
+            <>
+              <rect x="36" y="56" width="28" height="26" rx="6" className="svg-body-screen" style={{ fill: 'rgba(16,185,129,0.15)', stroke: '#10b981', strokeWidth: 1.5 }} />
+              <text x="50" y="74" textAnchor="middle" fill="#10b981" fontSize="16" fontWeight="bold">$</text>
+            </>
+          ) : emotion === 'warning' ? (
+            <>
+              <rect x="36" y="56" width="28" height="26" rx="6" className="svg-body-screen" style={{ fill: 'rgba(239,68,68,0.15)', stroke: '#ef4444', strokeWidth: 1.5 }} />
+              <text x="50" y="74" textAnchor="middle" fill="#ef4444" fontSize="16" fontWeight="bold">!</text>
+            </>
+          ) : emotion === 'thinking' ? (
+            <>
+              <rect x="36" y="56" width="28" height="26" rx="6" className="svg-body-screen" style={{ fill: 'rgba(14,165,233,0.15)', stroke: '#0ea5e9', strokeWidth: 1.5 }} />
+              <circle cx="50" cy="69" r="5" stroke="#0ea5e9" strokeWidth="2.5" strokeDasharray="3,3" fill="none" className="spin-animation" />
+            </>
+          ) : (
+            <>
+              <rect x="36" y="56" width="28" height="26" rx="6" className="svg-body-screen" />
+              <rect x="42" y="66" width="16" height="6" rx="2" className="svg-screen-bar" />
+            </>
+          )}
+
           <rect x="44" y="38" width="12" height="12" rx="2" className="svg-neck" />
           <rect x="24" y="10" width="52" height="34" rx="16" className="svg-head-base" />
           <circle cx="24" cy="27" r="4" className="svg-ear" />
           <circle cx="76" cy="27" r="4" className="svg-ear" />
           <line x1="50" y1="10" x2="50" y2="4" strokeWidth="3" className="svg-antenna-stem" />
-          <circle cx="50" cy="2" r="3" className="svg-antenna-tip" />
+          
+          {/* Antenna tip color adapts to emotion */}
+          <circle cx="50" cy="2" r="3" className="svg-antenna-tip" style={emotion === 'warning' ? { fill: '#ef4444' } : emotion === 'thinking' ? { fill: '#0ea5e9' } : emotion === 'happy' ? { fill: '#10b981' } : {}} />
+          
           <rect x="32" y="16" width="36" height="20" rx="8" className="svg-head-visor" />
-          <circle cx="43" cy="26" r="3.5" className="svg-eye eye-left" />
-          <circle cx="57" cy="26" r="3.5" className="svg-eye eye-right" />
-          <circle cx="36" cy="30" r="2" className="svg-blush" />
-          <circle cx="64" cy="30" r="2" className="svg-blush" />
+          
+          {/* Visor eyes expressions */}
+          {emotion === 'happy' ? (
+            <>
+              <path d="M38 27 Q43 21 48 27" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" />
+              <path d="M52 27 Q57 21 62 27" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" />
+            </>
+          ) : emotion === 'warning' ? (
+            <>
+              <line x1="38" y1="26" x2="48" y2="26" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
+              <line x1="52" y1="26" x2="62" y2="26" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
+            </>
+          ) : emotion === 'thinking' ? (
+            <>
+              <ellipse cx="43" cy="26" rx="4.5" ry="1.5" fill="#0ea5e9" />
+              <ellipse cx="57" cy="26" rx="4.5" ry="1.5" fill="#0ea5e9" />
+            </>
+          ) : (
+            <>
+              <circle cx="43" cy="26" r="3.5" className="svg-eye eye-left" />
+              <circle cx="57" cy="26" r="3.5" className="svg-eye eye-right" />
+            </>
+          )}
+
+          {/* Blush circles */}
+          <circle cx="36" cy="30" r="2" className="svg-blush" style={emotion === 'happy' ? { fill: 'rgba(16,185,129,0.5)' } : {}} />
+          <circle cx="64" cy="30" r="2" className="svg-blush" style={emotion === 'happy' ? { fill: 'rgba(16,185,129,0.5)' } : {}} />
         </svg>
+
+        {/* Sparks particles exhaust tail */}
+        <div className="mascot-sparks-container">
+          <div className="mascot-booster-spark"></div>
+          <div className="mascot-booster-spark"></div>
+          <div className="mascot-booster-spark"></div>
+          <div className="mascot-booster-spark"></div>
+        </div>
       </div>
     </div>
   );

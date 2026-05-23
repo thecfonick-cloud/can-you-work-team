@@ -35,18 +35,22 @@ const FundWallet = ({ user, refreshUser }) => {
     e.preventDefault();
     if (amount < 1000) {
       setError('Minimum deposit is ₦1,000');
+      window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
       return;
     }
     if (!txHash) {
       setError('Please provide the USDT ERC20 transaction hash or Reference ID.');
+      window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
       return;
     }
     if (!receipt) {
       setError('Please upload your transaction screenshot or payment receipt.');
+      window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
       return;
     }
     setError('');
     setLoading(true);
+    window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'thinking', duration: 15000 } }));
 
     try {
       const res = await api.depositFunds(amount, txHash, receipt);
@@ -59,10 +63,12 @@ const FundWallet = ({ user, refreshUser }) => {
         }, 2000);
       } else {
         setError(res.message || 'Deposit failed');
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 5000 } }));
       }
     } catch (err) {
       setLoading(false);
       setError('An error occurred during payment processing');
+      window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 5000 } }));
       console.error(err);
     }
   };

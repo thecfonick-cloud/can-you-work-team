@@ -99,12 +99,15 @@ const AdminPortal = ({ user }) => {
       const res = await api.approveDeposit(id);
       if (res.success) {
         setMessage('Deposit approved successfully. Wallet funded.');
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'happy', duration: 5000 } }));
         fetchData();
       } else {
         setError(res.message || 'Verification failed.');
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
       }
     } catch (err) {
       setError('An error occurred during verification.');
+      window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
     }
   };
 
@@ -114,12 +117,15 @@ const AdminPortal = ({ user }) => {
       const res = await api.rejectDeposit(id);
       if (res.success) {
         setMessage('Deposit rejected.');
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 5000 } }));
         fetchData();
       } else {
         setError(res.message || 'Action failed.');
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
       }
     } catch (err) {
       setError('An error occurred.');
+      window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
     }
   };
 
@@ -130,12 +136,15 @@ const AdminPortal = ({ user }) => {
       const res = await api.reviewWithdrawalAdmin(id, status, reason);
       if (res.success) {
         setMessage(`Withdrawal ${status} successfully.`);
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: status === 'approved' ? 'happy' : 'warning', duration: 5000 } }));
         fetchData();
       } else {
         setError(res.message || 'Action failed.');
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
       }
     } catch (err) {
       setError('An error occurred.');
+      window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
     }
   };
 
@@ -146,13 +155,16 @@ const AdminPortal = ({ user }) => {
       const res = await api.updateUserBalance(editingUser._id, newBalance);
       if (res.success) {
         setMessage(`Balance for @${editingUser.username} updated to ₦${Number(newBalance).toLocaleString()}`);
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'happy', duration: 5000 } }));
         setEditingUser(null);
         fetchData();
       } else {
         setError(res.message || 'Failed to update balance');
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
       }
     } catch (err) {
       setError('An error occurred.');
+      window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
     }
   };
 
@@ -180,9 +192,11 @@ const AdminPortal = ({ user }) => {
           localStorage.setItem('cw_offline_users', JSON.stringify(users));
         }
         setMessage(`User is now ${nextStatus}`);
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: nextStatus === 'active' ? 'happy' : 'warning', duration: 5000 } }));
         fetchData();
       } else {
         setError(data.message || 'Status update failed');
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
       }
     } catch (err) {
       // Offline fallback direct
@@ -193,6 +207,7 @@ const AdminPortal = ({ user }) => {
         localStorage.setItem('cw_offline_users', JSON.stringify(users));
       }
       setMessage(`User is now ${nextStatus} (Offline fallback)`);
+      window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: nextStatus === 'active' ? 'happy' : 'warning', duration: 5000 } }));
       fetchData();
     }
   };
@@ -203,12 +218,15 @@ const AdminPortal = ({ user }) => {
       const res = await api.updateCampaignStatus(campaignId, status);
       if (res.success) {
         setMessage(`Campaign ${status === 'deleted' ? 'deleted' : 'updated'}.`);
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: status === 'active' ? 'happy' : 'warning', duration: 5000 } }));
         fetchData();
       } else {
         setError(res.message || 'Campaign status update failed.');
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
       }
     } catch (err) {
       setError('An error occurred.');
+      window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
     }
   };
 
@@ -247,9 +265,11 @@ const AdminPortal = ({ user }) => {
           }
         }
         setMessage(`Submission ${status} successfully.`);
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: status === 'approved' ? 'happy' : 'warning', duration: 5000 } }));
         fetchData();
       } else {
         setError(data.message || 'Override review failed.');
+        window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 4000 } }));
       }
     } catch (err) {
       // Offline direct
@@ -273,6 +293,7 @@ const AdminPortal = ({ user }) => {
         }
       }
       setMessage(`Submission ${status} successfully (Offline fallback).`);
+      window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: status === 'approved' ? 'happy' : 'warning', duration: 5000 } }));
       fetchData();
     }
   };
