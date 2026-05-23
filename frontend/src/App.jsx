@@ -350,14 +350,14 @@ function App() {
   );
 }
 
-// Predefined random screen positions for the cute panda
+// Predefined random screen positions for the cute panda (snapping options)
 const POSITIONS = [
-  { name: 'bottom-right', style: { top: '80%', left: '85%' }, isLeft: false },
-  { name: 'bottom-left', style: { top: '80%', left: '5%' }, isLeft: true },
-  { name: 'top-right', style: { top: '12%', left: '85%' }, isLeft: false },
-  { name: 'top-left', style: { top: '12%', left: '5%' }, isLeft: true },
-  { name: 'mid-left', style: { top: '45%', left: '5%' }, isLeft: true },
-  { name: 'mid-right', style: { top: '45%', left: '85%' }, isLeft: false }
+  { name: 'bottom-right', style: { bottom: '2rem', right: '2rem', top: 'auto', left: 'auto' }, isLeft: false },
+  { name: 'bottom-left', style: { bottom: '2rem', left: '2rem', top: 'auto', right: 'auto' }, isLeft: true },
+  { name: 'top-right', style: { top: '6rem', right: '2rem', bottom: 'auto', left: 'auto' }, isLeft: false },
+  { name: 'top-left', style: { top: '6rem', left: '2rem', bottom: 'auto', right: 'auto' }, isLeft: true },
+  { name: 'mid-left', style: { top: '40%', left: '2rem', bottom: 'auto', right: 'auto' }, isLeft: true },
+  { name: 'mid-right', style: { top: '40%', right: '2rem', bottom: 'auto', left: 'auto' }, isLeft: false }
 ];
 
 // Global Mascot Component
@@ -369,15 +369,13 @@ const GlobalMascot = ({ user }) => {
   const [bubbleAnim, setBubbleAnim] = useState(false);
   const [mascotClass, setMascotClass] = useState("");
   const [currentPath, setCurrentPath] = useState(location.pathname);
-  const [currentPos, setCurrentPos] = useState(POSITIONS[0]);
+  const [currentPos, setCurrentPos] = useState(POSITIONS[0]); // default bottom-right
 
-  // Panda expressions, 3D cursor tilt, Drag states, and 4D lock states
+  // Panda expressions, 3D cursor tilt, Drag states, and Leaf particle system
   const [emotion, setEmotion] = useState('normal'); // normal, happy, warning, thinking
   const [tiltStyle, setTiltStyle] = useState({});
   const [dragStyle, setDragStyle] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [targetElement, setTargetElement] = useState(null);
-  const [positionType, setPositionType] = useState('fixed');
   const [leafParticles, setLeafParticles] = useState([]);
 
   const bubbleTimeoutRef = useRef(null);
@@ -452,130 +450,6 @@ const GlobalMascot = ({ user }) => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [isDragging, visible]);
 
-  // Find all visible, clickable buttons/links on the screen
-  const findTargetButtons = () => {
-    const elements = Array.from(document.querySelectorAll('button, a.btn, a.btn-outline, .hero-cta-buttons a, .cta-btn, .action-btn, .sidebar-link, .topbar-btn'));
-    return elements.filter(el => {
-      const rect = el.getBoundingClientRect();
-      return (
-        rect.width > 0 &&
-        rect.height > 0 &&
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <= window.innerHeight &&
-        rect.right <= window.innerWidth &&
-        !el.closest('.mascot-tutor-container')
-      );
-    });
-  };
-
-  const getSpeechForButton = (button) => {
-    const text = button.innerText.trim().toLowerCase();
-    if (text.includes('earning') || text.includes('start')) {
-      return "👉 Sitting on 'Start Earning Now'! Click here to grab your +₦200 bonus! 🐼";
-    } else if (text.includes('advertiser') || text.includes('campaign')) {
-      return "💼 Launch tasks here to get thousands of followers/subscribers! 🐼";
-    } else if (text.includes('login') || text.includes('log in')) {
-      return "🔑 Click here to log in and check your wallet balance! 🐼";
-    } else if (text.includes('register') || text.includes('sign up')) {
-      return "📝 Click here to create your free account in 30 seconds! 🐼";
-    } else if (text.includes('subscribe')) {
-      return "🔔 Click 'Subscribe' to receive premium Lucky Task alerts! 🐼";
-    }
-    return `👉 Slipped onto the '${button.innerText.trim()}' button! Let's click it! 🐼`;
-  };
-
-  // Periodic Random Position Movement or Button Sitting
-  useEffect(() => {
-    if (!visible || isDragging) return;
-
-    const interval = setInterval(() => {
-      const buttons = findTargetButtons();
-      const shouldGoToButton = Math.random() > 0.4 && buttons.length > 0;
-
-      setBubbleAnim(false);
-      
-      if (shouldGoToButton) {
-        const target = buttons[Math.floor(Math.random() * buttons.length)];
-        setTargetElement(target);
-        
-        const rect = target.getBoundingClientRect();
-        setPositionType('fixed');
-        setMascotClass("mascot-walk");
-        setCurrentPos({
-          name: 'walking-to-button',
-          style: {
-            top: `${rect.top - 80}px`,
-            left: `${rect.left + rect.width / 2 - 40}px`
-          },
-          isLeft: rect.left < window.innerWidth / 2
-        });
-
-        if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
-        mascotTimeoutRef.current = setTimeout(() => {
-          setMascotClass("");
-          setPositionType('absolute');
-          setCurrentPos({
-            name: 'button-sat',
-            style: {
-              top: `${rect.top + window.scrollY - 80}px`,
-              left: `${rect.left + window.scrollX + rect.width / 2 - 40}px`
-            },
-            isLeft: rect.left < window.innerWidth / 2
-          });
-          setSpeechText(getSpeechForButton(target));
-          setBubbleAnim(true);
-          
-          setEmotion('happy');
-          if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
-          emotionTimeoutRef.current = setTimeout(() => setEmotion('normal'), 6000);
-        }, 1200);
-
-      } else {
-        setTargetElement(null);
-        setPositionType('fixed');
-        const otherPositions = POSITIONS.filter(p => p.name !== currentPos.name);
-        const nextPos = otherPositions[Math.floor(Math.random() * otherPositions.length)];
-        
-        setMascotClass("mascot-walk");
-        setCurrentPos(nextPos);
-        
-        if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
-        mascotTimeoutRef.current = setTimeout(() => {
-          setMascotClass("");
-          setSpeechText(getSpeechTextForRoute(location.pathname, user));
-          setBubbleAnim(true);
-        }, 1200);
-      }
-    }, 25000);
-
-    return () => clearInterval(interval);
-  }, [visible, currentPos, isDragging, location.pathname, user]);
-
-  // Lock to button positions on scroll and resize
-  useEffect(() => {
-    if (positionType !== 'absolute' || !targetElement) return;
-
-    const updatePos = () => {
-      const rect = targetElement.getBoundingClientRect();
-      setCurrentPos({
-        name: 'button-sat',
-        style: {
-          top: `${rect.top + window.scrollY - 80}px`,
-          left: `${rect.left + window.scrollX + rect.width / 2 - 40}px`
-        },
-        isLeft: rect.left < window.innerWidth / 2
-      });
-    };
-
-    window.addEventListener('resize', updatePos);
-    window.addEventListener('scroll', updatePos);
-    return () => {
-      window.removeEventListener('resize', updatePos);
-      window.removeEventListener('scroll', updatePos);
-    };
-  }, [positionType, targetElement]);
-
   // Leaf Particles chewing physics generator
   useEffect(() => {
     if (emotion !== 'happy') return;
@@ -623,14 +497,13 @@ const GlobalMascot = ({ user }) => {
     if (e.button !== 0) return;
     if (e.target.closest('.mascot-close-btn')) return;
     setIsDragging(true);
-    setPositionType('fixed');
     const rect = e.currentTarget.getBoundingClientRect();
     elementStart.current = { x: rect.left, y: rect.top };
     dragStart.current = { x: e.clientX, y: e.clientY };
     e.preventDefault();
   };
 
-  // Drag physics logic
+  // Drag snapping logic
   useEffect(() => {
     if (!isDragging) return;
 
@@ -664,23 +537,18 @@ const GlobalMascot = ({ user }) => {
       const minDist = Math.min(distLeft, distRight, distTop, distBottom);
       let nextPos = currentPos;
 
-      const pctY = Math.max(10, Math.min(85, (y / vh) * 100));
-      const pctX = Math.max(5, Math.min(85, (x / vw) * 100));
-
       if (minDist === distLeft) {
-        nextPos = { name: 'dragged-left', style: { left: '5%', top: `${pctY}%` }, isLeft: true };
+        nextPos = { name: 'dragged-left', style: { left: '2rem', top: `${Math.max(80, Math.min(vh - 150, y))}px`, right: 'auto', bottom: 'auto' }, isLeft: true };
       } else if (minDist === distRight) {
-        nextPos = { name: 'dragged-right', style: { left: '85%', top: `${pctY}%` }, isLeft: false };
+        nextPos = { name: 'dragged-right', style: { right: '2rem', top: `${Math.max(80, Math.min(vh - 150, y))}px`, left: 'auto', bottom: 'auto' }, isLeft: false };
       } else if (minDist === distTop) {
-        nextPos = { name: 'dragged-top', style: { top: '12%', left: `${pctX}%` }, isLeft: x < vw / 2 };
+        nextPos = { name: 'dragged-top', style: { top: '6rem', left: `${Math.max(20, Math.min(vw - 100, x))}px`, right: 'auto', bottom: 'auto' }, isLeft: x < vw / 2 };
       } else {
-        nextPos = { name: 'dragged-bottom', style: { top: '80%', left: `${pctX}%` }, isLeft: x < vw / 2 };
+        nextPos = { name: 'dragged-bottom', style: { bottom: '2rem', left: `${Math.max(20, Math.min(vw - 100, x))}px`, right: 'auto', top: 'auto' }, isLeft: x < vw / 2 };
       }
 
       setCurrentPos(nextPos);
       setDragStyle(null);
-      setPositionType('fixed');
-      setTargetElement(null);
       setMascotClass("mascot-jump");
       setTimeout(() => setMascotClass(""), 1600);
     };
@@ -720,7 +588,7 @@ const GlobalMascot = ({ user }) => {
       if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
       bubbleTimeoutRef.current = setTimeout(() => setBubbleAnim(true), 50);
 
-      setMascotClass("mascot-walk");
+      setMascotClass("mascot-jump");
       setEmotion("happy");
       if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
       emotionTimeoutRef.current = setTimeout(() => setEmotion("normal"), 5000);
@@ -800,7 +668,7 @@ const GlobalMascot = ({ user }) => {
     return () => clearTimeout(timer);
   }, [location.pathname, user]);
 
-  // Trigger wobbly climb animation on route change
+  // Trigger wobbly climb animation on route change (locks in place)
   useEffect(() => {
     const dismissed = localStorage.getItem("canyuwork_mascot_dismissed") === "true";
     if (dismissed) {
@@ -810,8 +678,6 @@ const GlobalMascot = ({ user }) => {
 
     if (location.pathname !== currentPath) {
       setBubbleAnim(false);
-      setTargetElement(null);
-      setPositionType('fixed');
       setMascotClass("mascot-climb-off");
 
       const timer1 = setTimeout(() => {
@@ -830,7 +696,6 @@ const GlobalMascot = ({ user }) => {
         clearTimeout(timer2);
       };
     } else {
-      // If user profile updates (e.g. balance updates)
       setSpeechText(getSpeechTextForRoute(location.pathname, user));
     }
   }, [location.pathname, user, currentPath]);
@@ -883,60 +748,32 @@ const GlobalMascot = ({ user }) => {
     if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
     emotionTimeoutRef.current = setTimeout(() => setEmotion("normal"), 5000);
     
-    // Choose a random new position and walk waddle to it
-    const buttons = findTargetButtons();
-    const target = buttons.length > 0 ? buttons[Math.floor(Math.random() * buttons.length)] : null;
-    
-    setBubbleAnim(false);
-    
-    setTimeout(() => {
-      if (target) {
-        setTargetElement(target);
-        setPositionType('fixed');
-        setMascotClass("mascot-walk");
-        
-        const rect = target.getBoundingClientRect();
-        setCurrentPos({
-          name: 'walking-to-button',
-          style: {
-            top: `${rect.top - 80}px`,
-            left: `${rect.left + rect.width / 2 - 40}px`
-          },
-          isLeft: rect.left < window.innerWidth / 2
-        });
+    // Custom click responses based on page (locked in corner, no movement)
+    let clickText = "🚀 Let's earn! Tap a button to proceed.";
+    if (location.pathname === '/') {
+      clickText = "🚀 Let's earn! Tap 'Start Earning Now' to sign up and claim your ₦200 bonus!";
+      const ctaBtn = document.querySelector('.hero-cta-buttons');
+      if (ctaBtn) ctaBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else if (location.pathname === '/register') {
+      clickText = "📝 Just fill out the fields and tap 'Sign Up' to get started!";
+    } else if (location.pathname === '/login') {
+      clickText = "🔑 Enter your email/username and password to access your earnings!";
+    } else if (location.pathname === '/dashboard') {
+      clickText = "🌟 Tap 'Check In' inside 'Bonus & Streaks' to get your free daily Naira!";
+      navigate('/bonus');
+    } else if (location.pathname === '/my-tasks') {
+      clickText = "🎁 Tap 'Complete Campaign' on the Lucky Task banner to start your ₦5,000 survey!";
+    }
 
-        if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
-        mascotTimeoutRef.current = setTimeout(() => {
-          setMascotClass("");
-          setPositionType('absolute');
-          setCurrentPos({
-            name: 'button-sat',
-            style: {
-              top: `${rect.top + window.scrollY - 80}px`,
-              left: `${rect.left + window.scrollX + rect.width / 2 - 40}px`
-            },
-            isLeft: rect.left < window.innerWidth / 2
-          });
-          setSpeechText(getSpeechForButton(target));
-          setBubbleAnim(true);
-        }, 1200);
-      } else {
-        setTargetElement(null);
-        setPositionType('fixed');
-        const otherPositions = POSITIONS.filter(p => p.name !== currentPos.name);
-        const nextPos = otherPositions[Math.floor(Math.random() * otherPositions.length)];
-        
-        setMascotClass("mascot-walk");
-        setCurrentPos(nextPos);
-        
-        if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
-        mascotTimeoutRef.current = setTimeout(() => {
-          setMascotClass("");
-          setSpeechText("😋 Mmm, fresh bamboo is delicious! Let's click around and earn! 🎋");
-          setBubbleAnim(true);
-        }, 1200);
-      }
-    }, 500);
+    setSpeechText(clickText);
+    setBubbleAnim(false);
+    if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
+    bubbleTimeoutRef.current = setTimeout(() => setBubbleAnim(true), 50);
+
+    if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
+    mascotTimeoutRef.current = setTimeout(() => {
+      setMascotClass("");
+    }, 1600); // clear jump class after completion
   };
 
   const handleCloseMascot = (e) => {
@@ -951,7 +788,7 @@ const GlobalMascot = ({ user }) => {
       style={{
         ...(dragStyle || currentPos.style),
         ...tiltStyle,
-        position: positionType,
+        position: 'fixed',
         zIndex: 999,
         cursor: isDragging ? 'grabbing' : 'grab'
       }}
