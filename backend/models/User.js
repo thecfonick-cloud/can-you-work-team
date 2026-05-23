@@ -27,7 +27,7 @@ const UserSchema = new mongoose.Schema({
 
   status: { type: String, enum: ['active', 'suspended'], default: 'active' },
   isVerified: { type: Boolean, default: false },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  role: { type: String, enum: ['user', 'advertiser', 'admin'], default: 'user' },
 
   notificationPreferences: {
     taskAlerts: { type: Boolean, default: true },

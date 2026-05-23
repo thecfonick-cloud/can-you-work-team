@@ -274,7 +274,7 @@ const LandingPage = () => {
             <button className="btn btn-primary btn-lg" onClick={() => navigate('/register')}>
               Start Earning Now <ArrowRight size={18} />
             </button>
-            <button className="btn btn-outline btn-lg" onClick={() => navigate('/login')}>
+            <button className="btn btn-outline btn-lg" onClick={() => navigate('/login?role=advertiser')}>
               Advertiser Login
             </button>
           </div>

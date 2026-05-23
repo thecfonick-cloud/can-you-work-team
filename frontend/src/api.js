@@ -420,12 +420,12 @@ export const api = {
     }
   },
 
-  register: async (fullname, username, email, phone, country, password, referredBy) => {
+  register: async (fullname, username, email, phone, country, password, referredBy, role = 'user') => {
     try {
       const res = await fetch(`${BASE_URL}/auth/register`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ fullname, username, email, phone, country, password, referredBy, deviceFingerprint: 'mock_fingerprint' })
+        body: JSON.stringify({ fullname, username, email, phone, country, password, referredBy, role, deviceFingerprint: 'mock_fingerprint' })
       });
       const data = await res.json();
       if (data.success) {
@@ -452,9 +452,10 @@ export const api = {
         referralCode,
         referredBy: referredBy || null,
         isVerified: true,
-        balance: 200.0,
+        role, // Store role in mock DB
+        balance: role === 'advertiser' ? 0.0 : 200.0, // Advertisers start with 0 budget
         pendingBalance: 0.0,
-        totalEarnings: 200.0,
+        totalEarnings: role === 'advertiser' ? 0.0 : 200.0,
         totalWithdrawn: 0.0,
         socialAccounts: {
           instagramUsername: '',
@@ -485,9 +486,9 @@ export const api = {
 
       const wallets = getOfflineWallets();
       wallets[newUserId] = {
-        availableBalance: 200.0,
+        availableBalance: role === 'advertiser' ? 0.0 : 200.0,
         pendingBalance: 0.0,
-        totalEarnings: 200.0,
+        totalEarnings: role === 'advertiser' ? 0.0 : 200.0,
         totalWithdrawn: 0.0
       };
       saveOfflineWallets(wallets);
@@ -1289,6 +1290,260 @@ export const api = {
         saveOfflineUsers(users);
       }
       return { success: true, message: 'Profile updated successfully (Simulated)' };
+    }
+  },
+
+  depositFunds: async (amount) => {
+    try {
+      const res = await fetch(`${BASE_URL}/advertiser/deposit`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ amount })
+      });
+      return await res.json();
+    } catch (e) {
+      const userId = getActiveUserIdOffline();
+      const wallets = getOfflineWallets();
+      const wallet = wallets[userId];
+      if (wallet) {
+        wallet.availableBalance += Number(amount);
+        wallet.totalEarnings += Number(amount); // track total deposits
+        saveOfflineWallets(wallets);
+      }
+      
+      const txs = getOfflineTransactions();
+      txs.push({
+        _id: 'tx_deposit_' + Date.now(),
+        userId,
+        type: 'deposit',
+        description: `Mock Deposit of ₦${Number(amount).toLocaleString()}`,
+        amount: Number(amount),
+        status: 'Completed',
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineTransactions(txs);
+
+      const notifs = getOfflineNotifications();
+      notifs.push({
+        _id: 'notif_dep_' + Date.now(),
+        userId,
+        title: 'Wallet Funded! 💳',
+        message: `Successfully deposited ₦${Number(amount).toLocaleString()} mock funds.`,
+        type: 'withdrawal',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineNotifications(notifs);
+
+      // Trigger Mascot animated indicator bounce
+      window.dispatchEvent(new CustomEvent('mascot-fund-success', { detail: { amount } }));
+
+      return { success: true, message: 'Deposit successful (Simulated)' };
+    }
+  },
+
+  createCampaign: async (title, platform, guidelines, rewardPerTask, totalBudget) => {
+    try {
+      const res = await fetch(`${BASE_URL}/advertiser/campaigns`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ title, platform, guidelines, rewardPerTask, totalBudget })
+      });
+      return await res.json();
+    } catch (e) {
+      const userId = getActiveUserIdOffline();
+      const wallets = getOfflineWallets();
+      const wallet = wallets[userId];
+      
+      if (!wallet || wallet.availableBalance < Number(totalBudget)) {
+        return { success: false, message: 'Insufficient budget balance' };
+      }
+
+      wallet.availableBalance -= Number(totalBudget);
+      saveOfflineWallets(wallets);
+
+      const tasks = getOfflineTasks();
+      const newTaskId = 't_camp_' + Math.random().toString(36).substr(2, 9);
+      const newTask = {
+        _id: newTaskId,
+        advertiserId: userId,
+        title,
+        platform,
+        guidelines,
+        reward: Number(rewardPerTask),
+        totalBudget: Number(totalBudget),
+        remainingBudget: Number(totalBudget),
+        subscribersRequired: Math.floor(Number(totalBudget) / Number(rewardPerTask)),
+        subscribersCount: 0,
+        status: 'active',
+        createdAt: new Date().toISOString()
+      };
+      tasks.push(newTask);
+      saveOfflineTasks(tasks);
+
+      const txs = getOfflineTransactions();
+      txs.push({
+        _id: 'tx_camp_' + Date.now(),
+        userId,
+        type: 'withdrawal',
+        description: `Campaign Launched: ${title}`,
+        amount: -Number(totalBudget),
+        status: 'Completed',
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineTransactions(txs);
+
+      const notifs = getOfflineNotifications();
+      notifs.push({
+        _id: 'notif_camp_' + Date.now(),
+        userId,
+        title: 'Campaign Live! 🚀',
+        message: `Your campaign "${title}" is live for ₦${Number(totalBudget).toLocaleString()} budget.`,
+        type: 'task',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineNotifications(notifs);
+
+      // Trigger Mascot 360 loop-flight animatic
+      window.dispatchEvent(new CustomEvent('mascot-campaign-live', { detail: { title } }));
+
+      return { success: true, task: newTask };
+    }
+  },
+
+  getAdvertiserCampaigns: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/advertiser/campaigns`, { headers: getHeaders() });
+      return await res.json();
+    } catch (e) {
+      const userId = getActiveUserIdOffline();
+      const tasks = getOfflineTasks();
+      const myCampaigns = tasks.filter(t => t.advertiserId === userId);
+      return { success: true, campaigns: myCampaigns };
+    }
+  },
+
+  getAdvertiserSubmissions: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/advertiser/submissions`, { headers: getHeaders() });
+      return await res.json();
+    } catch (e) {
+      const userId = getActiveUserIdOffline();
+      const tasks = getOfflineTasks();
+      const myTaskIds = tasks.filter(t => t.advertiserId === userId).map(t => t._id);
+      
+      const subs = getOfflineSubmissions();
+      const users = getOfflineUsers();
+      
+      const mySubs = subs.filter(s => myTaskIds.includes(s.taskId)).map(s => {
+        const t = tasks.find(task => task._id === s.taskId);
+        const u = users.find(user => user._id === s.userId);
+        return {
+          ...s,
+          taskTitle: t ? t.title : 'Deleted Task',
+          platform: t ? t.platform : 'Unknown',
+          reward: t ? t.reward : 0,
+          username: u ? u.username : 'Unknown User'
+        };
+      });
+      
+      return { success: true, submissions: mySubs };
+    }
+  },
+
+  verifySubmission: async (submissionId, status) => {
+    try {
+      const res = await fetch(`${BASE_URL}/advertiser/submissions/verify`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ submissionId, status })
+      });
+      return await res.json();
+    } catch (e) {
+      const subs = getOfflineSubmissions();
+      const subIdx = subs.findIndex(s => s._id === submissionId);
+      if (subIdx === -1) {
+        return { success: false, message: 'Submission not found' };
+      }
+
+      const submission = subs[subIdx];
+      if (submission.status !== 'pending') {
+        return { success: false, message: 'Submission already verified' };
+      }
+
+      subs[subIdx].status = status;
+      saveOfflineSubmissions(subs);
+
+      const tasks = getOfflineTasks();
+      const task = tasks.find(t => t._id === submission.taskId);
+
+      if (status === 'approved') {
+        const wallets = getOfflineWallets();
+        const earnerWallet = wallets[submission.userId];
+        const reward = task ? task.reward : 15;
+        
+        if (earnerWallet) {
+          earnerWallet.availableBalance += reward;
+          earnerWallet.totalEarnings += reward;
+          saveOfflineWallets(wallets);
+        }
+
+        const users = getOfflineUsers();
+        const earnerIdx = users.findIndex(u => u._id === submission.userId);
+        if (earnerIdx !== -1) {
+           users[earnerIdx].balance = earnerWallet ? earnerWallet.availableBalance : users[earnerIdx].balance + reward;
+           users[earnerIdx].totalEarnings = earnerWallet ? earnerWallet.totalEarnings : users[earnerIdx].totalEarnings + reward;
+           saveOfflineUsers(users);
+        }
+
+        const txs = getOfflineTransactions();
+        txs.push({
+          _id: 'tx_reward_' + Date.now(),
+          userId: submission.userId,
+          type: 'task_reward',
+          description: `Approved Task Proof: ${task ? task.title : 'Microtask'}`,
+          amount: reward,
+          status: 'Completed',
+          createdAt: new Date().toISOString()
+        });
+        saveOfflineTransactions(txs);
+
+        const notifs = getOfflineNotifications();
+        notifs.push({
+          _id: 'notif_appr_' + Date.now(),
+          userId: submission.userId,
+          title: 'Proof Approved! ✅',
+          message: `Your proof for "${task ? task.title : 'Microtask'}" was approved. +₦${reward}`,
+          type: 'task',
+          isRead: false,
+          createdAt: new Date().toISOString()
+        });
+        saveOfflineNotifications(notifs);
+
+        if (task) {
+          task.subscribersCount += 1;
+          task.remainingBudget -= reward;
+          if (task.remainingBudget <= 0) {
+            task.status = 'completed';
+          }
+          saveOfflineTasks(tasks);
+        }
+      } else {
+        const notifs = getOfflineNotifications();
+        notifs.push({
+          _id: 'notif_rej_' + Date.now(),
+          userId: submission.userId,
+          title: 'Proof Rejected ❌',
+          message: `Your proof for "${task ? task.title : 'Microtask'}" was rejected. Please review task guidelines.`,
+          type: 'task',
+          isRead: false,
+          createdAt: new Date().toISOString()
+        });
+        saveOfflineNotifications(notifs);
+      }
+
+      return { success: true, message: `Submission successfully ${status}` };
     }
   }
 };

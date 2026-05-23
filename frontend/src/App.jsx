@@ -25,6 +25,12 @@ const Terms = lazy(() => import('./pages/Terms'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Refund = lazy(() => import('./pages/Refund'));
 
+const AdvertiserDashboard = lazy(() => import('./pages/AdvertiserDashboard'));
+const CreateCampaign = lazy(() => import('./pages/CreateCampaign'));
+const ManageCampaigns = lazy(() => import('./pages/ManageCampaigns'));
+const VerifySubmissions = lazy(() => import('./pages/VerifySubmissions'));
+const FundWallet = lazy(() => import('./pages/FundWallet'));
+
 // Wrapper to set topbar titles and load notification badge count
 const AppLayout = ({ user, handleLogout, theme, toggleTheme, children }) => {
   const location = useLocation();
@@ -59,6 +65,11 @@ const AppLayout = ({ user, handleLogout, theme, toggleTheme, children }) => {
       case '/notifications': return 'Notifications & DND';
       case '/settings': return 'Account Settings';
       case '/help': return 'Help & Support';
+      case '/advertiser/dashboard': return 'Advertiser Workspace';
+      case '/advertiser/create-campaign': return 'Create Social Campaign';
+      case '/advertiser/manage-campaigns': return 'Manage Campaigns';
+      case '/advertiser/verify-submissions': return 'Verify Submissions';
+      case '/advertiser/fund-wallet': return 'Fund Campaign Budget';
       default: return 'CanYouWork Platform';
     }
   };
@@ -145,9 +156,9 @@ function App() {
       <Suspense fallback={<div className="loading-spinner-container">Loading...</div>}>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={user ? <Navigate to="/dashboard" /> : <LandingPage />} />
-          <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login onLoginSuccess={handleLoginSuccess} />} />
-          <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <SignUp onLoginSuccess={handleLoginSuccess} />} />
+          <Route path="/" element={user ? (user.role === 'advertiser' ? <Navigate to="/advertiser/dashboard" /> : <Navigate to="/dashboard" />) : <LandingPage />} />
+          <Route path="/login" element={user ? (user.role === 'advertiser' ? <Navigate to="/advertiser/dashboard" /> : <Navigate to="/dashboard" />) : <Login onLoginSuccess={handleLoginSuccess} />} />
+          <Route path="/register" element={user ? (user.role === 'advertiser' ? <Navigate to="/advertiser/dashboard" /> : <Navigate to="/dashboard" />) : <SignUp onLoginSuccess={handleLoginSuccess} />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/refund" element={<Refund />} />
@@ -157,9 +168,11 @@ function App() {
             path="/dashboard" 
             element={
               user ? (
-                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
-                  <Dashboard user={user} refreshUser={refreshUser} />
-                </AppLayout>
+                user.role === 'advertiser' ? <Navigate to="/advertiser/dashboard" /> : (
+                  <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                    <Dashboard user={user} refreshUser={refreshUser} />
+                  </AppLayout>
+                )
               ) : <Navigate to="/login" />
             } 
           />
@@ -264,6 +277,58 @@ function App() {
             } 
           />
 
+          {/* Advertiser Shell Routes */}
+          <Route 
+            path="/advertiser/dashboard" 
+            element={
+              user && user.role === 'advertiser' ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <AdvertiserDashboard user={user} refreshUser={refreshUser} />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/advertiser/create-campaign" 
+            element={
+              user && user.role === 'advertiser' ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <CreateCampaign user={user} refreshUser={refreshUser} />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/advertiser/manage-campaigns" 
+            element={
+              user && user.role === 'advertiser' ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <ManageCampaigns user={user} refreshUser={refreshUser} />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/advertiser/verify-submissions" 
+            element={
+              user && user.role === 'advertiser' ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <VerifySubmissions user={user} refreshUser={refreshUser} />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/advertiser/fund-wallet" 
+            element={
+              user && user.role === 'advertiser' ? (
+                <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
+                  <FundWallet user={user} refreshUser={refreshUser} />
+                </AppLayout>
+              ) : <Navigate to="/login" />
+            } 
+          />
+
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
@@ -301,6 +366,45 @@ const GlobalMascot = ({ user }) => {
     };
   }, []);
 
+  // Advertiser Mascot Event Triggers
+  useEffect(() => {
+    const handleFundSuccess = (e) => {
+      const { amount } = e.detail;
+      setSpeechText(`💰 Ka-ching! ₦${Number(amount).toLocaleString()} added to your budget. Let's launch some campaigns!`);
+      setBubbleAnim(false);
+      if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
+      bubbleTimeoutRef.current = setTimeout(() => setBubbleAnim(true), 50);
+
+      setMascotClass("mascot-jump");
+      if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
+      mascotTimeoutRef.current = setTimeout(() => {
+        setMascotClass("");
+      }, 1600);
+    };
+
+    const handleCampaignLive = (e) => {
+      const { title } = e.detail;
+      setSpeechText(`🚀 Zoom! Your campaign "${title}" is live for earners to complete!`);
+      setBubbleAnim(false);
+      if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
+      bubbleTimeoutRef.current = setTimeout(() => setBubbleAnim(true), 50);
+
+      setMascotClass("mascot-fly-loop");
+      if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
+      mascotTimeoutRef.current = setTimeout(() => {
+        setMascotClass("");
+      }, 1600);
+    };
+
+    window.addEventListener('mascot-fund-success', handleFundSuccess);
+    window.addEventListener('mascot-campaign-live', handleCampaignLive);
+
+    return () => {
+      window.removeEventListener('mascot-fund-success', handleFundSuccess);
+      window.removeEventListener('mascot-campaign-live', handleCampaignLive);
+    };
+  }, []);
+
   // Context-aware speech texts
   const getSpeechTextForRoute = (path, userProfile) => {
     const name = userProfile?.fullname ? userProfile.fullname.split(' ')[0] : 'Earner';
@@ -331,6 +435,16 @@ const GlobalMascot = ({ user }) => {
         return `🔔 Check your reward notifications and customize your quiet hours.`;
       case '/settings':
         return `⚙️ Update your profile details and link your social handles.`;
+      case '/advertiser/dashboard':
+        return `💼 Welcome to your Advertiser Workspace! Here you can check your budget, active tasks, and pending verifications!`;
+      case '/advertiser/create-campaign':
+        return `➕ Create a task campaign! Select a platform, add rules, set a reward, and Canny will fly it to all earners!`;
+      case '/advertiser/manage-campaigns':
+        return `📁 Track your active campaigns. You can pause campaigns or check how many earners completed them.`;
+      case '/advertiser/verify-submissions':
+        return `🤝 Verify submissions! Review the proof submitted by earners and click 'Approve' to credit their wallets.`;
+      case '/advertiser/fund-wallet':
+        return `💳 Fund your campaign budget! You can mock-deposit Naira using Bank Transfer, Card, or Crypto.`;
       default:
         return `👋 Hello! Let's complete some microtasks and earn pocket money!`;
     }

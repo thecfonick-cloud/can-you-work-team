@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 const Sidebar = ({ user, handleLogout, isOpen, setIsOpen }) => {
-  const menuItems = [
+  const earnerItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Tasks', path: '/tasks', icon: CheckSquare },
     { name: 'My Tasks', path: '/my-tasks', icon: ListTodo },
@@ -32,6 +32,19 @@ const Sidebar = ({ user, handleLogout, isOpen, setIsOpen }) => {
     { name: 'Settings', path: '/settings', icon: SettingsIcon },
     { name: 'Help & Support', path: '/help', icon: HelpCircle }
   ];
+
+  const advertiserItems = [
+    { name: 'Dashboard', path: '/advertiser/dashboard', icon: LayoutDashboard },
+    { name: 'Create Campaign', path: '/advertiser/create-campaign', icon: Gift },
+    { name: 'My Campaigns', path: '/advertiser/manage-campaigns', icon: ListTodo },
+    { name: 'Verify Proofs', path: '/advertiser/verify-submissions', icon: ShieldCheck },
+    { name: 'Fund Wallet', path: '/advertiser/fund-wallet', icon: WalletIcon },
+    { name: 'Notifications', path: '/notifications', icon: Bell },
+    { name: 'Settings', path: '/settings', icon: SettingsIcon },
+    { name: 'Help & Support', path: '/help', icon: HelpCircle }
+  ];
+
+  const menuItems = user?.role === 'advertiser' ? advertiserItems : earnerItems;
 
   return (
     <aside className={`app-sidebar ${isOpen ? 'open' : ''}`}>
@@ -59,8 +72,8 @@ const Sidebar = ({ user, handleLogout, isOpen, setIsOpen }) => {
           </div>
           <div className="profile-card-stats">
             <div className="sidebar-stat-item">
-              <span className="sidebar-stat-label">Wallet</span>
-              <span className="sidebar-stat-val">₦{(user.balance || 0).toLocaleString()}</span>
+              <span className="sidebar-stat-label">{user?.role === 'advertiser' ? 'Ad Budget' : 'Wallet'}</span>
+              <span className="sidebar-stat-val">₦{(user?.balance || 0).toLocaleString()}</span>
             </div>
             <div className="sidebar-stat-divider"></div>
             <div className="sidebar-stat-item">

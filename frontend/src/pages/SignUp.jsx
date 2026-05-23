@@ -7,6 +7,8 @@ const SignUp = ({ onLoginSuccess }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  const initialRole = searchParams.get('role') === 'advertiser' ? 'advertiser' : 'user';
+
   const [fullname, setFullname] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -17,11 +19,16 @@ const SignUp = ({ onLoginSuccess }) => {
   const [referredBy, setReferredBy] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState(initialRole);
 
   useEffect(() => {
     const refCode = searchParams.get('ref');
     if (refCode) {
       setReferredBy(refCode);
+    }
+    const r = searchParams.get('role');
+    if (r === 'advertiser' || r === 'user') {
+      setRole(r);
     }
   }, [searchParams]);
 
@@ -58,13 +65,18 @@ const SignUp = ({ onLoginSuccess }) => {
         phone, 
         country, 
         password, 
-        referredBy
+        referredBy,
+        role
       );
       setLoading(false);
 
       if (res.success) {
         onLoginSuccess(res.user);
-        navigate('/dashboard');
+        if (res.user.role === 'advertiser') {
+          navigate('/advertiser/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setError(res.message || 'Registration failed');
       }
@@ -91,50 +103,108 @@ const SignUp = ({ onLoginSuccess }) => {
             </span>
           </div>
 
-          <div className="auth-left-content">
-            <h2>Start Your Earning Journey Today</h2>
-            <p className="auth-left-desc">Join our network of micro-earners and complete simple tasks to earn daily pocket money.</p>
-            
-            <div className="auth-mockup-graphic">
-              <div className="graphic-circle outer"></div>
-              <div className="graphic-circle inner"></div>
-              <div className="graphic-floating-card one">
-                <span>🎉 +₦200 Signup Bonus</span>
+          {role === 'user' ? (
+            <div className="auth-left-content">
+              <h2>Start Your Earning Journey Today</h2>
+              <p className="auth-left-desc">Join our network of micro-earners and complete simple tasks to earn daily pocket money.</p>
+              
+              <div className="auth-mockup-graphic">
+                <div className="graphic-circle outer"></div>
+                <div className="graphic-circle inner"></div>
+                <div className="graphic-floating-card one">
+                  <span>🎉 +₦200 Signup Bonus</span>
+                </div>
+                <div className="graphic-floating-card two">
+                  <span>🔥 5 Day Check-in Streak</span>
+                </div>
+                <div className="graphic-floating-card three">
+                  <span>💰 Balance: ₦2,450.00</span>
+                </div>
               </div>
-              <div className="graphic-floating-card two">
-                <span>🔥 5 Day Check-in Streak</span>
-              </div>
-              <div className="graphic-floating-card three">
-                <span>💰 Balance: ₦2,450.00</span>
-              </div>
-            </div>
 
-            <ul className="auth-feature-list">
-              <li>
-                <span className="check-icon">✓</span>
-                <span>Earn ₦200 instant registration bonus</span>
-              </li>
-              <li>
-                <span className="check-icon">✓</span>
-                <span>Over 100+ new microtasks daily</span>
-              </li>
-              <li>
-                <span className="check-icon">✓</span>
-                <span>Instant payouts directly to your local bank</span>
-              </li>
-              <li>
-                <span className="check-icon">✓</span>
-                <span>10% referral commission for life</span>
-              </li>
-            </ul>
-          </div>
+              <ul className="auth-feature-list">
+                <li>
+                  <span className="check-icon">✓</span>
+                  <span>Earn ₦200 instant registration bonus</span>
+                </li>
+                <li>
+                  <span className="check-icon">✓</span>
+                  <span>Over 100+ new microtasks daily</span>
+                </li>
+                <li>
+                  <span className="check-icon">✓</span>
+                  <span>Instant payouts directly to your local bank</span>
+                </li>
+                <li>
+                  <span className="check-icon">✓</span>
+                  <span>10% referral commission for life</span>
+                </li>
+              </ul>
+            </div>
+          ) : (
+            <div className="auth-left-content">
+              <h2>Deploy Campaigns & Grow Your Brand</h2>
+              <p className="auth-left-desc">Reach thousands of active, real-human social earners. Run high-converting social follows, likes, and survey microtasks.</p>
+              
+              <div className="auth-mockup-graphic advertiser-graphic">
+                <div className="graphic-circle outer" style={{ borderColor: 'rgba(139, 92, 246, 0.2)' }}></div>
+                <div className="graphic-circle inner" style={{ borderColor: 'rgba(139, 92, 246, 0.4)' }}></div>
+                <div className="graphic-floating-card one" style={{ background: 'rgba(15, 23, 42, 0.8)' }}>
+                  <span>📊 98.4% Task Approve Rate</span>
+                </div>
+                <div className="graphic-floating-card two" style={{ background: 'rgba(15, 23, 42, 0.8)' }}>
+                  <span>🚀 100% Genuine User Traffic</span>
+                </div>
+                <div className="graphic-floating-card three" style={{ background: 'rgba(15, 23, 42, 0.8)' }}>
+                  <span>💳 Funding: ₦50,000.00</span>
+                </div>
+              </div>
+
+              <ul className="auth-feature-list">
+                <li>
+                  <span className="check-icon">✓</span>
+                  <span>Verify proofs offline before approving rewards</span>
+                </li>
+                <li>
+                  <span className="check-icon">✓</span>
+                  <span>Zero bots or VPN/proxy traffic (real IP checking)</span>
+                </li>
+                <li>
+                  <span className="check-icon">✓</span>
+                  <span>Flexible rewards per task setting</span>
+                </li>
+                <li>
+                  <span className="check-icon">✓</span>
+                  <span>Mock-fund campaigns in Naira instantly</span>
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Right Panel */}
         <div className="auth-right-panel" style={{ padding: '2.5rem' }}>
-          <div className="auth-header" style={{ marginBottom: '1.5rem' }}>
-            <h2>Create Earning Account</h2>
-            <p>Start earning ₦200 instant profile bonus. Complete social & survey tasks.</p>
+          <div className="auth-header" style={{ marginBottom: '1.25rem' }}>
+            <h2>Create Account</h2>
+            <p>Select your workspace type and input details to get started.</p>
+          </div>
+
+          {/* Role Switcher Tab Switch */}
+          <div className="role-switcher-container" style={{ marginBottom: '1.25rem' }}>
+            <button
+              type="button"
+              className={`role-tab ${role === 'user' ? 'active' : ''}`}
+              onClick={() => setRole('user')}
+            >
+              Earn Cash (Earner)
+            </button>
+            <button
+              type="button"
+              className={`role-tab ${role === 'advertiser' ? 'active' : ''}`}
+              onClick={() => setRole('advertiser')}
+            >
+              Run Ads (Advertiser)
+            </button>
           </div>
 
           {error && (
@@ -153,7 +223,7 @@ const SignUp = ({ onLoginSuccess }) => {
                   <input
                     type="text"
                     id="fullname"
-                    placeholder="John Goodluck"
+                    placeholder="e.g. John Goodluck"
                     value={fullname}
                     onChange={(e) => setFullname(e.target.value)}
                     disabled={loading}
@@ -168,7 +238,7 @@ const SignUp = ({ onLoginSuccess }) => {
                   <input
                     type="text"
                     id="username"
-                    placeholder="johng"
+                    placeholder="e.g. johng"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     disabled={loading}
@@ -184,7 +254,7 @@ const SignUp = ({ onLoginSuccess }) => {
                 <input
                   type="email"
                   id="email"
-                  placeholder="john@example.com"
+                  placeholder="johng@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
@@ -196,7 +266,10 @@ const SignUp = ({ onLoginSuccess }) => {
               <div className="form-group">
                 <label htmlFor="country">Country</label>
                 <div className="input-with-icon">
-                  <span className="country-flag-icon">{selectedCountryObj.flag}</span>
+                  <Globe size={16} className="input-icon" />
+                  <span style={{ position: 'absolute', left: '10px', fontSize: '14px', zIndex: 2, pointerEvents: 'none' }}>
+                    {selectedCountryObj?.flag}
+                  </span>
                   <select
                     id="country"
                     value={country}
@@ -267,12 +340,12 @@ const SignUp = ({ onLoginSuccess }) => {
             </div>
 
             <button type="submit" className="btn btn-primary auth-submit-btn" style={{ padding: '0.8rem', marginTop: '0.5rem' }} disabled={loading}>
-              {loading ? 'Creating Account...' : 'Sign Up & Get ₦200'} <ArrowRight size={18} style={{ marginLeft: '6px' }} />
+              {loading ? 'Creating Account...' : role === 'user' ? 'Sign Up & Get ₦200' : 'Register Campaign Account'} <ArrowRight size={18} style={{ marginLeft: '6px' }} />
             </button>
           </form>
 
           <div className="auth-footer-link" style={{ marginTop: '1.25rem', textAlign: 'center' }}>
-            Already have an account? <Link to="/login" style={{ color: 'var(--primary)', fontWeight: '700' }}>Login here</Link>
+            Already have an account? <Link to={`/login?role=${role}`} style={{ color: 'var(--primary)', fontWeight: '700' }}>Login here</Link>
           </div>
 
           <div className="auth-terms-bar" style={{ marginTop: '1.5rem' }}>
