@@ -76,6 +76,69 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Premium Global Button Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family);
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1.5rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  outline: none;
+  gap: 0.5rem;
+  user-select: none;
+}
+
+.btn-primary {
+  background: var(--purple-grad);
+  color: var(--text-white);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #8b5cf6, #6366f1) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5) !important;
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 2px solid var(--border-color);
+  color: var(--text-main);
+}
+
+.btn-outline:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background-color: var(--primary-light);
+  transform: translateY(-2px);
+}
+
+.btn-outline:active {
+  transform: translateY(0);
+}
+
+.btn-lg {
+  padding: 0.85rem 2rem;
+  font-size: 1rem;
+  border-radius: var(--radius-lg);
+}
+
+/* Light / Dark Mode adaptive button variables */
+[data-theme="dark"] .btn-outline {
+  border-color: var(--border-color);
+  color: var(--text-main);
+}
+
 a {
   text-decoration: none;
   color: inherit;
@@ -589,8 +652,57 @@ a {
 }
 
 .landing-page-container {
-  background-color: var(--bg-app);
+  background-color: #090d16;
+  color: #f3f4f6;
   min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Premium dark overrides for all cards on the landing page */
+.landing-page-container .feature-card,
+.landing-page-container .step-card,
+.landing-page-container .testimonial-card,
+.landing-page-container .category-card,
+.landing-page-container .newsletter-card {
+  background-color: #111827 !important;
+  border: 1px solid #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+
+.landing-page-container .feature-card h3,
+.landing-page-container .step-card h3,
+.landing-page-container .testimonial-card h4,
+.landing-page-container .category-card h4,
+.landing-page-container .newsletter-card h2 {
+  color: #ffffff !important;
+}
+
+.landing-page-container .feature-card p,
+.landing-page-container .step-card p,
+.landing-page-container .testimonial-card p,
+.landing-page-container .category-card p,
+.landing-page-container .newsletter-card p {
+  color: #9ca3af !important;
+}
+
+.landing-page-container .btn-outline {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+.landing-page-container .btn-outline:hover {
+  border-color: var(--primary) !important;
+  background-color: rgba(124, 58, 237, 0.15) !important;
+  color: #ffffff !important;
+}
+
+.landing-page-container .landing-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: rgba(9, 13, 22, 0.8) !important;
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 /* Promo bar slides down */
@@ -4960,6 +5072,16 @@ a {
 }
 
 @media (max-width: 480px) {
+  .landing-header {
+    padding: 0.75rem 0.75rem;
+  }
+  .landing-nav {
+    gap: 0.4rem;
+  }
+  .landing-nav .btn {
+    padding: 0.4rem 0.75rem !important;
+    font-size: 0.75rem !important;
+  }
   /* Hero Phone Mockup scale down to fit */
   .phone-mockup-frame {
     transform: scale(0.85);
