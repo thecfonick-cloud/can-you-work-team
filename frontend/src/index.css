@@ -5638,6 +5638,27 @@ a {
     max-width: 170px;
     padding: 0.6rem 1rem;
   }
+  .newsletter-form {
+    flex-direction: column;
+    background-color: transparent;
+    padding: 0;
+    gap: 0.75rem;
+  }
+  .newsletter-form input {
+    width: 100%;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    padding: 0.85rem 1.25rem;
+    font-size: 0.95rem;
+    background-color: #ffffff;
+    color: #0f172a;
+  }
+  .newsletter-form button {
+    width: 100%;
+    padding: 0.85rem 1.25rem;
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+  }
 }
 
 /* Mobile Navigation Hamburger & Drawer Overlay Styles */

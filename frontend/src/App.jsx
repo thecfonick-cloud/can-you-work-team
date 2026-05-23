@@ -371,11 +371,14 @@ const GlobalMascot = ({ user }) => {
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const [currentPos, setCurrentPos] = useState(POSITIONS[0]);
 
-  // Panda expressions, 3D cursor tilt, and Drag states
+  // Panda expressions, 3D cursor tilt, Drag states, and 4D lock states
   const [emotion, setEmotion] = useState('normal'); // normal, happy, warning, thinking
   const [tiltStyle, setTiltStyle] = useState({});
   const [dragStyle, setDragStyle] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [targetElement, setTargetElement] = useState(null);
+  const [positionType, setPositionType] = useState('fixed');
+  const [leafParticles, setLeafParticles] = useState([]);
 
   const bubbleTimeoutRef = useRef(null);
   const mascotTimeoutRef = useRef(null);
@@ -449,31 +452,178 @@ const GlobalMascot = ({ user }) => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [isDragging, visible]);
 
-  // Periodic Random Position Movement
+  // Find all visible, clickable buttons/links on the screen
+  const findTargetButtons = () => {
+    const elements = Array.from(document.querySelectorAll('button, a.btn, a.btn-outline, .hero-cta-buttons a, .cta-btn, .action-btn, .sidebar-link, .topbar-btn'));
+    return elements.filter(el => {
+      const rect = el.getBoundingClientRect();
+      return (
+        rect.width > 0 &&
+        rect.height > 0 &&
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= window.innerHeight &&
+        rect.right <= window.innerWidth &&
+        !el.closest('.mascot-tutor-container')
+      );
+    });
+  };
+
+  const getSpeechForButton = (button) => {
+    const text = button.innerText.trim().toLowerCase();
+    if (text.includes('earning') || text.includes('start')) {
+      return "👉 Sitting on 'Start Earning Now'! Click here to grab your +₦200 bonus! 🐼";
+    } else if (text.includes('advertiser') || text.includes('campaign')) {
+      return "💼 Launch tasks here to get thousands of followers/subscribers! 🐼";
+    } else if (text.includes('login') || text.includes('log in')) {
+      return "🔑 Click here to log in and check your wallet balance! 🐼";
+    } else if (text.includes('register') || text.includes('sign up')) {
+      return "📝 Click here to create your free account in 30 seconds! 🐼";
+    } else if (text.includes('subscribe')) {
+      return "🔔 Click 'Subscribe' to receive premium Lucky Task alerts! 🐼";
+    }
+    return `👉 Slipped onto the '${button.innerText.trim()}' button! Let's click it! 🐼`;
+  };
+
+  // Periodic Random Position Movement or Button Sitting
   useEffect(() => {
     if (!visible || isDragging) return;
+
     const interval = setInterval(() => {
-      const otherPositions = POSITIONS.filter(p => p.name !== currentPos.name);
-      const nextPos = otherPositions[Math.floor(Math.random() * otherPositions.length)];
-      
-      setMascotClass("mascot-walk");
-      setCurrentPos(nextPos);
+      const buttons = findTargetButtons();
+      const shouldGoToButton = Math.random() > 0.4 && buttons.length > 0;
+
       setBubbleAnim(false);
       
-      if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
-      mascotTimeoutRef.current = setTimeout(() => {
-        setMascotClass("");
-        setBubbleAnim(true);
-      }, 1200);
-    }, 20000);
+      if (shouldGoToButton) {
+        const target = buttons[Math.floor(Math.random() * buttons.length)];
+        setTargetElement(target);
+        
+        const rect = target.getBoundingClientRect();
+        setPositionType('fixed');
+        setMascotClass("mascot-walk");
+        setCurrentPos({
+          name: 'walking-to-button',
+          style: {
+            top: `${rect.top - 80}px`,
+            left: `${rect.left + rect.width / 2 - 40}px`
+          },
+          isLeft: rect.left < window.innerWidth / 2
+        });
+
+        if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
+        mascotTimeoutRef.current = setTimeout(() => {
+          setMascotClass("");
+          setPositionType('absolute');
+          setCurrentPos({
+            name: 'button-sat',
+            style: {
+              top: `${rect.top + window.scrollY - 80}px`,
+              left: `${rect.left + window.scrollX + rect.width / 2 - 40}px`
+            },
+            isLeft: rect.left < window.innerWidth / 2
+          });
+          setSpeechText(getSpeechForButton(target));
+          setBubbleAnim(true);
+          
+          setEmotion('happy');
+          if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
+          emotionTimeoutRef.current = setTimeout(() => setEmotion('normal'), 6000);
+        }, 1200);
+
+      } else {
+        setTargetElement(null);
+        setPositionType('fixed');
+        const otherPositions = POSITIONS.filter(p => p.name !== currentPos.name);
+        const nextPos = otherPositions[Math.floor(Math.random() * otherPositions.length)];
+        
+        setMascotClass("mascot-walk");
+        setCurrentPos(nextPos);
+        
+        if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
+        mascotTimeoutRef.current = setTimeout(() => {
+          setMascotClass("");
+          setSpeechText(getSpeechTextForRoute(location.pathname, user));
+          setBubbleAnim(true);
+        }, 1200);
+      }
+    }, 25000);
 
     return () => clearInterval(interval);
-  }, [visible, currentPos, isDragging]);
+  }, [visible, currentPos, isDragging, location.pathname, user]);
+
+  // Lock to button positions on scroll and resize
+  useEffect(() => {
+    if (positionType !== 'absolute' || !targetElement) return;
+
+    const updatePos = () => {
+      const rect = targetElement.getBoundingClientRect();
+      setCurrentPos({
+        name: 'button-sat',
+        style: {
+          top: `${rect.top + window.scrollY - 80}px`,
+          left: `${rect.left + window.scrollX + rect.width / 2 - 40}px`
+        },
+        isLeft: rect.left < window.innerWidth / 2
+      });
+    };
+
+    window.addEventListener('resize', updatePos);
+    window.addEventListener('scroll', updatePos);
+    return () => {
+      window.removeEventListener('resize', updatePos);
+      window.removeEventListener('scroll', updatePos);
+    };
+  }, [positionType, targetElement]);
+
+  // Leaf Particles chewing physics generator
+  useEffect(() => {
+    if (emotion !== 'happy') return;
+    
+    const interval = setInterval(() => {
+      const newParticles = Array.from({ length: 2 }).map(() => ({
+        id: Math.random().toString(),
+        left: 45 + Math.random() * 10,
+        top: 48 + Math.random() * 6,
+        angle: Math.random() * 360,
+        speedX: (Math.random() - 0.5) * 2,
+        speedY: 1.5 + Math.random() * 2,
+        opacity: 1
+      }));
+      setLeafParticles(prev => [...prev, ...newParticles].slice(-25));
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, [emotion]);
+
+  useEffect(() => {
+    if (leafParticles.length === 0) return;
+
+    let frameId;
+    const updateParticles = () => {
+      setLeafParticles(prev => 
+        prev
+          .map(p => ({
+            ...p,
+            left: p.left + p.speedX * 0.15,
+            top: p.top + p.speedY * 0.35,
+            opacity: p.opacity - 0.025,
+            angle: p.angle + 3
+          }))
+          .filter(p => p.opacity > 0)
+      );
+      frameId = requestAnimationFrame(updateParticles);
+    };
+
+    frameId = requestAnimationFrame(updateParticles);
+    return () => cancelAnimationFrame(frameId);
+  }, [leafParticles.length]);
 
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
     if (e.target.closest('.mascot-close-btn')) return;
     setIsDragging(true);
+    setPositionType('fixed');
     const rect = e.currentTarget.getBoundingClientRect();
     elementStart.current = { x: rect.left, y: rect.top };
     dragStart.current = { x: e.clientX, y: e.clientY };
@@ -529,6 +679,8 @@ const GlobalMascot = ({ user }) => {
 
       setCurrentPos(nextPos);
       setDragStyle(null);
+      setPositionType('fixed');
+      setTargetElement(null);
       setMascotClass("mascot-jump");
       setTimeout(() => setMascotClass(""), 1600);
     };
@@ -658,6 +810,8 @@ const GlobalMascot = ({ user }) => {
 
     if (location.pathname !== currentPath) {
       setBubbleAnim(false);
+      setTargetElement(null);
+      setPositionType('fixed');
       setMascotClass("mascot-climb-off");
 
       const timer1 = setTimeout(() => {
@@ -723,48 +877,66 @@ const GlobalMascot = ({ user }) => {
   }, [location.pathname, handleScroll]);
 
   const handleMascotClick = () => {
-    // Play jump bounce and make it happy (chews faster, blushes)
+    // Play jump bounce and make it happy (chews faster, blushes, leaf crumbs fall)
     setMascotClass("mascot-jump");
     setEmotion("happy");
     if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
-    emotionTimeoutRef.current = setTimeout(() => setEmotion("normal"), 4000);
+    emotionTimeoutRef.current = setTimeout(() => setEmotion("normal"), 5000);
     
     // Choose a random new position and walk waddle to it
-    const otherPositions = POSITIONS.filter(p => p.name !== currentPos.name);
-    const nextPos = otherPositions[Math.floor(Math.random() * otherPositions.length)];
+    const buttons = findTargetButtons();
+    const target = buttons.length > 0 ? buttons[Math.floor(Math.random() * buttons.length)] : null;
     
-    // Walk waddle state triggers after the initial jump (e.g. 500ms)
-    setTimeout(() => {
-      setMascotClass("mascot-walk");
-      setCurrentPos(nextPos);
-    }, 500);
-    
-    // Custom click responses based on page
-    let clickText = "🚀 Let's earn! Tap a button to proceed.";
-    if (location.pathname === '/') {
-      clickText = "🚀 Let's earn! Tap 'Start Earning Now' to sign up and claim your ₦200 bonus!";
-      const ctaBtn = document.querySelector('.hero-cta-buttons');
-      if (ctaBtn) ctaBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } else if (location.pathname === '/register') {
-      clickText = "📝 Just fill out the fields and tap 'Sign Up' to get started!";
-    } else if (location.pathname === '/login') {
-      clickText = "🔑 Enter your email/username and password to access your earnings!";
-    } else if (location.pathname === '/dashboard') {
-      clickText = "🌟 Tap 'Check In' inside 'Bonus & Streaks' to get your free daily Naira!";
-      navigate('/bonus');
-    } else if (location.pathname === '/my-tasks') {
-      clickText = "🎁 Tap 'Complete Campaign' on the Lucky Task banner to start your ₦5,000 survey!";
-    }
-
-    setSpeechText(clickText);
     setBubbleAnim(false);
-    if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
-    bubbleTimeoutRef.current = setTimeout(() => setBubbleAnim(true), 50);
+    
+    setTimeout(() => {
+      if (target) {
+        setTargetElement(target);
+        setPositionType('fixed');
+        setMascotClass("mascot-walk");
+        
+        const rect = target.getBoundingClientRect();
+        setCurrentPos({
+          name: 'walking-to-button',
+          style: {
+            top: `${rect.top - 80}px`,
+            left: `${rect.left + rect.width / 2 - 40}px`
+          },
+          isLeft: rect.left < window.innerWidth / 2
+        });
 
-    if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
-    mascotTimeoutRef.current = setTimeout(() => {
-      setMascotClass("");
-    }, 1800); // clear class after walk completes
+        if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
+        mascotTimeoutRef.current = setTimeout(() => {
+          setMascotClass("");
+          setPositionType('absolute');
+          setCurrentPos({
+            name: 'button-sat',
+            style: {
+              top: `${rect.top + window.scrollY - 80}px`,
+              left: `${rect.left + window.scrollX + rect.width / 2 - 40}px`
+            },
+            isLeft: rect.left < window.innerWidth / 2
+          });
+          setSpeechText(getSpeechForButton(target));
+          setBubbleAnim(true);
+        }, 1200);
+      } else {
+        setTargetElement(null);
+        setPositionType('fixed');
+        const otherPositions = POSITIONS.filter(p => p.name !== currentPos.name);
+        const nextPos = otherPositions[Math.floor(Math.random() * otherPositions.length)];
+        
+        setMascotClass("mascot-walk");
+        setCurrentPos(nextPos);
+        
+        if (mascotTimeoutRef.current) clearTimeout(mascotTimeoutRef.current);
+        mascotTimeoutRef.current = setTimeout(() => {
+          setMascotClass("");
+          setSpeechText("😋 Mmm, fresh bamboo is delicious! Let's click around and earn! 🎋");
+          setBubbleAnim(true);
+        }, 1200);
+      }
+    }, 500);
   };
 
   const handleCloseMascot = (e) => {
@@ -779,7 +951,7 @@ const GlobalMascot = ({ user }) => {
       style={{
         ...(dragStyle || currentPos.style),
         ...tiltStyle,
-        position: 'fixed',
+        position: positionType,
         zIndex: 999,
         cursor: isDragging ? 'grabbing' : 'grab'
       }}
@@ -801,32 +973,78 @@ const GlobalMascot = ({ user }) => {
       
       <div className={`mascot-robot-wrapper ${mascotClass}`}>
         <div className="mascot-panda-3d" style={{ position: 'relative', width: '80px', height: '96px', transformStyle: 'preserve-3d' }}>
-          {/* Layer 1: Back (Shadow, Ears) */}
+          
+          {/* Leaf particles overlay rendering */}
+          {leafParticles.map(p => (
+            <svg
+              key={p.id}
+              viewBox="0 0 10 10"
+              style={{
+                position: 'absolute',
+                left: `${p.left}%`,
+                top: `${p.top}%`,
+                width: '6px',
+                height: '8px',
+                transform: `rotate(${p.angle}deg)`,
+                opacity: p.opacity,
+                pointerEvents: 'none',
+                zIndex: 1000
+              }}
+            >
+              <path d="M 5 0 C 8 2, 8 7, 5 10 C 2 7, 2 2, 5 0" fill="url(#panda-leaf)" />
+            </svg>
+          ))}
+
+          {/* Layer 1: Back (Shadow, Ears, Gradients Definitions) */}
           <svg viewBox="0 0 100 100" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', transform: 'translateZ(0px)', pointerEvents: 'none' }} className="mascot-svg">
+            <defs>
+              <radialGradient id="panda-white" cx="40%" cy="30%" r="65%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="55%" stopColor="#f8fafc" />
+                <stop offset="85%" stopColor="#e2e8f0" />
+                <stop offset="100%" stopColor="#cbd5e1" />
+              </radialGradient>
+              <radialGradient id="panda-black" cx="35%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#5b687a" />
+                <stop offset="20%" stopColor="#3d4957" />
+                <stop offset="70%" stopColor="#1e2530" />
+                <stop offset="100%" stopColor="#0a0f18" />
+              </radialGradient>
+              <linearGradient id="panda-bamboo" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#6ee7b7" />
+                <stop offset="40%" stopColor="#10b981" />
+                <stop offset="100%" stopColor="#047857" />
+              </linearGradient>
+              <radialGradient id="panda-leaf" cx="40%" cy="40%" r="60%">
+                <stop offset="0%" stopColor="#a7f3d0" />
+                <stop offset="100%" stopColor="#059669" />
+              </radialGradient>
+            </defs>
+
             <ellipse cx="50" cy="94" rx="20" ry="4" className="svg-shadow" />
-            <circle cx="26" cy="22" r="10" fill="#2d3748" stroke="#1a202c" strokeWidth="1.5" className="panda-ear ear-left" />
-            <circle cx="74" cy="22" r="10" fill="#2d3748" stroke="#1a202c" strokeWidth="1.5" className="panda-ear ear-right" />
+            <circle cx="26" cy="22" r="10" fill="url(#panda-black)" stroke="#0a0f18" strokeWidth="1.5" className="panda-ear ear-left" />
+            <circle cx="74" cy="22" r="10" fill="url(#panda-black)" stroke="#0a0f18" strokeWidth="1.5" className="panda-ear ear-right" />
           </svg>
 
           {/* Layer 2: Middle (Head Base, Body, Legs) */}
           <svg viewBox="0 0 100 100" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', transform: 'translateZ(10px)', pointerEvents: 'none' }} className="mascot-svg">
             {/* Body */}
-            <rect x="28" y="60" width="44" height="28" rx="14" fill="#2d3748" stroke="#1a202c" strokeWidth="1.5" className="panda-body" />
-            <ellipse cx="50" cy="74" rx="14" ry="10" fill="#ffffff" className="panda-belly" />
+            <rect x="28" y="60" width="44" height="28" rx="14" fill="url(#panda-black)" stroke="#0a0f18" strokeWidth="1.5" className="panda-body" />
+            <ellipse cx="50" cy="74" rx="14" ry="10" fill="url(#panda-white)" className="panda-belly" />
             
             {/* Legs */}
-            <ellipse cx="34" cy="86" rx="7" ry="5" fill="#1a202c" className="panda-leg leg-left" />
-            <ellipse cx="66" cy="86" rx="7" ry="5" fill="#1a202c" className="panda-leg leg-right" />
+            <ellipse cx="34" cy="86" rx="7" ry="5" fill="url(#panda-black)" className="panda-leg leg-left" />
+            <ellipse cx="66" cy="86" rx="7" ry="5" fill="url(#panda-black)" className="panda-leg leg-right" />
 
             {/* Head Base */}
-            <circle cx="50" cy="40" r="28" fill="#ffffff" stroke="#2c3e50" strokeWidth="1.5" className="panda-head" />
+            <circle cx="50" cy="40" r="28" fill="url(#panda-white)" stroke="#cbd5e1" strokeWidth="1.5" className="panda-head" />
           </svg>
 
           {/* Layer 3: Front (Face Details, Arms, Chewing Bamboo) */}
           <svg viewBox="0 0 100 100" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', transform: 'translateZ(20px)', pointerEvents: 'none' }} className="mascot-svg">
             {/* Eye Patches */}
-            <ellipse cx="38" cy="38" rx="9" ry="7" transform="rotate(-15 38 38)" fill="#2d3748" className="panda-eye-patch patch-left" />
-            <ellipse cx="62" cy="38" rx="9" ry="7" transform="rotate(15 62 38)" fill="#2d3748" className="panda-eye-patch patch-right" />
+            <ellipse cx="38" cy="38" rx="9" ry="7" transform="rotate(-15 38 38)" fill="url(#panda-black)" className="panda-eye-patch patch-left" />
+            <ellipse cx="62" cy="38" rx="9" ry="7" transform="rotate(15 62 38)" fill="url(#panda-black)" className="panda-eye-patch patch-right" />
 
             {/* Face Eyes Details */}
             {emotion === 'happy' ? (
@@ -854,7 +1072,7 @@ const GlobalMascot = ({ user }) => {
             )}
 
             {/* Nose */}
-            <ellipse cx="50" cy="46" rx="3" ry="2" fill="#1a202c" />
+            <ellipse cx="50" cy="46" rx="3" ry="2" fill="url(#panda-black)" />
 
             {/* Mouth */}
             {emotion === 'warning' ? (
@@ -870,22 +1088,22 @@ const GlobalMascot = ({ user }) => {
             <circle cx="72" cy="45" r="3.5" fill="#ff8a9a" opacity={emotion === 'happy' ? 0.85 : 0.3} className="panda-blush" />
 
             {/* Left Arm holding bamboo */}
-            <path d="M 28 66 Q 16 70 24 78" fill="none" stroke="#2d3748" strokeWidth="7" strokeLinecap="round" className="panda-arm arm-left" />
+            <path d="M 28 66 Q 16 70 24 78" fill="none" stroke="url(#panda-black)" strokeWidth="7" strokeLinecap="round" className="panda-arm arm-left" />
 
             {/* Right Arm near mouth */}
-            <path d="M 72 66 Q 84 70 76 78" fill="none" stroke="#2d3748" strokeWidth="7" strokeLinecap="round" className="panda-arm arm-right" />
+            <path d="M 72 66 Q 84 70 76 78" fill="none" stroke="url(#panda-black)" strokeWidth="7" strokeLinecap="round" className="panda-arm arm-right" />
 
             {/* Bamboo branch - placed in front of left arm */}
             <g className="bamboo-group">
-              <path d="M 18 84 L 46 52" fill="none" stroke="#10b981" strokeWidth="3.5" strokeLinecap="round" className="bamboo-stalk" />
+              <path d="M 18 84 L 46 52" fill="none" stroke="url(#panda-bamboo)" strokeWidth="3.5" strokeLinecap="round" className="bamboo-stalk" />
               <line x1="25.5" y1="75.5" x2="28" y2="73" stroke="#059669" strokeWidth="1.5" />
               <line x1="32.5" y1="67.5" x2="35" y2="65" stroke="#059669" strokeWidth="1.5" />
-              <path d="M 32 68 Q 28 60 20 64 Q 28 66 32 68 Z" fill="#10b981" />
-              <path d="M 40 59 Q 44 51 36 49 Q 38 56 40 59 Z" fill="#10b981" />
+              <path d="M 32 68 Q 28 60 20 64 Q 28 66 32 68 Z" fill="url(#panda-bamboo)" />
+              <path d="M 40 59 Q 44 51 36 49 Q 38 56 40 59 Z" fill="url(#panda-bamboo)" />
             </g>
 
             {/* Chewing Leaf at mouth */}
-            <path d="M 52 51 Q 57 47 62 50 Q 56 53 52 51 Z" fill="#10b981" className={`chewing-leaf ${emotion === 'happy' ? 'chew-fast' : ''}`} />
+            <path d="M 52 51 Q 57 47 62 50 Q 56 53 52 51 Z" fill="url(#panda-leaf)" className={`chewing-leaf ${emotion === 'happy' ? 'chew-fast' : ''}`} />
           </svg>
         </div>
       </div>
