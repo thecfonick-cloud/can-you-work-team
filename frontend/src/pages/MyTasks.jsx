@@ -2,12 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle2, HelpCircle, XCircle, Sparkles, Trophy, Gift, Calendar } from 'lucide-react';
 import { api } from '../api';
 
-const MyTasks = () => {
+const MyTasks = ({ refreshUser }) => {
   const [groupedTasks, setGroupedTasks] = useState(null);
   const [luckyTasks, setLuckyTasks] = useState([]);
   const [activeTab, setActiveTab] = useState('pending');
   const [timeLeft, setTimeLeft] = useState('4h 32m remaining');
   const [streakData, setStreakData] = useState(null);
+
+  // Survey Modal States
+  const [showSurvey, setShowSurvey] = useState(false);
+  const [surveyStep, setSurveyStep] = useState(1);
+  const [surveyAnswers, setSurveyAnswers] = useState({ q1: '', q2: '', q3: '' });
+  const [surveySubmitting, setSurveySubmitting] = useState(false);
+  const [surveySuccess, setSurveySuccess] = useState(false);
 
   useEffect(() => {
     fetchMyTasks();
@@ -86,7 +93,15 @@ const MyTasks = () => {
                     <span className="payout-label">Guaranteed Reward</span>
                     <span className="payout-value">₦{(luckyTasks[0].rewardAmount || 5000).toLocaleString()}</span>
                   </div>
-                  <button className="btn btn-primary lucky-start-btn">
+                  <button 
+                    className="btn btn-primary lucky-start-btn"
+                    onClick={() => {
+                      setSurveyStep(1);
+                      setSurveyAnswers({ q1: '', q2: '', q3: '' });
+                      setSurveySuccess(false);
+                      setShowSurvey(true);
+                    }}
+                  >
                     Complete Campaign <Sparkles size={14} style={{ marginLeft: '4px' }} />
                   </button>
                 </div>
@@ -213,6 +228,172 @@ const MyTasks = () => {
           )}
         </div>
       </div>
+
+      {/* Opinion Survey Modal Overlay */}
+      {showSurvey && (
+        <div className="survey-modal-overlay">
+          <div className="survey-modal-card card">
+            <button className="survey-modal-close" onClick={() => setShowSurvey(false)}>&times;</button>
+            
+            {!surveySuccess ? (
+              <>
+                <div className="survey-header">
+                  <div className="survey-icon-glow">
+                    <Trophy size={24} className="icon-gold" />
+                  </div>
+                  <h3>Premium Opinion Survey</h3>
+                  <p className="survey-subtitle">Step {surveyStep} of 3</p>
+                  
+                  <div className="survey-progress-bar-bg">
+                    <div className="survey-progress-bar-fill" style={{ width: `${(surveyStep / 3) * 100}%` }}></div>
+                  </div>
+                </div>
+
+                <div className="survey-body">
+                  {surveyStep === 1 && (
+                    <div className="survey-question-step">
+                      <h4>1. What is your main goal on CanYouWork?</h4>
+                      <div className="survey-options-grid">
+                        {[
+                          "Earn extra pocket money",
+                          "Find full-time online micro-jobs",
+                          "Discover new platforms & websites",
+                          "Learn digital marketing skills"
+                        ].map((option) => (
+                          <button
+                            key={option}
+                            className={`survey-option-btn ${surveyAnswers.q1 === option ? 'selected' : ''}`}
+                            onClick={() => setSurveyAnswers(prev => ({ ...prev, q1: option }))}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {surveyStep === 2 && (
+                    <div className="survey-question-step">
+                      <h4>2. How often do you complete online microtasks?</h4>
+                      <div className="survey-options-grid">
+                        {[
+                          "Daily, several times a day",
+                          "A few times a week",
+                          "Rarely, once or twice a month",
+                          "Just getting started today"
+                        ].map((option) => (
+                          <button
+                            key={option}
+                            className={`survey-option-btn ${surveyAnswers.q2 === option ? 'selected' : ''}`}
+                            onClick={() => setSurveyAnswers(prev => ({ ...prev, q2: option }))}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {surveyStep === 3 && (
+                    <div className="survey-question-step">
+                      <h4>3. Which platform's tasks do you prefer most?</h4>
+                      <div className="survey-options-grid">
+                        {[
+                          "Instagram / TikTok social tasks",
+                          "YouTube watch & subscribe tasks",
+                          "Premium feedback & survey tasks",
+                          "Telegram channel joins"
+                        ].map((option) => (
+                          <button
+                            key={option}
+                            className={`survey-option-btn ${surveyAnswers.q3 === option ? 'selected' : ''}`}
+                            onClick={() => setSurveyAnswers(prev => ({ ...prev, q3: option }))}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="survey-footer">
+                  {surveyStep > 1 && (
+                    <button 
+                      className="btn btn-outline" 
+                      onClick={() => setSurveyStep(prev => prev - 1)}
+                      disabled={surveySubmitting}
+                    >
+                      Back
+                    </button>
+                  )}
+                  
+                  {surveyStep < 3 ? (
+                    <button
+                      className="btn btn-primary"
+                      disabled={
+                        (surveyStep === 1 && !surveyAnswers.q1) ||
+                        (surveyStep === 2 && !surveyAnswers.q2)
+                      }
+                      onClick={() => setSurveyStep(prev => prev + 1)}
+                      style={{ marginLeft: 'auto' }}
+                    >
+                      Next Step
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-primary btn-submit-survey"
+                      disabled={!surveyAnswers.q3 || surveySubmitting}
+                      onClick={async () => {
+                        setSurveySubmitting(true);
+                        try {
+                          const res = await api.completeLuckyTask(luckyTasks[0]._id);
+                          if (res.success) {
+                            setSurveySuccess(true);
+                            if (refreshUser) await refreshUser();
+                            await fetchLuckyTasks();
+                            await fetchMyTasks();
+                          } else {
+                            alert(res.message || 'Failed to complete survey');
+                          }
+                        } catch (err) {
+                          console.error(err);
+                          alert('Error submitting survey');
+                        } finally {
+                          setSurveySubmitting(false);
+                        }
+                      }}
+                      style={{ marginLeft: 'auto' }}
+                    >
+                      {surveySubmitting ? 'Submitting...' : 'Submit Survey'}
+                    </button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="survey-success-container">
+                <div className="success-icon-badge">
+                  <Sparkles size={36} className="icon-success" />
+                </div>
+                <h3>Campaign Completed!</h3>
+                <p>Your premium opinion survey feedback was recorded successfully.</p>
+                
+                <div className="reward-alert-box">
+                  <span className="reward-label">Reward Sent to Wallet</span>
+                  <span className="reward-val">+₦5,000.00</span>
+                </div>
+
+                <button 
+                  className="btn btn-primary close-success-btn" 
+                  onClick={() => setShowSurvey(false)}
+                >
+                  Return to Dashboard
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

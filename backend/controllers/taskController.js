@@ -1,6 +1,10 @@
 const Task = require('../models/Task');
 const TaskSubmission = require('../models/TaskSubmission');
 const LuckyTask = require('../models/LuckyTask');
+const Wallet = require('../models/Wallet');
+const Transaction = require('../models/Transaction');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 // Fetch all active tasks
 const getTasks = async (req, res) => {
@@ -170,10 +174,92 @@ const getLuckyTasks = async (req, res) => {
   }
 };
 
+// Complete a Lucky Task (Survey, etc.)
+const completeLuckyTask = async (req, res) => {
+  try {
+    const luckyTaskId = req.params.id;
+    const userId = req.user._id;
+
+    // Find the lucky task assigned to this user
+    const luckyTask = await LuckyTask.findOne({
+      _id: luckyTaskId,
+      assignedUserId: userId,
+      status: 'active'
+    });
+
+    if (!luckyTask) {
+      return res.status(404).json({ success: false, message: 'Active Lucky Task not found or already completed.' });
+    }
+
+    // Check expiration
+    if (luckyTask.expiresAt < new Date()) {
+      luckyTask.status = 'expired';
+      await luckyTask.save();
+      return res.status(400).json({ success: false, message: 'Lucky Task has expired.' });
+    }
+
+    const reward = luckyTask.rewardAmount || 5000.0;
+
+    // Update LuckyTask status to completed
+    luckyTask.status = 'completed';
+    await luckyTask.save();
+
+    // Credit Wallet
+    let wallet = await Wallet.findOne({ userId });
+    if (!wallet) {
+      wallet = await Wallet.create({
+        userId,
+        availableBalance: 0,
+        pendingBalance: 0,
+        totalEarned: 0,
+        totalWithdrawn: 0
+      });
+    }
+
+    wallet.availableBalance += reward;
+    wallet.totalEarned += reward;
+    await wallet.save();
+
+    // Update User model fields to match wallet balance
+    await User.findByIdAndUpdate(userId, {
+      $inc: { balance: reward, totalEarnings: reward }
+    });
+
+    // Create a transaction record
+    await Transaction.create({
+      userId,
+      type: 'task_reward',
+      amount: reward,
+      description: `Lucky Task: ${luckyTask.title}`,
+      status: 'completed'
+    });
+
+    // Create a notification
+    await Notification.create({
+      userId,
+      title: 'Lucky Task Completed! 🎁',
+      message: `Congratulations! You earned ₦${reward.toLocaleString()} for completing "${luckyTask.title}".`,
+      type: 'task'
+    });
+
+    res.json({
+      success: true,
+      message: 'Lucky task completed successfully!',
+      rewardAmount: reward,
+      balance: wallet.availableBalance
+    });
+
+  } catch (error) {
+    console.error('Error completing lucky task:', error);
+    res.status(500).json({ success: false, message: 'Server error completing lucky task' });
+  }
+};
+
 module.exports = {
   getTasks,
   getTaskById,
   submitTaskProof,
   getMyTasks,
-  getLuckyTasks
+  getLuckyTasks,
+  completeLuckyTask
 };

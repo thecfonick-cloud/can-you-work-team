@@ -243,6 +243,10 @@ const initOfflineDb = () => {
         country: 'Nigeria',
         referralCode: 'JohnG',
         isVerified: true,
+        balance: 25680.00,
+        pendingBalance: 1230.00,
+        totalEarnings: 48250.00,
+        totalWithdrawn: 36800.00,
         socialAccounts: {
           instagramUsername: 'john_doe',
           tiktokUsername: 'johndoe_tt',
@@ -384,13 +388,31 @@ export const api = {
     } catch (e) {
       // Mock Fallback
       const users = getOfflineUsers();
-      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() || u.username.toLowerCase() === email.toLowerCase());
+      let user = users.find(u => u.email.toLowerCase() === email.toLowerCase() || u.username.toLowerCase() === email.toLowerCase());
       if (user) {
+        const wallets = getOfflineWallets();
+        const wallet = wallets[user._id];
+        if (wallet) {
+          user.balance = wallet.availableBalance;
+          user.pendingBalance = wallet.pendingBalance;
+          user.totalEarnings = wallet.totalEarnings;
+          user.totalWithdrawn = wallet.totalWithdrawn;
+        }
         localStorage.setItem('canyuwork_token', user._id);
         return { success: true, user, token: user._id };
       }
       if (email.includes('johng') || email.includes('john@')) {
         const john = users.find(u => u.username === 'johng');
+        if (john) {
+          const wallets = getOfflineWallets();
+          const wallet = wallets[john._id];
+          if (wallet) {
+            john.balance = wallet.availableBalance;
+            john.pendingBalance = wallet.pendingBalance;
+            john.totalEarnings = wallet.totalEarnings;
+            john.totalWithdrawn = wallet.totalWithdrawn;
+          }
+        }
         localStorage.setItem('canyuwork_token', john._id);
         return { success: true, user: john, token: john._id };
       }
@@ -430,6 +452,10 @@ export const api = {
         referralCode,
         referredBy: referredBy || null,
         isVerified: true,
+        balance: 200.0,
+        pendingBalance: 0.0,
+        totalEarnings: 200.0,
+        totalWithdrawn: 0.0,
         socialAccounts: {
           instagramUsername: '',
           tiktokUsername: '',
@@ -668,7 +694,70 @@ export const api = {
       const res = await fetch(`${BASE_URL}/tasks/lucky-tasks`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
-      return { success: true, luckyTasks: MOCK_LUCKY_TASKS };
+      const isCompleted = localStorage.getItem('cw_lucky_task_completed_l1') === 'true';
+      return { success: true, luckyTasks: isCompleted ? [] : MOCK_LUCKY_TASKS };
+    }
+  },
+
+  completeLuckyTask: async (id) => {
+    try {
+      const res = await fetch(`${BASE_URL}/tasks/lucky-tasks/${id}/complete`, {
+        method: 'POST',
+        headers: getHeaders()
+      });
+      return await res.json();
+    } catch (e) {
+      const userId = getActiveUserIdOffline();
+      
+      localStorage.setItem('cw_lucky_task_completed_l1', 'true');
+
+      const wallets = getOfflineWallets();
+      const wallet = wallets[userId];
+      if (wallet) {
+        wallet.availableBalance += 5000.0;
+        wallet.totalEarnings += 5000.0;
+        wallets[userId] = wallet;
+        saveOfflineWallets(wallets);
+      }
+
+      const users = getOfflineUsers();
+      const userIdx = users.findIndex(u => u._id === userId);
+      if (userIdx !== -1 && wallet) {
+        users[userIdx].balance = wallet.availableBalance;
+        users[userIdx].totalEarnings = wallet.totalEarnings;
+        saveOfflineUsers(users);
+      }
+
+      const txs = getOfflineTransactions();
+      txs.push({
+        _id: 'tx_lucky_' + Date.now(),
+        userId: userId,
+        type: 'task_reward',
+        description: 'Lucky Task: Complete Premium Survey',
+        amount: 5000.0,
+        status: 'Completed',
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineTransactions(txs);
+
+      const notifs = getOfflineNotifications();
+      notifs.push({
+        _id: 'notif_lucky_' + Date.now(),
+        userId: userId,
+        title: 'Lucky Task Completed! 🎁',
+        message: 'Congratulations! You earned ₦5,000 for completing the Premium Survey.',
+        type: 'task',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineNotifications(notifs);
+
+      return { 
+        success: true, 
+        message: 'Lucky task completed successfully! ₦5,000 credited to your wallet.',
+        rewardAmount: 5000.0,
+        balance: wallet ? wallet.availableBalance : 0
+      };
     }
   },
 
@@ -789,6 +878,8 @@ export const api = {
       const userIdx = users.findIndex(u => u._id === userId);
       if (userIdx !== -1) {
         users[userIdx].balance = wallet.availableBalance;
+        users[userIdx].pendingBalance = wallet.pendingBalance;
+        users[userIdx].totalWithdrawn = wallet.totalWithdrawn;
         saveOfflineUsers(users);
       }
 
@@ -1156,6 +1247,16 @@ export const api = {
       const userId = getActiveUserIdOffline();
       const users = getOfflineUsers();
       const user = users.find(u => u._id === userId) || users[0];
+      if (user) {
+        const wallets = getOfflineWallets();
+        const wallet = wallets[user._id];
+        if (wallet) {
+          user.balance = wallet.availableBalance;
+          user.pendingBalance = wallet.pendingBalance;
+          user.totalEarnings = wallet.totalEarnings;
+          user.totalWithdrawn = wallet.totalWithdrawn;
+        }
+      }
       return { success: true, user };
     }
   },

@@ -173,7 +173,7 @@ const LandingPage = () => {
               <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
             </svg>
           </div>
-          <span className="logo-text" style={{ color: '#ffffff', background: 'none', WebkitTextFillColor: 'initial' }}>
+          <span className="logo-text">
             CanYou<span style={{ color: '#8b5cf6' }}>Work</span>
           </span>
         </div>

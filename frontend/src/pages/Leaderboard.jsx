@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Trophy, Award, Users, ShieldAlert, Sparkles, TrendingUp } from 'lucide-react';
 import { api } from '../api';
 
-const Leaderboard = () => {
+const Leaderboard = ({ user }) => {
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -116,7 +116,7 @@ const Leaderboard = () => {
               {list.map((item) => (
                 <tr 
                   key={item.rank} 
-                  className={item.username === 'johng' ? 'user-highlight-row' : ''}
+                  className={item.username === user?.username ? 'user-highlight-row' : ''}
                 >
                   <td className={`rank-col-cell ${getRankBadgeClass(item.rank)}`}>
                     {item.rank <= 3 ? (

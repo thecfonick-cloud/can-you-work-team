@@ -171,7 +171,7 @@ function App() {
             element={
               user ? (
                 <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
-                  <MyTasks />
+                  <MyTasks refreshUser={refreshUser} />
                 </AppLayout>
               ) : <Navigate to="/login" />
             } 
@@ -211,7 +211,7 @@ function App() {
             element={
               user ? (
                 <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
-                  <Leaderboard />
+                  <Leaderboard user={user} />
                 </AppLayout>
               ) : <Navigate to="/login" />
             } 
