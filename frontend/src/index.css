@@ -1327,18 +1327,25 @@ a {
   border-bottom: 1px solid var(--border-color);
   margin-bottom: 3rem;
   overflow: hidden;
+  display: flex;
+  width: 100%;
 }
 
-.brand-logos-container {
+.brand-logos-track {
+  display: flex;
+  width: max-content;
+  animation: marqueeScroll 25s linear infinite;
+}
+
+.brand-logos-track:hover {
+  animation-play-state: paused;
+}
+
+.brand-logos-group {
   display: flex;
   align-items: center;
-  gap: 3rem;
-  width: max-content;
-  animation: marqueeScroll 18s linear infinite;
-}
-
-.brand-logos-container:hover {
-  animation-play-state: paused;
+  gap: 5rem;
+  padding-right: 5rem;
 }
 
 .brand-logo-text {
@@ -1356,7 +1363,7 @@ a {
 }
 
 [data-theme="dark"] .brand-logo-text {
-  color: #1e293b;
+  color: #94a3b8;
 }
 
 [data-theme="dark"] .brand-logo-text:hover {

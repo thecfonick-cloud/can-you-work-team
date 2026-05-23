@@ -308,11 +308,17 @@ const LandingPage = () => {
 
       {/* Brand Logos Bar */}
       <section className="brand-logos-bar">
-        <div className="brand-logos-container">
-          {/* Duplicate the list for seamless infinite scroll */}
-          {[...brandNames, ...brandNames].map((name, idx) => (
-            <span className="brand-logo-text" key={idx}>{name}</span>
-          ))}
+        <div className="brand-logos-track">
+          <div className="brand-logos-group">
+            {brandNames.map((name, idx) => (
+              <span className="brand-logo-text" key={idx}>{name}</span>
+            ))}
+          </div>
+          <div className="brand-logos-group" aria-hidden="true">
+            {brandNames.map((name, idx) => (
+              <span className="brand-logo-text" key={idx}>{name}</span>
+            ))}
+          </div>
         </div>
       </section>
 
