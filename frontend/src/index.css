@@ -5435,6 +5435,16 @@ a {
 .svg-shadow {
   fill: rgba(15, 23, 42, 0.15);
   transition: transform 0.4s ease;
+  animation: shadowPulse 5s ease-in-out infinite alternate;
+  transform-origin: 50px 112px;
+}
+
+@keyframes shadowPulse {
+  0% { transform: scale(1); opacity: 1; }
+  25% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(0.8); opacity: 0.6; }
+  75% { transform: scale(0.95); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .svg-jet-flame {
@@ -5515,16 +5525,108 @@ a {
 
 /* Animations */
 .mascot-robot-wrapper {
-  animation: floatingMascot 3.5s ease-in-out infinite alternate;
+  animation: floatingMascot 5s ease-in-out infinite alternate;
   will-change: transform;
 }
 
 @keyframes floatingMascot {
   0% {
-    transform: translateY(0px);
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-6px) translateX(4px) rotate(1.5deg);
+  }
+  50% {
+    transform: translateY(-12px) translateX(-2px) rotate(-1deg);
+  }
+  75% {
+    transform: translateY(-4px) translateX(3px) rotate(1deg);
   }
   100% {
-    transform: translateY(-8px);
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+}
+
+/* Booster jet fire scale/glow states during flight */
+.mascot-fly-off .svg-jet-flame,
+.mascot-fly-on .svg-jet-flame,
+.mascot-fly-loop .svg-jet-flame {
+  fill: #ff5500 !important;
+  transform: scaleY(1.7) translateY(3px) !important;
+  transform-origin: 50px 90px;
+}
+
+.mascot-fly-off .svg-jet-glow,
+.mascot-fly-on .svg-jet-glow,
+.mascot-fly-loop .svg-jet-glow {
+  fill: rgba(255, 85, 0, 0.8) !important;
+  filter: blur(5px) !important;
+}
+
+/* Flight and loop classes */
+.mascot-fly-loop {
+  animation: flightLoopCircle 1.6s cubic-bezier(0.45, 0, 0.55, 1) !important;
+}
+
+.mascot-fly-off {
+  animation: flyOffScreen 0.8s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards !important;
+}
+
+.mascot-fly-on {
+  animation: flyOnScreen 1.0s cubic-bezier(0.215, 0.61, 0.355, 1) forwards !important;
+}
+
+/* Fly off-screen on route change */
+@keyframes flyOffScreen {
+  0% {
+    transform: translate(0, 0) rotate(0) scale(1);
+    opacity: 1;
+  }
+  25% {
+    transform: translate(-30px, 15px) rotate(-15deg) scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(350px, -250px) rotate(45deg) scale(0.4);
+    opacity: 0;
+  }
+}
+
+/* Fly back onto screen */
+@keyframes flyOnScreen {
+  0% {
+    transform: translate(-300px, 200px) rotate(-45deg) scale(0.4);
+    opacity: 0;
+  }
+  70% {
+    transform: translate(30px, -15px) rotate(15deg) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) rotate(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Playful circle flight loop */
+@keyframes flightLoopCircle {
+  0% {
+    transform: translate(0, 0) rotate(0) scale(1);
+  }
+  15% {
+    transform: translate(-45px, -25px) rotate(-15deg) scale(0.9);
+  }
+  40% {
+    transform: translate(-160px, -180px) rotate(-180deg) scale(0.85);
+  }
+  65% {
+    transform: translate(-270px, -50px) rotate(-270deg) scale(0.95);
+  }
+  85% {
+    transform: translate(-90px, 35px) rotate(-340deg) scale(1.05);
+  }
+  100% {
+    transform: translate(0, 0) rotate(-360deg) scale(1);
   }
 }
 

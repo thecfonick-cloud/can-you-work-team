@@ -99,70 +99,7 @@ const LandingPage = () => {
   const [countersStarted, setCountersStarted] = useState(false);
   const statsRef = useRef(null);
 
-  // Mascot Tutor States
-  const [mascotVisible, setMascotVisible] = useState(false);
-  const [speechText, setSpeechText] = useState("👋 Hey! Join now and get a ₦200 instant sign-up bonus!");
-  const [bubbleAnim, setBubbleAnim] = useState(false);
-  const [mascotActionClass, setMascotActionClass] = useState("");
-  const [mascotHovered, setMascotHovered] = useState(false);
 
-  useEffect(() => {
-    // Show mascot after 1.5 seconds
-    const timer = setTimeout(() => {
-      setMascotVisible(true);
-      setBubbleAnim(true);
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleMascotScroll = useCallback(() => {
-    const scrollPos = window.scrollY;
-    let currentText = "👋 Hey! Join now and get a ₦200 instant sign-up bonus!";
-    
-    const featuresEl = document.getElementById('features');
-    const howEl = document.getElementById('how-it-works');
-    const safetyEl = document.querySelector('.safety-banner-section');
-    const testimonialsEl = document.getElementById('testimonials');
-
-    if (testimonialsEl && scrollPos >= testimonialsEl.offsetTop - 400) {
-      currentText = "⭐️ Hear from our 12,000+ happy earners worldwide!";
-    } else if (safetyEl && scrollPos >= safetyEl.offsetTop - 400) {
-      currentText = "🛡️ Warning: No VPNs or proxy networks allowed, please!";
-    } else if (howEl && scrollPos >= howEl.offsetTop - 400) {
-      currentText = "🎯 Just register, follow task rules, upload proof, and get paid!";
-    } else if (featuresEl && scrollPos >= featuresEl.offsetTop - 400) {
-      currentText = "💡 Earn up to ₦10,000 with premium Lucky Tasks!";
-    }
-
-    setSpeechText((prev) => {
-      if (prev !== currentText) {
-        setBubbleAnim(false);
-        setTimeout(() => setBubbleAnim(true), 50);
-        return currentText;
-      }
-      return prev;
-    });
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('scroll', handleMascotScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleMascotScroll);
-  }, [handleMascotScroll]);
-
-  const handleMascotClick = () => {
-    setMascotActionClass("mascot-jump");
-    setTimeout(() => setMascotActionClass(""), 500);
-
-    setSpeechText("🚀 Let's earn! Tap the 'Start Earning Now' button to claim your ₦200 bonus!");
-    setBubbleAnim(false);
-    setTimeout(() => setBubbleAnim(true), 50);
-
-    const heroBtn = document.querySelector('.hero-cta-buttons');
-    if (heroBtn) {
-      heroBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  };
 
   // Start counters when stats section comes into view
   useEffect(() => {
@@ -509,62 +446,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Floating Interactive Mascot Tutor "Canny" */}
-      <div 
-        className={`mascot-tutor-container ${mascotVisible ? 'visible' : ''}`}
-        onClick={handleMascotClick}
-        onMouseEnter={() => setMascotHovered(true)}
-        onMouseLeave={() => setMascotHovered(false)}
-      >
-        <div className={`mascot-speech-bubble ${bubbleAnim ? 'pop' : ''}`}>
-          {speechText}
-        </div>
-        
-        <div className={`mascot-robot-wrapper ${mascotActionClass}`}>
-          <svg viewBox="0 0 100 120" width="80" height="96" className="mascot-svg">
-            {/* Shadows */}
-            <ellipse cx="50" cy="112" rx="20" ry="4" className="svg-shadow" />
-            
-            {/* Hover Flame / Jet propulsion */}
-            <path d="M42 90 L50 108 L58 90 Z" className="svg-jet-flame" />
-            <circle cx="50" cy="98" r="8" className="svg-jet-glow" />
-            
-            {/* Arms */}
-            <rect x="18" y="55" width="8" height="24" rx="4" className="svg-arm arm-left" transform="rotate(-15 18 55)" />
-            <rect x="74" y="55" width="8" height="24" rx="4" className="svg-arm arm-right" transform="rotate(15 82 55)" />
-            
-            {/* Body */}
-            <rect x="28" y="48" width="44" height="42" rx="12" className="svg-body-base" />
-            <rect x="36" y="56" width="28" height="26" rx="6" className="svg-body-screen" />
-            
-            {/* Battery Indicator on screen */}
-            <rect x="42" y="66" width="16" height="6" rx="2" className="svg-screen-bar" />
-            
-            {/* Neck */}
-            <rect x="44" y="38" width="12" height="12" rx="2" className="svg-neck" />
-            
-            {/* Head */}
-            <rect x="24" y="10" width="52" height="34" rx="16" className="svg-head-base" />
-            
-            {/* Ear Antennae */}
-            <circle cx="24" cy="27" r="4" className="svg-ear" />
-            <circle cx="76" cy="27" r="4" className="svg-ear" />
-            <line x1="50" y1="10" x2="50" y2="4" strokeWidth="3" className="svg-antenna-stem" />
-            <circle cx="50" cy="2" r="3" className="svg-antenna-tip" />
-            
-            {/* Visor Screen */}
-            <rect x="32" y="16" width="36" height="20" rx="8" className="svg-head-visor" />
-            
-            {/* Eyes */}
-            <circle cx="43" cy="26" r="3.5" className="svg-eye eye-left" />
-            <circle cx="57" cy="26" r="3.5" className="svg-eye eye-right" />
-            
-            {/* Cheeks blush */}
-            <circle cx="36" cy="30" r="2" className="svg-blush" />
-            <circle cx="64" cy="30" r="2" className="svg-blush" />
-          </svg>
-        </div>
-      </div>
+
 
       {/* Footer */}
       <Footer />
