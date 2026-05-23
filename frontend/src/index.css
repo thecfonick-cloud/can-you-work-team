@@ -1335,10 +1335,7 @@ a {
   display: flex;
   width: max-content;
   animation: marqueeScroll 25s linear infinite;
-}
-
-.brand-logos-track:hover {
-  animation-play-state: paused;
+  will-change: transform;
 }
 
 .brand-logos-group {
@@ -1346,6 +1343,7 @@ a {
   align-items: center;
   gap: 5rem;
   padding-right: 5rem;
+  flex-shrink: 0;
 }
 
 .brand-logo-text {
