@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, TrendingUp, Users, DollarSign, Award, ShieldAlert, Sparkles } from 'lucide-react';
+import { ArrowRight, CheckCircle2, TrendingUp, Users, DollarSign, Award, ShieldAlert, Sparkles, Menu, X } from 'lucide-react';
 import Footer from '../components/Footer';
 
 // ─── Animated Counter Hook ────────────────────────────
@@ -91,6 +91,7 @@ function handleTiltReset(e) {
 const LandingPage = () => {
   const navigate = useNavigate();
   const pageRef = useScrollReveal();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Animated counters
   const counter1 = useCountUp(2500000, 2200);
@@ -179,13 +180,39 @@ const LandingPage = () => {
             CanYou<span style={{ color: '#8b5cf6' }}>Work</span>
           </span>
         </div>
-        <nav className="landing-nav">
+
+        {/* Desktop Nav Links */}
+        <nav className="landing-nav desktop-nav">
           <a href="#features">Features</a>
           <a href="#how-it-works">How It Works</a>
           <a href="#testimonials">Testimonials</a>
           <button className="btn btn-outline" onClick={() => navigate('/login')}>Login</button>
           <button className="btn btn-primary" onClick={() => navigate('/register')}>Get Started</button>
         </nav>
+
+        {/* Mobile Hamburger toggle button */}
+        <button 
+          className="mobile-hamburger-btn"
+          onClick={() => setMobileMenuOpen(prev => !prev)}
+          aria-label="Toggle Navigation Menu"
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        {/* Mobile Menu Overlay Drawer */}
+        {mobileMenuOpen && (
+          <div className="mobile-menu-overlay" onClick={() => setMobileMenuOpen(false)}>
+            <nav className="mobile-nav" onClick={(e) => e.stopPropagation()}>
+              <a href="#features" onClick={() => setMobileMenuOpen(false)}>Features</a>
+              <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
+              <a href="#testimonials" onClick={() => setMobileMenuOpen(false)}>Testimonials</a>
+              <div className="mobile-nav-buttons">
+                <button className="btn btn-outline" onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}>Login</button>
+                <button className="btn btn-primary" onClick={() => { setMobileMenuOpen(false); navigate('/register'); }}>Get Started</button>
+              </div>
+            </nav>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}

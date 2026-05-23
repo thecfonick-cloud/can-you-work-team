@@ -312,6 +312,9 @@ const GlobalMascot = ({ user }) => {
   };
 
   useEffect(() => {
+    const dismissed = localStorage.getItem("canyuwork_mascot_dismissed") === "true";
+    if (dismissed) return;
+
     // Show mascot after 1 second initially
     const timer = setTimeout(() => {
       setVisible(true);
@@ -323,6 +326,12 @@ const GlobalMascot = ({ user }) => {
 
   // Trigger flight animation on route change
   useEffect(() => {
+    const dismissed = localStorage.getItem("canyuwork_mascot_dismissed") === "true";
+    if (dismissed) {
+      setVisible(false);
+      return;
+    }
+
     if (location.pathname !== currentPath) {
       setBubbleAnim(false);
       setMascotClass("mascot-fly-off");
@@ -415,11 +424,26 @@ const GlobalMascot = ({ user }) => {
     }, 1600); // matches fly-loop duration
   };
 
+  const handleCloseMascot = (e) => {
+    e.stopPropagation();
+    setVisible(false);
+    localStorage.setItem("canyuwork_mascot_dismissed", "true");
+  };
+
   return (
     <div 
       className={`mascot-tutor-container ${visible ? 'visible' : ''}`}
       onClick={handleMascotClick}
     >
+      <button 
+        className="mascot-close-btn"
+        onClick={handleCloseMascot}
+        title="Hide guide mascot"
+        aria-label="Close mascot guide"
+      >
+        &times;
+      </button>
+
       <div className={`mascot-speech-bubble ${bubbleAnim ? 'pop' : ''}`}>
         {speechText}
       </div>
