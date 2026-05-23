@@ -16,7 +16,7 @@ const generateToken = (id) => {
 // Register User
 const register = async (req, res) => {
   try {
-    const { fullname, username, email, phone, country, password, referredBy, socialAccounts, deviceFingerprint } = req.body;
+    const { fullname, username, email, phone, country, password, referredBy, socialAccounts, deviceFingerprint, role } = req.body;
 
     if (!fullname || !username || !email || !phone || !country || !password) {
       return res.status(400).json({ success: false, message: 'Please fill all required fields' });
@@ -68,7 +68,8 @@ const register = async (req, res) => {
       referredBy: referrerId,
       ipAddress: ip,
       deviceFingerprint: deviceFingerprint || '',
-      isVerified: false // Admin must verify, or auto-verify unless flagged
+      isVerified: false, // Admin must verify, or auto-verify unless flagged
+      role: role || 'user'
     });
 
     // Create user's wallet
@@ -80,29 +81,35 @@ const register = async (req, res) => {
       totalWithdrawn: 0
     });
 
-    // Automatically award sign up bonus of ₦200 as seen in the designs
-    wallet.availableBalance += 200;
-    wallet.totalEarned += 200;
-    await wallet.save();
+    // Automatically award sign up bonus of ₦200 to earners
+    if (user.role === 'user') {
+      wallet.availableBalance += 200;
+      wallet.totalEarned += 200;
+      await wallet.save();
 
-    user.balance = wallet.availableBalance;
-    user.totalEarnings = wallet.totalEarned;
-    await user.save();
+      user.balance = wallet.availableBalance;
+      user.totalEarnings = wallet.totalEarned;
+      await user.save();
 
-    await Transaction.create({
-      userId: user._id,
-      type: 'challenge_bonus',
-      amount: 200,
-      description: 'Sign Up Bonus: Profile created successfully',
-      status: 'completed'
-    });
+      await Transaction.create({
+        userId: user._id,
+        type: 'challenge_bonus',
+        amount: 200,
+        description: 'Sign Up Bonus: Profile created successfully',
+        status: 'completed'
+      });
 
-    await Notification.create({
-      userId: user._id,
-      title: 'Bonus Earned! 🎉',
-      message: 'You earned ₦200 for completing your profile sign up bonus.',
-      type: 'bonus'
-    });
+      await Notification.create({
+        userId: user._id,
+        title: 'Bonus Earned! 🎉',
+        message: 'You earned ₦200 for completing your profile sign up bonus.',
+        type: 'bonus'
+      });
+    } else {
+      user.balance = 0;
+      user.totalEarnings = 0;
+      await user.save();
+    }
 
     // Handle Referral logic
     if (referrerId) {

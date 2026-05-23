@@ -43,6 +43,17 @@ const Login = ({ onLoginSuccess }) => {
       setLoading(false);
 
       if (res.success) {
+        if (role === 'advertiser' && res.user.role !== 'advertiser') {
+          setError('This account is registered as an Earner. Please switch to the Earn Cash tab or register a new Advertiser account.');
+          setLoading(false);
+          return;
+        }
+        if (role === 'user' && res.user.role !== 'user') {
+          setError('This account is registered as an Advertiser. Please switch to the Run Ads tab.');
+          setLoading(false);
+          return;
+        }
+
         onLoginSuccess(res.user);
         if (res.user.role === 'advertiser') {
           navigate('/advertiser/dashboard');
