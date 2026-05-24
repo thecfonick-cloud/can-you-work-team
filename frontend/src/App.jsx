@@ -390,13 +390,14 @@ const GlobalMascot = ({ user }) => {
     };
   }, []);
 
-  // Auto-hide speech bubble after 10 seconds
+  // Auto-hide speech bubble after 10 seconds (5 seconds on mobile)
   useEffect(() => {
     if (bubbleAnim) {
       if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
+      const isMobile = window.innerWidth <= 576;
       bubbleTimeoutRef.current = setTimeout(() => {
         setBubbleAnim(false);
-      }, 10000);
+      }, isMobile ? 5000 : 10000);
     }
     return () => {
       if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
@@ -734,7 +735,13 @@ const GlobalMascot = ({ user }) => {
         &times;
       </button>
 
-      <div className={`mascot-speech-bubble ${bubbleAnim ? 'pop' : ''}`}>
+      <div 
+        className={`mascot-speech-bubble ${bubbleAnim ? 'pop' : ''}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          setBubbleAnim(false);
+        }}
+      >
         {speechText}
       </div>
       

@@ -2464,6 +2464,11 @@ a {
   align-items: center;
 }
 
+.input-with-icon input,
+.input-with-icon select {
+  padding-left: 2.75rem !important;
+}
+
 .input-icon {
   position: absolute;
   left: 1rem;
@@ -3760,8 +3765,8 @@ a {
 }
 
 .withdraw-cta-btn {
-  background-color: var(--text-white);
-  color: var(--primary);
+  background: var(--text-white) !important;
+  color: var(--primary) !important;
   width: 100%;
 }
 
@@ -5700,6 +5705,13 @@ a {
     bottom: 102px !important;
     right: 0 !important;
   }
+  .mascot-close-btn {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 20px !important;
+    top: -12px !important;
+    right: -12px !important;
+  }
   .newsletter-form {
     flex-direction: column;
     background-color: transparent;
@@ -6154,6 +6166,12 @@ a {
   .step-connector {
     display: none !important; /* Hide horizontal line connector */
   }
+
+  /* Stack overview widgets */
+  .bonus-summary-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
 }
 
 @media (max-width: 600px) {
@@ -6166,6 +6184,32 @@ a {
   .calendar-streak-row, .days-row-grid {
     grid-template-columns: repeat(4, 1fr) !important;
     gap: 0.5rem !important;
+  }
+
+  .streak-day-block {
+    padding: 0.75rem 0.5rem !important;
+  }
+
+  /* Scrollable filters & tabs */
+  .list-filters-row {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px !important;
+  }
+  .filter-badge-btn {
+    flex-shrink: 0 !important;
+  }
+
+  .settings-tab-bar {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .settings-tab-bar .tab-btn {
+    flex-shrink: 0 !important;
+    padding: 0.5rem 0.85rem !important;
+    font-size: 0.8rem !important;
   }
 }
 
