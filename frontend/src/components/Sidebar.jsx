@@ -44,15 +44,46 @@ const Sidebar = ({ user, handleLogout, isOpen, setIsOpen }) => {
     { name: 'Help & Support', path: '/help', icon: HelpCircle }
   ];
 
-  let menuItems = [];
+  let sections = [];
   if (user?.role === 'admin') {
-    menuItems = [
-      { name: 'Admin Portal', path: '/admin', icon: ShieldCheck }
+    sections = [
+      {
+        title: 'System Admin',
+        items: [
+          { name: 'Admin Portal', path: '/admin', icon: ShieldCheck }
+        ]
+      },
+      {
+        title: 'Advertiser Features',
+        items: advertiserItems.filter(item => !['Notifications', 'Settings', 'Help & Support'].includes(item.name))
+      },
+      {
+        title: 'Earner Features',
+        items: earnerItems.filter(item => !['Notifications', 'Settings', 'Help & Support'].includes(item.name))
+      },
+      {
+        title: 'General',
+        items: [
+          { name: 'Notifications', path: '/notifications', icon: Bell },
+          { name: 'Settings', path: '/settings', icon: SettingsIcon },
+          { name: 'Help & Support', path: '/help', icon: HelpCircle }
+        ]
+      }
     ];
   } else if (user?.role === 'advertiser') {
-    menuItems = [...advertiserItems];
+    sections = [
+      {
+        title: '',
+        items: advertiserItems
+      }
+    ];
   } else {
-    menuItems = [...earnerItems];
+    sections = [
+      {
+        title: '',
+        items: earnerItems
+      }
+    ];
   }
 
   return (
@@ -96,22 +127,29 @@ const Sidebar = ({ user, handleLogout, isOpen, setIsOpen }) => {
       )}
 
       <nav className="sidebar-nav">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.name}
-              to={item.path}
-              className={({ isActive }) =>
-                `sidebar-nav-link ${isActive ? 'active' : ''}`
-              }
-              onClick={() => setIsOpen(false)}
-            >
-              <Icon size={18} className="nav-icon" />
-              <span>{item.name}</span>
-            </NavLink>
-          );
-        })}
+        {sections.map((section, sIdx) => (
+          <div key={section.title || sIdx} className="sidebar-section">
+            {user?.role === 'admin' && section.title && (
+              <h5 className="sidebar-section-title">{section.title}</h5>
+            )}
+            {section.items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.name}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `sidebar-nav-link ${isActive ? 'active' : ''}`
+                  }
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Icon size={18} className="nav-icon" />
+                  <span>{item.name}</span>
+                </NavLink>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       <div className="sidebar-footer">

@@ -283,7 +283,7 @@ function App() {
           <Route 
             path="/advertiser/dashboard" 
             element={
-              user && user.role === 'advertiser' ? (
+              user && (user.role === 'advertiser' || user.role === 'admin') ? (
                 <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
                   <AdvertiserDashboard user={user} refreshUser={refreshUser} />
                 </AppLayout>
@@ -293,7 +293,7 @@ function App() {
           <Route 
             path="/advertiser/create-campaign" 
             element={
-              user && user.role === 'advertiser' ? (
+              user && (user.role === 'advertiser' || user.role === 'admin') ? (
                 <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
                   <CreateCampaign user={user} refreshUser={refreshUser} />
                 </AppLayout>
@@ -303,7 +303,7 @@ function App() {
           <Route 
             path="/advertiser/manage-campaigns" 
             element={
-              user && user.role === 'advertiser' ? (
+              user && (user.role === 'advertiser' || user.role === 'admin') ? (
                 <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
                   <ManageCampaigns user={user} refreshUser={refreshUser} />
                 </AppLayout>
@@ -313,7 +313,7 @@ function App() {
           <Route 
             path="/advertiser/verify-submissions" 
             element={
-              user && user.role === 'advertiser' ? (
+              user && (user.role === 'advertiser' || user.role === 'admin') ? (
                 <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
                   <VerifySubmissions user={user} refreshUser={refreshUser} />
                 </AppLayout>
@@ -323,7 +323,7 @@ function App() {
           <Route 
             path="/advertiser/fund-wallet" 
             element={
-              user && user.role === 'advertiser' ? (
+              user && (user.role === 'advertiser' || user.role === 'admin') ? (
                 <AppLayout user={user} handleLogout={handleLogout} theme={theme} toggleTheme={toggleTheme}>
                   <FundWallet user={user} refreshUser={refreshUser} />
                 </AppLayout>
@@ -350,16 +350,6 @@ function App() {
   );
 }
 
-// Predefined random screen positions for the cute panda (snapping options)
-const POSITIONS = [
-  { name: 'bottom-right', style: { bottom: '2rem', right: '2rem', top: 'auto', left: 'auto' }, isLeft: false },
-  { name: 'bottom-left', style: { bottom: '2rem', left: '2rem', top: 'auto', right: 'auto' }, isLeft: true },
-  { name: 'top-right', style: { top: '6rem', right: '2rem', bottom: 'auto', left: 'auto' }, isLeft: false },
-  { name: 'top-left', style: { top: '6rem', left: '2rem', bottom: 'auto', right: 'auto' }, isLeft: true },
-  { name: 'mid-left', style: { top: '40%', left: '2rem', bottom: 'auto', right: 'auto' }, isLeft: true },
-  { name: 'mid-right', style: { top: '40%', right: '2rem', bottom: 'auto', left: 'auto' }, isLeft: false }
-];
-
 // Global Mascot Component
 const GlobalMascot = ({ user }) => {
   const location = useLocation();
@@ -369,13 +359,10 @@ const GlobalMascot = ({ user }) => {
   const [bubbleAnim, setBubbleAnim] = useState(false);
   const [mascotClass, setMascotClass] = useState("");
   const [currentPath, setCurrentPath] = useState(location.pathname);
-  const [currentPos, setCurrentPos] = useState(POSITIONS[0]); // default bottom-right
 
-  // Panda expressions, 3D cursor tilt, Drag states, and Leaf particle system
+  // Panda expressions, 3D cursor tilt, and Leaf particle system
   const [emotion, setEmotion] = useState('normal'); // normal, happy, warning, thinking
   const [tiltStyle, setTiltStyle] = useState({});
-  const [dragStyle, setDragStyle] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
   const [leafParticles, setLeafParticles] = useState([]);
 
   const bubbleTimeoutRef = useRef(null);
@@ -383,8 +370,6 @@ const GlobalMascot = ({ user }) => {
   const emotionTimeoutRef = useRef(null);
   const scrollTicking = useRef(false);
   const speechTextRef = useRef("");
-  const dragStart = useRef({ x: 0, y: 0 });
-  const elementStart = useRef({ x: 0, y: 0 });
 
   // Clear dismissed flag on load to restore the mascot!
   useEffect(() => {
@@ -405,6 +390,19 @@ const GlobalMascot = ({ user }) => {
     };
   }, []);
 
+  // Auto-hide speech bubble after 7 seconds
+  useEffect(() => {
+    if (bubbleAnim) {
+      if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
+      bubbleTimeoutRef.current = setTimeout(() => {
+        setBubbleAnim(false);
+      }, 7000);
+    }
+    return () => {
+      if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
+    };
+  }, [bubbleAnim, speechText]);
+
   // Global Emotion Receiver
   useEffect(() => {
     const handleSetEmotion = (e) => {
@@ -423,7 +421,7 @@ const GlobalMascot = ({ user }) => {
 
   // Mouse tilt tracking
   useEffect(() => {
-    if (isDragging || !visible) return;
+    if (!visible) return;
 
     const handleMouseMove = (e) => {
       const mascotEl = document.querySelector('.mascot-tutor-container');
@@ -448,7 +446,7 @@ const GlobalMascot = ({ user }) => {
 
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [isDragging, visible]);
+  }, [visible]);
 
   // Leaf Particles chewing physics generator
   useEffect(() => {
@@ -492,74 +490,6 @@ const GlobalMascot = ({ user }) => {
     frameId = requestAnimationFrame(updateParticles);
     return () => cancelAnimationFrame(frameId);
   }, [leafParticles.length]);
-
-  const handleMouseDown = (e) => {
-    if (e.button !== 0) return;
-    if (e.target.closest('.mascot-close-btn')) return;
-    setIsDragging(true);
-    const rect = e.currentTarget.getBoundingClientRect();
-    elementStart.current = { x: rect.left, y: rect.top };
-    dragStart.current = { x: e.clientX, y: e.clientY };
-    e.preventDefault();
-  };
-
-  // Drag snapping logic
-  useEffect(() => {
-    if (!isDragging) return;
-
-    const handleMouseMove = (e) => {
-      const dx = e.clientX - dragStart.current.x;
-      const dy = e.clientY - dragStart.current.y;
-      setDragStyle({
-        position: 'fixed',
-        left: `${elementStart.current.x + dx}px`,
-        top: `${elementStart.current.y + dy}px`,
-        bottom: 'auto',
-        right: 'auto'
-      });
-    };
-
-    const handleMouseUp = (e) => {
-      setIsDragging(false);
-
-      const x = elementStart.current.x + (e.clientX - dragStart.current.x);
-      const y = elementStart.current.y + (e.clientY - dragStart.current.y);
-      const containerWidth = 80;
-      const containerHeight = 96;
-      const vw = window.innerWidth || 1000;
-      const vh = window.innerHeight || 800;
-
-      const distLeft = x;
-      const distRight = vw - (x + containerWidth);
-      const distTop = y;
-      const distBottom = vh - (y + containerHeight);
-
-      const minDist = Math.min(distLeft, distRight, distTop, distBottom);
-      let nextPos = currentPos;
-
-      if (minDist === distLeft) {
-        nextPos = { name: 'dragged-left', style: { left: '2rem', top: `${Math.max(80, Math.min(vh - 150, y))}px`, right: 'auto', bottom: 'auto' }, isLeft: true };
-      } else if (minDist === distRight) {
-        nextPos = { name: 'dragged-right', style: { right: '2rem', top: `${Math.max(80, Math.min(vh - 150, y))}px`, left: 'auto', bottom: 'auto' }, isLeft: false };
-      } else if (minDist === distTop) {
-        nextPos = { name: 'dragged-top', style: { top: '6rem', left: `${Math.max(20, Math.min(vw - 100, x))}px`, right: 'auto', bottom: 'auto' }, isLeft: x < vw / 2 };
-      } else {
-        nextPos = { name: 'dragged-bottom', style: { bottom: '2rem', left: `${Math.max(20, Math.min(vw - 100, x))}px`, right: 'auto', top: 'auto' }, isLeft: x < vw / 2 };
-      }
-
-      setCurrentPos(nextPos);
-      setDragStyle(null);
-      setMascotClass("mascot-jump");
-      setTimeout(() => setMascotClass(""), 1600);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, currentPos]);
 
   // Advertiser Mascot Event Triggers
   useEffect(() => {
@@ -668,7 +598,7 @@ const GlobalMascot = ({ user }) => {
     return () => clearTimeout(timer);
   }, [location.pathname, user]);
 
-  // Trigger wobbly climb animation on route change (locks in place)
+  // Trigger wobbly bounce animation on route change (locks in place)
   useEffect(() => {
     const dismissed = localStorage.getItem("canyuwork_mascot_dismissed") === "true";
     if (dismissed) {
@@ -678,18 +608,17 @@ const GlobalMascot = ({ user }) => {
 
     if (location.pathname !== currentPath) {
       setBubbleAnim(false);
-      setMascotClass("mascot-climb-off");
+      setCurrentPath(location.pathname);
+      setSpeechText(getSpeechTextForRoute(location.pathname, user));
+      setMascotClass("mascot-jump");
 
       const timer1 = setTimeout(() => {
-        setCurrentPath(location.pathname);
-        setSpeechText(getSpeechTextForRoute(location.pathname, user));
-        setMascotClass("mascot-climb-on");
         setBubbleAnim(true);
-      }, 900); // matches climb-off duration
+      }, 300);
 
       const timer2 = setTimeout(() => {
         setMascotClass("");
-      }, 2000); // clear class after on-animation completes
+      }, 1600);
 
       return () => {
         clearTimeout(timer1);
@@ -784,16 +713,16 @@ const GlobalMascot = ({ user }) => {
 
   return (
     <div 
-      className={`mascot-tutor-container ${visible ? 'visible' : ''} ${currentPos.isLeft ? 'pos-left' : ''} ${isDragging ? 'mascot-dragged' : ''}`}
+      className={`mascot-tutor-container ${visible ? 'visible' : ''}`}
       style={{
-        ...(dragStyle || currentPos.style),
+        bottom: '2rem',
+        right: '2rem',
         ...tiltStyle,
         position: 'fixed',
         zIndex: 999,
-        cursor: isDragging ? 'grabbing' : 'grab'
+        cursor: 'pointer'
       }}
       onClick={handleMascotClick}
-      onMouseDown={handleMouseDown}
     >
       <button 
         className="mascot-close-btn"
