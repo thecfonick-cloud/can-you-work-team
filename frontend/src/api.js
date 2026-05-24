@@ -425,8 +425,12 @@ export const api = {
     } catch (e) {
       // Mock Fallback
       const users = getOfflineUsers();
-      let user = users.find(u => u.email.toLowerCase() === email.toLowerCase() || u.username.toLowerCase() === email.toLowerCase());
+      const sanitizedEmail = email.trim().toLowerCase();
+      let user = users.find(u => u.email.toLowerCase() === sanitizedEmail || u.username.toLowerCase() === sanitizedEmail);
       if (user) {
+        if (user.password && user.password !== password) {
+          return { success: false, message: 'Invalid credentials or offline.' };
+        }
         const wallets = getOfflineWallets();
         const wallet = wallets[user._id];
         if (wallet) {
@@ -472,24 +476,28 @@ export const api = {
     } catch (e) {
       // Mock Fallback
       const users = getOfflineUsers();
-      if (users.some(u => u.email.toLowerCase() === email.toLowerCase() || u.username.toLowerCase() === username.toLowerCase())) {
+      const sanitizedEmail = email.trim().toLowerCase();
+      const sanitizedUsername = username.trim().toLowerCase();
+      
+      if (users.some(u => u.email.toLowerCase() === sanitizedEmail || u.username.toLowerCase() === sanitizedUsername)) {
         return { success: false, message: 'Username or email already exists' };
       }
       
       const newUserId = 'mock_user_' + Math.random().toString(36).substr(2, 9);
-      const referralCode = username.toLowerCase() + Math.floor(100 + Math.random() * 900);
+      const referralCode = sanitizedUsername + Math.floor(100 + Math.random() * 900);
       
       const newUser = {
         _id: newUserId,
         fullname,
-        username,
-        email,
+        username: sanitizedUsername,
+        email: sanitizedEmail,
         phone,
         country,
         referralCode,
         referredBy: referredBy || null,
         isVerified: true,
         role, // Store role in mock DB
+        password, // Save password in mock DB
         balance: role === 'advertiser' ? 0.0 : 200.0, // Advertisers start with 0 budget
         pendingBalance: 0.0,
         totalEarnings: role === 'advertiser' ? 0.0 : 200.0,

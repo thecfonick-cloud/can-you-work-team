@@ -22,8 +22,11 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please fill all required fields' });
     }
 
+    const sanitizedEmail = email.trim().toLowerCase();
+    const sanitizedUsername = username.trim().toLowerCase();
+
     // Check if user exists
-    const userExists = await User.findOne({ $or: [{ email }, { username }] });
+    const userExists = await User.findOne({ $or: [{ email: sanitizedEmail }, { username: sanitizedUsername }] });
     if (userExists) {
       return res.status(400).json({ success: false, message: 'Username or email already exists' });
     }
@@ -32,7 +35,7 @@ const register = async (req, res) => {
     if (deviceFingerprint) {
       const existingDevice = await User.findOne({ deviceFingerprint });
       if (existingDevice) {
-        console.warn(`[REGISTRATION FRAUD WARNING] Duplicate device fingerprint detected for ${username}. Fingerprint: ${deviceFingerprint}`);
+        console.warn(`[REGISTRATION FRAUD WARNING] Duplicate device fingerprint detected for ${sanitizedUsername}. Fingerprint: ${deviceFingerprint}`);
         // We will let the account register but keep it flag-unverified, or restrict functionality
       }
     }
@@ -40,7 +43,7 @@ const register = async (req, res) => {
     // Resolve referredBy code if provided
     let referrerId = null;
     if (referredBy) {
-      const referrer = await User.findOne({ referralCode: referredBy.trim() });
+      const referrer = await User.findOne({ referralCode: referredBy.trim().toLowerCase() });
       if (referrer) {
         referrerId = referrer._id;
       }
@@ -51,15 +54,15 @@ const register = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, salt);
 
     // Create unique referral code
-    const generatedReferralCode = username.toLowerCase() + Math.floor(100 + Math.random() * 900);
+    const generatedReferralCode = sanitizedUsername + Math.floor(100 + Math.random() * 900);
 
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
 
     // Create user
     const user = await User.create({
       fullname,
-      username,
-      email,
+      username: sanitizedUsername,
+      email: sanitizedEmail,
       phone,
       country,
       passwordHash,
@@ -159,9 +162,11 @@ const login = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide email/username and password' });
     }
 
+    const sanitizedEmail = email.trim().toLowerCase();
+
     // Find by email or username
     const user = await User.findOne({
-      $or: [{ email: email.toLowerCase() }, { username: email.toLowerCase() }]
+      $or: [{ email: sanitizedEmail }, { username: sanitizedEmail }]
     });
 
     if (!user) {

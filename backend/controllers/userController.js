@@ -20,20 +20,22 @@ const updateProfile = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    if (username && username !== user.username) {
-      const usernameExists = await User.findOne({ username });
+    if (username && username.trim().toLowerCase() !== user.username) {
+      const sanitizedUsername = username.trim().toLowerCase();
+      const usernameExists = await User.findOne({ username: sanitizedUsername });
       if (usernameExists) {
         return res.status(400).json({ success: false, message: 'Username is already taken' });
       }
-      user.username = username;
+      user.username = sanitizedUsername;
     }
 
-    if (email && email !== user.email) {
-      const emailExists = await User.findOne({ email });
+    if (email && email.trim().toLowerCase() !== user.email) {
+      const sanitizedEmail = email.trim().toLowerCase();
+      const emailExists = await User.findOne({ email: sanitizedEmail });
       if (emailExists) {
         return res.status(400).json({ success: false, message: 'Email is already taken' });
       }
-      user.email = email;
+      user.email = sanitizedEmail;
     }
 
     if (fullname) user.fullname = fullname;
