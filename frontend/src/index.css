@@ -5150,6 +5150,9 @@ a {
   }
   .topbar-title {
     font-size: 1.1rem !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.2 !important;
   }
 }
 
@@ -5704,6 +5707,7 @@ a {
     width: 180px !important;
     bottom: 102px !important;
     right: 0 !important;
+    pointer-events: none !important;
   }
   .mascot-close-btn {
     width: 32px !important;
