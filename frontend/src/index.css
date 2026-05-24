@@ -4036,6 +4036,7 @@ a {
   padding: 0.5rem;
   font-size: 0.9rem;
   outline: none;
+  min-width: 0;
 }
 
 .copy-btn {
@@ -5072,19 +5073,10 @@ a {
     gap: 0.5rem;
   }
   .topbar-user-details {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    display: none !important;
   }
-  .topbar-username {
-    font-size: 0.75rem;
-    max-width: 120px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .topbar-user-role {
-    font-size: 0.6rem;
+  .topbar-divider {
+    display: none !important;
   }
 
   /* Legal Pages Content Card */
@@ -6183,6 +6175,10 @@ a {
     gap: 1rem !important;
     text-align: center !important;
   }
+
+  .referrals-invite-card {
+    padding: 1.5rem !important;
+  }
 }
 
 @media (max-width: 600px) {
@@ -6202,12 +6198,16 @@ a {
   }
 
   /* Scrollable filters & tabs */
-  .list-filters-row {
+  .list-filters-row,
+  .tasks-filter-bar,
+  .my-tasks-tabs-navigation {
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 4px !important;
   }
+  .filter-tab-btn,
+  .tab-nav-btn,
   .filter-badge-btn {
     flex-shrink: 0 !important;
   }
