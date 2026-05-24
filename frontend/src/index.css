@@ -5026,10 +5026,33 @@ a {
 
   /* Topbar Responsive */
   .app-topbar {
-    padding-bottom: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     height: auto;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+    padding: 0.75rem 1rem 0.5rem;
+    gap: 0.5rem;
+  }
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.5rem;
+  }
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
   .topbar-user-details {
     display: flex;
@@ -5038,19 +5061,13 @@ a {
   }
   .topbar-username {
     font-size: 0.75rem;
-    max-width: 75px;
+    max-width: 120px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .topbar-user-role {
     font-size: 0.6rem;
-  }
-  .topbar-right {
-    gap: 0.75rem;
-  }
-  .topbar-actions {
-    gap: 0.5rem;
   }
 
   /* Legal Pages Content Card */
@@ -5395,18 +5412,17 @@ a {
 .mascot-tutor-container {
   position: fixed;
   z-index: 999;
-  cursor: grab;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   pointer-events: all;
   opacity: 0;
   transform: translateY(20px) scale(0.9);
-  /* Smooth glide transitions for coordinates */
+  width: 80px;
+  height: 96px;
   transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), 
-              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), 
-              top 1.2s cubic-bezier(0.25, 0.8, 0.25, 1), 
-              left 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .mascot-tutor-container.visible {
@@ -5423,19 +5439,22 @@ a {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(15, 23, 42, 0.05);
   font-size: 0.85rem;
   font-weight: 700;
-  max-width: 220px;
+  width: 220px;
   text-align: left;
-  margin-bottom: 0.75rem;
-  position: relative;
+  position: absolute;
+  bottom: 108px;
+  right: 0;
   transform-origin: bottom right;
   opacity: 0;
   transform: scale(0);
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease !important;
+  pointer-events: none;
 }
 
 .mascot-speech-bubble.pop {
   opacity: 1 !important;
   transform: scale(1) !important;
+  pointer-events: all;
 }
 
 .mascot-speech-bubble::after {
@@ -5658,15 +5677,16 @@ a {
 
 @media (max-width: 576px) {
   .mascot-tutor-container {
-    bottom: 1rem;
-    right: 1rem;
-    transform: scale(0.6) !important;
+    bottom: 1rem !important;
+    right: 1rem !important;
+    transform: scale(0.7) !important;
     transform-origin: bottom right;
   }
   .mascot-speech-bubble {
-    font-size: 0.75rem;
-    max-width: 170px;
-    padding: 0.6rem 1rem;
+    font-size: 0.9rem !important;
+    width: 180px !important;
+    bottom: 102px !important;
+    right: 0 !important;
   }
   .newsletter-form {
     flex-direction: column;

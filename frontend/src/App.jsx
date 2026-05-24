@@ -390,13 +390,13 @@ const GlobalMascot = ({ user }) => {
     };
   }, []);
 
-  // Auto-hide speech bubble after 7 seconds
+  // Auto-hide speech bubble after 10 seconds
   useEffect(() => {
     if (bubbleAnim) {
       if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
       bubbleTimeoutRef.current = setTimeout(() => {
         setBubbleAnim(false);
-      }, 7000);
+      }, 10000);
     }
     return () => {
       if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current);
@@ -723,6 +723,7 @@ const GlobalMascot = ({ user }) => {
         cursor: 'pointer'
       }}
       onClick={handleMascotClick}
+      onMouseEnter={() => setBubbleAnim(true)}
     >
       <button 
         className="mascot-close-btn"
