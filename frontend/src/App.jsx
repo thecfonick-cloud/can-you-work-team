@@ -114,17 +114,23 @@ function App() {
   }, [theme]);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem('canyuwork_token');
-    if (token) {
-      const res = await api.getProfile();
-      if (res.success) {
-        setUser(res.user);
-      } else {
-        // Clear corrupt token
-        localStorage.removeItem('canyuwork_token');
+    try {
+      const token = localStorage.getItem('canyuwork_token');
+      if (token) {
+        const res = await api.getProfile();
+        if (res.success) {
+          setUser(res.user);
+        } else {
+          // Clear corrupt token
+          localStorage.removeItem('canyuwork_token');
+        }
       }
+    } catch (err) {
+      console.error("Auth check failed:", err);
+      localStorage.removeItem('canyuwork_token');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleLoginSuccess = (userData) => {

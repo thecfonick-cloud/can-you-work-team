@@ -374,31 +374,43 @@ const initOfflineDb = () => {
   }
 };
 
-const getOfflineUsers = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_users') || '[]'); };
+const getLocalStorageItem = (key, defaultValue) => {
+  try {
+    const val = localStorage.getItem(key);
+    if (val && val !== 'null' && val !== 'undefined') {
+      return JSON.parse(val);
+    }
+  } catch (e) {
+    console.error(`Error parsing localStorage key "${key}":`, e);
+  }
+  return defaultValue;
+};
+
+const getOfflineUsers = () => { initOfflineDb(); return getLocalStorageItem('cw_offline_users', []); };
 const saveOfflineUsers = (users) => localStorage.setItem('cw_offline_users', JSON.stringify(users));
 
-const getOfflineWallets = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_wallets') || '{}'); };
+const getOfflineWallets = () => { initOfflineDb(); return getLocalStorageItem('cw_offline_wallets', {}); };
 const saveOfflineWallets = (wallets) => localStorage.setItem('cw_offline_wallets', JSON.stringify(wallets));
 
-const getOfflineTasks = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_tasks') || '[]'); };
+const getOfflineTasks = () => { initOfflineDb(); return getLocalStorageItem('cw_offline_tasks', []); };
 const saveOfflineTasks = (tasks) => localStorage.setItem('cw_offline_tasks', JSON.stringify(tasks));
 
-const getOfflineSubmissions = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_submissions') || '[]'); };
+const getOfflineSubmissions = () => { initOfflineDb(); return getLocalStorageItem('cw_offline_submissions', []); };
 const saveOfflineSubmissions = (subs) => localStorage.setItem('cw_offline_submissions', JSON.stringify(subs));
 
-const getOfflineTransactions = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_transactions') || '[]'); };
+const getOfflineTransactions = () => { initOfflineDb(); return getLocalStorageItem('cw_offline_transactions', []); };
 const saveOfflineTransactions = (txs) => localStorage.setItem('cw_offline_transactions', JSON.stringify(txs));
 
-const getOfflineNotifications = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_notifications') || '[]'); };
+const getOfflineNotifications = () => { initOfflineDb(); return getLocalStorageItem('cw_offline_notifications', []); };
 const saveOfflineNotifications = (notifs) => localStorage.setItem('cw_offline_notifications', JSON.stringify(notifs));
 
-const getOfflineStreaks = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_streaks') || '{}'); };
+const getOfflineStreaks = () => { initOfflineDb(); return getLocalStorageItem('cw_offline_streaks', {}); };
 const saveOfflineStreaks = (streaks) => localStorage.setItem('cw_offline_streaks', JSON.stringify(streaks));
 
-const getOfflineWithdrawals = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_withdrawals') || '[]'); };
+const getOfflineWithdrawals = () => { initOfflineDb(); return getLocalStorageItem('cw_offline_withdrawals', []); };
 const saveOfflineWithdrawals = (withdrawals) => localStorage.setItem('cw_offline_withdrawals', JSON.stringify(withdrawals));
 
-const getOfflineReferrals = () => { initOfflineDb(); return JSON.parse(localStorage.getItem('cw_offline_referrals') || '[]'); };
+const getOfflineReferrals = () => { initOfflineDb(); return getLocalStorageItem('cw_offline_referrals', []); };
 const saveOfflineReferrals = (refs) => localStorage.setItem('cw_offline_referrals', JSON.stringify(refs));
 
 const getActiveUserIdOffline = () => {
