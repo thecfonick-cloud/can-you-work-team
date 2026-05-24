@@ -6172,9 +6172,16 @@ a {
   }
 
   /* Stack overview widgets */
-  .bonus-summary-grid {
+  .bonus-summary-grid,
+  .leaderboard-stats-grid {
     grid-template-columns: 1fr !important;
     gap: 1rem !important;
+  }
+
+  .user-own-rank-highlight-strip {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+    text-align: center !important;
   }
 }
 
@@ -6214,6 +6221,11 @@ a {
     flex-shrink: 0 !important;
     padding: 0.5rem 0.85rem !important;
     font-size: 0.8rem !important;
+  }
+
+  .settings-stats-row {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
   }
 }
 
