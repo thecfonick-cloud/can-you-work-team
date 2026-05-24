@@ -408,6 +408,37 @@ const getActiveUserIdOffline = () => {
   return token;
 };
 
+const syncUserToOfflineDb = (user, password = null) => {
+  try {
+    const users = getOfflineUsers();
+    const idx = users.findIndex(u => u._id === user._id || u.email.toLowerCase() === user.email.toLowerCase() || u.username.toLowerCase() === user.username.toLowerCase());
+    
+    const offlineUser = {
+      ...user,
+      password: password || (idx !== -1 ? users[idx].password : null)
+    };
+
+    if (idx !== -1) {
+      users[idx] = { ...users[idx], ...offlineUser };
+    } else {
+      users.push(offlineUser);
+    }
+    
+    saveOfflineUsers(users);
+
+    const wallets = getOfflineWallets();
+    wallets[user._id] = {
+      availableBalance: user.balance || 0,
+      pendingBalance: user.pendingBalance || 0,
+      totalEarnings: user.totalEarnings || user.balance || 0,
+      totalWithdrawn: user.totalWithdrawn || 0
+    };
+    saveOfflineWallets(wallets);
+  } catch (err) {
+    console.error('Error syncing user to offline database:', err);
+  }
+};
+
 export const api = {
   // Authentication
   login: async (email, password) => {
@@ -420,6 +451,7 @@ export const api = {
       const data = await res.json();
       if (data.success) {
         localStorage.setItem('canyuwork_token', data.token);
+        syncUserToOfflineDb(data.user, password);
       }
       return data;
     } catch (e) {
@@ -471,6 +503,7 @@ export const api = {
       const data = await res.json();
       if (data.success) {
         localStorage.setItem('canyuwork_token', data.token);
+        syncUserToOfflineDb(data.user, password);
       }
       return data;
     } catch (e) {
@@ -1288,7 +1321,11 @@ export const api = {
   getProfile: async () => {
     try {
       const res = await fetch(`${BASE_URL}/user/profile`, { headers: getHeaders() });
-      return await res.json();
+      const data = await res.json();
+      if (data.success && data.user) {
+        syncUserToOfflineDb(data.user);
+      }
+      return data;
     } catch (e) {
       const userId = getActiveUserIdOffline();
       const users = getOfflineUsers();
@@ -1314,7 +1351,11 @@ export const api = {
         headers: getHeaders(),
         body: JSON.stringify({ fullname, username, email, phone, country, socialAccounts })
       });
-      return await res.json();
+      const data = await res.json();
+      if (data.success && data.user) {
+        syncUserToOfflineDb(data.user);
+      }
+      return data;
     } catch (e) {
       const userId = getActiveUserIdOffline();
       const users = getOfflineUsers();
