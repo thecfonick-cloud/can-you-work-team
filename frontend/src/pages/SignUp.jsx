@@ -215,7 +215,7 @@ const SignUp = ({ onLoginSuccess }) => {
           )}
 
           <form className="auth-form" onSubmit={handleSubmit} style={{ gap: '0.85rem' }}>
-            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <div className="form-grid">
               <div className="form-group">
                 <label htmlFor="fullname">Full Name</label>
                 <div className="input-with-icon">
@@ -262,7 +262,7 @@ const SignUp = ({ onLoginSuccess }) => {
               </div>
             </div>
 
-            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <div className="form-grid">
               <div className="form-group">
                 <label htmlFor="country">Country</label>
                 <div className="input-with-icon">

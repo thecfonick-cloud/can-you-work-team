@@ -6079,3 +6079,108 @@ a {
     display: none !important;
   }
 }
+
+/* ==========================================================================
+   MOBILE VIEWPORT LAYOUT ADJUSTMENTS & RESPONSIVENESS OVERRIDES
+   ========================================================================== */
+
+/* Quick launch grid for Advertiser Dashboard */
+.quick-launch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  /* Task Row Item mobile override */
+  .task-row-item {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    padding: 1rem !important;
+  }
+  
+  .task-row-slots {
+    align-items: flex-start !important;
+  }
+  
+  .slots-text-row {
+    text-align: left !important;
+  }
+  
+  .task-row-action {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin-top: 0.5rem !important;
+    border-top: 1px solid var(--border-color) !important;
+    padding-top: 0.75rem !important;
+  }
+  
+  .start-task-btn-row {
+    width: auto !important;
+  }
+
+  /* Form Grid responsive layout for profile, signup, and settings */
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Help Categories Grid responsive layout */
+  .help-categories-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* Withdraw Stepper vertical layout on mobile */
+  .withdraw-steps-indicator-card {
+    padding: 1rem !important;
+  }
+  
+  .withdraw-steps-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+  
+  .step-node {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+  }
+  
+  .step-connector {
+    display: none !important; /* Hide horizontal line connector */
+  }
+}
+
+@media (max-width: 600px) {
+  /* Quick launch grid stack */
+  .quick-launch-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Attendance and Daily Streak grids wrap layout */
+  .calendar-streak-row, .days-row-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+}
+
+@media (max-width: 380px) {
+  /* Attendance and Daily Streak grids wrap smaller layout */
+  .calendar-streak-row, .days-row-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* DND Time Range inputs stack */
+  .dnd-time-range-inputs {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+}
+

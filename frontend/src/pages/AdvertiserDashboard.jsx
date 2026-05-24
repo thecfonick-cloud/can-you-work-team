@@ -129,7 +129,7 @@ const AdvertiserDashboard = ({ user, refreshUser }) => {
             <h3>Quick Launch Campaign</h3>
           </div>
           
-          <div className="quick-launch-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="quick-launch-grid">
             <div 
               className="quick-launch-box" 
               onClick={() => navigate('/advertiser/create-campaign?platform=Instagram')}
