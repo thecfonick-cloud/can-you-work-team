@@ -50,7 +50,7 @@ const Sidebar = ({ user, handleLogout, isOpen, setIsOpen }) => {
       {
         title: 'System Admin',
         items: [
-          { name: 'Admin Alexa Cockpit', href: 'https://admin-alexa.vercel.app', icon: ShieldCheck, external: true }
+          { name: 'Admin Alexa Cockpit', href: '/admin-alexa/', icon: ShieldCheck, external: true }
         ]
       },
       {

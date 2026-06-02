@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/admin-alexa/:path*", "destination": "/admin-alexa/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

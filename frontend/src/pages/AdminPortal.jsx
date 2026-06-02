@@ -324,7 +324,7 @@ const AdminPortal = ({ refreshUser }) => {
           <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.15rem', color: '#00d4ff', display: 'flex', alignItems: 'center', gap: '8px' }}>🚀 Standalone Cockpit: Admin Alexa is Active!</h3>
           <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.75)' }}>The admin interface has been upgraded to a dedicated platform with a real-time Operations Center activity feed, command controls, and full transaction ledger.</p>
         </div>
-        <a href="https://admin-alexa.vercel.app" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ background: 'linear-gradient(90deg, #8b5cf6, #00d4ff)', border: 'none', color: '#ffffff', padding: '0.6rem 1.2rem', fontWeight: 'bold', textDecoration: 'none', borderRadius: '4px', whiteSpace: 'nowrap' }}>Open Admin Alexa ↗</a>
+        <a href="/admin-alexa/" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ background: 'linear-gradient(90deg, #8b5cf6, #00d4ff)', border: 'none', color: '#ffffff', padding: '0.6rem 1.2rem', fontWeight: 'bold', textDecoration: 'none', borderRadius: '4px', whiteSpace: 'nowrap' }}>Open Admin Alexa ↗</a>
       </div>
 
       {/* Header bar */}
