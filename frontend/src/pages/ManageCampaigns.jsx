@@ -99,16 +99,16 @@ const ManageCampaigns = () => {
                       </td>
                       <td style={{ padding: '1rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
-                          <span>{c.subscribersCount} / {c.subscribersRequired} completions</span>
-                          <span>{percent}%</span>
+                          <span>{c.currentCount || c.subscribersCount || 0} / {c.targetCount || c.subscribersRequired || 0} completions</span>
+                          <span>{c.targetCount > 0 ? Math.min(100, Math.floor(((c.currentCount || 0) / c.targetCount) * 100)) : percent}%</span>
                         </div>
                         <div style={{ width: '100%', height: '6px', background: 'var(--bg-app)', borderRadius: '3px', overflow: 'hidden' }}>
-                          <div style={{ width: `${percent}%`, height: '100%', background: 'var(--primary)', borderRadius: '3px' }}></div>
+                          <div style={{ width: `${c.targetCount > 0 ? Math.min(100, Math.floor(((c.currentCount || 0) / c.targetCount) * 100)) : percent}%`, height: '100%', background: 'var(--primary)', borderRadius: '3px' }}></div>
                         </div>
                       </td>
                       <td style={{ padding: '1rem' }}>
                         <div><strong>₦{c.reward}</strong> / task</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Budget: ₦{c.totalBudget.toLocaleString()}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Cost: ₦{(c.totalCost || c.totalBudget || 0).toLocaleString()}</div>
                       </td>
                       <td style={{ padding: '1rem' }}>
                         <span style={{
@@ -119,10 +119,10 @@ const ManageCampaigns = () => {
                           fontWeight: 'bold',
                           padding: '0.25rem 0.5rem',
                           borderRadius: 'var(--radius-full)',
-                          background: c.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(100, 116, 139, 0.1)',
-                          color: c.status === 'active' ? '#10b981' : '#64748b'
+                          background: c.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : c.status === 'pending_payment' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(100, 116, 139, 0.1)',
+                          color: c.status === 'active' ? '#10b981' : c.status === 'pending_payment' ? '#f59e0b' : '#64748b'
                         }}>
-                          {c.status === 'active' ? 'Active' : 'Completed'}
+                          {c.status === 'active' ? 'Active' : c.status === 'pending_payment' ? 'Pending Payment' : 'Completed'}
                         </span>
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'right' }}>

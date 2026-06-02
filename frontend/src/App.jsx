@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy, useCallback, useRef } from 'react';
+import { useState, useEffect, Suspense, lazy, useCallback, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { api } from './api';
 
@@ -38,10 +38,6 @@ const AppLayout = ({ user, handleLogout, theme, toggleTheme, children }) => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    fetchUnreadCount();
-  }, [location]);
-
   const fetchUnreadCount = async () => {
     try {
       const res = await api.getNotifications();
@@ -52,6 +48,10 @@ const AppLayout = ({ user, handleLogout, theme, toggleTheme, children }) => {
       console.error("Error fetching unread notifications:", err);
     }
   };
+
+  useEffect(() => {
+    fetchUnreadCount();
+  }, [location]);
 
   const getPageTitle = (path) => {
     switch (path) {
@@ -104,15 +104,6 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState(() => localStorage.getItem('canyuwork_theme') || 'light');
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
-    // Set theme attribute on html node
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
   const checkAuth = async () => {
     try {
       const token = localStorage.getItem('canyuwork_token');
@@ -132,6 +123,15 @@ function App() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    // Set theme attribute on html node
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   const handleLoginSuccess = (userData) => {
     setUser(userData);
@@ -360,7 +360,7 @@ function App() {
 const GlobalMascot = ({ user }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(() => localStorage.getItem("canyuwork_mascot_dismissed") !== "true");
   const [speechText, setSpeechText] = useState("");
   const [bubbleAnim, setBubbleAnim] = useState(false);
   const [mascotClass, setMascotClass] = useState("");
@@ -609,7 +609,7 @@ const GlobalMascot = ({ user }) => {
   useEffect(() => {
     const dismissed = localStorage.getItem("canyuwork_mascot_dismissed") === "true";
     if (dismissed) {
-      setVisible(false);
+      if (visible) setVisible(false);
       return;
     }
 

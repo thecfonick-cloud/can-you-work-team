@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, TrendingUp, Users, DollarSign, Award, ShieldAlert, Sparkles, Menu, X } from 'lucide-react';
+import { ArrowRight, TrendingUp, Users, DollarSign, Award, ShieldAlert, Sparkles, Menu, X } from 'lucide-react';
 import Footer from '../components/Footer';
+import { api } from '../api';
 
 // ─── Animated Counter Hook ────────────────────────────
 function useCountUp(target, duration = 2000, startOnView = true) {
@@ -24,6 +25,8 @@ function useCountUp(target, duration = 2000, startOnView = true) {
       setCount(Math.floor(eased * target));
       if (progress < 1) {
         rafId = requestAnimationFrame(animate);
+      } else {
+        setCount(target);
       }
     };
 
@@ -68,37 +71,37 @@ function useScrollReveal() {
   return containerRef;
 }
 
-// ─── 3D Tilt Handler ──────────────────────────────────
-function handleTilt(e) {
-  const card = e.currentTarget;
-  const rect = card.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  const centerX = rect.width / 2;
-  const centerY = rect.height / 2;
-  const rotateX = ((y - centerY) / centerY) * -8;
-  const rotateY = ((x - centerX) / centerX) * 8;
-  card.style.setProperty('--tilt-x', `${rotateX}deg`);
-  card.style.setProperty('--tilt-y', `${rotateY}deg`);
-}
-
-function handleTiltReset(e) {
-  const card = e.currentTarget;
-  card.style.setProperty('--tilt-x', '0deg');
-  card.style.setProperty('--tilt-y', '0deg');
-}
-
 const LandingPage = () => {
   const navigate = useNavigate();
   const pageRef = useScrollReveal();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const [statsData, setStatsData] = useState({ rewardsPaid: 0, tasksCompleted: 0, activeEarners: 0 });
+
   // Animated counters
-  const counter1 = useCountUp(2500000, 2200);
-  const counter2 = useCountUp(240000, 2000);
-  const counter3 = useCountUp(12000, 1800);
+  const counter1 = useCountUp(statsData.rewardsPaid, 2200);
+  const counter2 = useCountUp(statsData.tasksCompleted, 2000);
+  const counter3 = useCountUp(statsData.activeEarners, 1800);
   const [countersStarted, setCountersStarted] = useState(false);
   const statsRef = useRef(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await api.getGlobalStats();
+        if (res.success && res.stats) {
+          setStatsData({
+            rewardsPaid: res.stats.totalRewardsPaid || 0,
+            tasksCompleted: res.stats.totalTasksCompleted || 0,
+            activeEarners: res.stats.activeEarners || 0
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching global stats:', err);
+      }
+    };
+    fetchStats();
+  }, []);
 
 
 

@@ -4,6 +4,30 @@ const TaskSubmission = require('../models/TaskSubmission');
 const Wallet = require('../models/Wallet');
 const Transaction = require('../models/Transaction');
 const Notification = require('../models/Notification');
+const Leaderboard = require('../models/Leaderboard');
+const Referral = require('../models/Referral');
+
+// Helper: Refresh leaderboard row for a user
+const refreshLeaderboard = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    if (!user) return;
+    
+    const referralsCount = await Referral.countDocuments({ referrerId: userId });
+    
+    await Leaderboard.findOneAndUpdate(
+      { userId },
+      { 
+        totalEarnings: user.totalEarnings,
+        referralsCount,
+        updatedAt: Date.now()
+      },
+      { upsert: true, new: true }
+    );
+  } catch (error) {
+    console.error('Leaderboard Refresh Error:', error);
+  }
+};
 
 // 1. Submit deposit
 const depositFunds = async (req, res) => {
@@ -185,6 +209,7 @@ const verifySubmission = async (req, res) => {
           earner.balance = earnerWallet.availableBalance;
           earner.totalEarnings = earnerWallet.totalEarned;
           await earner.save();
+          await refreshLeaderboard(submission.userId);
         }
       }
 

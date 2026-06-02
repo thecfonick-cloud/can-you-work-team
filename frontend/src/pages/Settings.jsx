@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { User, ShieldCheck, Mail, Lock, Phone, Globe, Send, AlertCircle, CheckCircle } from 'lucide-react';
 
 const Instagram = ({ size = 24, className = "" }) => (
@@ -41,10 +41,6 @@ const Settings = ({ refreshUser }) => {
   const [msg, setMsg] = useState({ type: '', text: '' });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchProfileDetails();
-  }, []);
-
   const fetchProfileDetails = async () => {
     const res = await api.getProfile();
     if (res.success) {
@@ -65,6 +61,10 @@ const Settings = ({ refreshUser }) => {
       }
     }
   };
+
+  useEffect(() => {
+    fetchProfileDetails();
+  }, []);
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();

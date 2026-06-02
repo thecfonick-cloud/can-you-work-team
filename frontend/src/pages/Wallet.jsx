@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  TrendingUp, 
+  TrendingUp,
   ArrowUpRight, 
   ArrowDownLeft, 
-  Download, 
+  Download,
   Clock, 
   CheckCircle2, 
   XCircle,
@@ -20,12 +20,6 @@ const Wallet = () => {
   const [withdrawals, setWithdrawals] = useState([]);
   const [historyTab, setHistoryTab] = useState('transactions');
   const [showUSD, setShowUSD] = useState(false);
-
-  useEffect(() => {
-    fetchWalletDetails();
-    fetchTransactions();
-    fetchWithdrawals();
-  }, []);
 
   const fetchWalletDetails = async () => {
     const res = await api.getWallet();
@@ -47,6 +41,12 @@ const Wallet = () => {
       setWithdrawals(res.withdrawals);
     }
   };
+
+  useEffect(() => {
+    fetchWalletDetails();
+    fetchTransactions();
+    fetchWithdrawals();
+  }, []);
 
   if (!wallet) {
     return <div className="loading-spinner-container">Loading Wallet Details...</div>;

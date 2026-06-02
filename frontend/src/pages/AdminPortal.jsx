@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Users, 
   Coins, 
@@ -13,20 +13,18 @@ import {
   Trash2, 
   Image as ImageIcon, 
   RefreshCw, 
-  DollarSign, 
-  Eye, 
   Edit 
 } from 'lucide-react';
 import { api } from '../api';
 
-const AdminPortal = ({ user }) => {
-  const [activeTab, setActiveTab] = useState('deposits');
+const AdminPortal = ({ refreshUser }) => {
+  const [activeTab, setActiveTab] = useState('campaigns');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   // Data states
-  const [deposits, setDeposits] = useState([]);
+  const [pendingCampaigns, setPendingCampaigns] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
   const [users, setUsers] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
@@ -35,7 +33,7 @@ const AdminPortal = ({ user }) => {
     totalUsers: 0,
     activeTasks: 0,
     pendingSubmissions: 0,
-    pendingDeposits: 0,
+    pendingCampaigns: 0,
     pendingWithdrawals: 0
   });
 
@@ -45,18 +43,14 @@ const AdminPortal = ({ user }) => {
   const [editingUser, setEditingUser] = useState(null);
   const [newBalance, setNewBalance] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
-
   const fetchData = async () => {
     setLoading(true);
     setError('');
     setMessage('');
     try {
-      if (activeTab === 'deposits') {
-        const res = await api.getPendingDeposits();
-        if (res.success) setDeposits(res.deposits || []);
+      if (activeTab === 'pending-campaigns') {
+        const res = await api.getAllCampaigns();
+        if (res.success) setPendingCampaigns((res.campaigns || []).filter(c => c.status === 'pending_payment'));
       } else if (activeTab === 'withdrawals') {
         const res = await api.getAllWithdrawals();
         if (res.success) setWithdrawals(res.withdrawals || []);
@@ -73,7 +67,6 @@ const AdminPortal = ({ user }) => {
         // Load summary analytics
         const resUsers = await api.getAllUsers();
         const resCamp = await api.getAllCampaigns();
-        const resDep = await api.getPendingDeposits();
         const resWith = await api.getAllWithdrawals();
         const resSubs = await api.getAllSubmissions();
 
@@ -81,7 +74,7 @@ const AdminPortal = ({ user }) => {
           totalUsers: resUsers.success ? resUsers.users.length : 0,
           activeTasks: resCamp.success ? resCamp.campaigns.filter(c => c.status === 'active').length : 0,
           pendingSubmissions: resSubs.success ? resSubs.submissions.filter(s => s.status === 'pending').length : 0,
-          pendingDeposits: resDep.success ? resDep.deposits.length : 0,
+          pendingCampaigns: resCamp.success ? resCamp.campaigns.filter(c => c.status === 'pending_payment').length : 0,
           pendingWithdrawals: resWith.success ? resWith.withdrawals.filter(w => w.status === 'pending').length : 0
         });
       }
@@ -92,13 +85,17 @@ const AdminPortal = ({ user }) => {
     setLoading(false);
   };
 
+  useEffect(() => {
+    fetchData();
+  }, [activeTab]);
+
   // Actions
-  const handleApproveDeposit = async (id) => {
-    if (!window.confirm('Are you sure you want to approve this deposit? The advertiser budget will be funded instantly.')) return;
+  const handleApproveCampaign = async (id) => {
+    if (!window.confirm('Are you sure you want to approve this campaign payment? The campaign will go live immediately.')) return;
     try {
-      const res = await api.approveDeposit(id);
+      const res = await api.approveCampaign(id);
       if (res.success) {
-        setMessage('Deposit approved successfully. Wallet funded.');
+        setMessage('Campaign payment verified and activated.');
         window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'happy', duration: 5000 } }));
         fetchData();
       } else {
@@ -111,12 +108,12 @@ const AdminPortal = ({ user }) => {
     }
   };
 
-  const handleRejectDeposit = async (id) => {
-    if (!window.confirm('Are you sure you want to reject this deposit?')) return;
+  const handleRejectCampaign = async (id) => {
+    if (!window.confirm('Are you sure you want to reject this campaign payment?')) return;
     try {
-      const res = await api.rejectDeposit(id);
+      const res = await api.updateCampaignStatus(id, 'rejected');
       if (res.success) {
-        setMessage('Deposit rejected.');
+        setMessage('Campaign payment rejected.');
         window.dispatchEvent(new CustomEvent('mascot-set-emotion', { detail: { newEmotion: 'warning', duration: 5000 } }));
         fetchData();
       } else {
@@ -173,13 +170,16 @@ const AdminPortal = ({ user }) => {
     try {
       // In online mode, calls the suspendUser endpoint:
       // Body needs { userId, status: 'suspended' / 'active' }
+      const controller1 = new AbortController();
+      setTimeout(() => controller1.abort(), 500);
       const res = await fetch('http://localhost:5000/api/admin/user/suspend', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('canyuwork_token')}`
         },
-        body: JSON.stringify({ userId, status: nextStatus })
+        body: JSON.stringify({ userId, status: nextStatus }),
+        signal: controller1.signal
       });
       const data = await res.json();
       
@@ -235,13 +235,16 @@ const AdminPortal = ({ user }) => {
       // Let advertiser/admin verify submissions
       // Check if we can hit the verify endpoint directly
       const token = localStorage.getItem('canyuwork_token');
+      const controller2 = new AbortController();
+      setTimeout(() => controller2.abort(), 500);
       const res = await fetch(`http://localhost:5000/api/admin/task/review`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ submissionId, status })
+        body: JSON.stringify({ submissionId, status }),
+        signal: controller2.signal
       });
       const data = await res.json();
       if (data.success || !res.ok) {
@@ -283,7 +286,16 @@ const AdminPortal = ({ user }) => {
           const tasks = JSON.parse(localStorage.getItem('cw_offline_tasks') || '[]');
           const sub = subs[idx];
           const task = tasks.find(t => t._id === sub.taskId);
-          const reward = task ? task.rewardAmount || task.reward || 15 : 15;
+          
+          if (task) {
+            task.currentCount = (task.currentCount || task.subscribersCount || 0) + 1;
+            if (task.currentCount >= (task.targetCount || task.subscribersRequired || 99999)) {
+              task.status = 'completed';
+            }
+            localStorage.setItem('cw_offline_tasks', JSON.stringify(tasks));
+          }
+
+          const reward = task ? task.rewardAmount || task.reward || 2 : 2;
           const wallets = JSON.parse(localStorage.getItem('cw_offline_wallets') || '{}');
           if (wallets[sub.userId]) {
             wallets[sub.userId].availableBalance += reward;
@@ -328,7 +340,7 @@ const AdminPortal = ({ user }) => {
       <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-app)', padding: '0.35rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', overflowX: 'auto' }}>
         {[
           { id: 'overview', label: 'System Overview', icon: RefreshCw },
-          { id: 'deposits', label: `USDT Deposits (${deposits.length})`, icon: Coins },
+          { id: 'pending-campaigns', label: `Pending Payments (${pendingCampaigns.length})`, icon: Coins },
           { id: 'withdrawals', label: 'Withdrawal Payouts', icon: Download },
           { id: 'users', label: 'Users Management', icon: Users },
           { id: 'campaigns', label: 'Advertiser Campaigns', icon: ListTodo },
@@ -392,8 +404,8 @@ const AdminPortal = ({ user }) => {
               </div>
               <div style={{ padding: '1.5rem', background: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                 <Coins size={28} style={{ color: '#f59e0b', marginBottom: '0.5rem' }} />
-                <h4 style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>Pending Deposits</h4>
-                <p style={{ fontSize: '2rem', fontWeight: 'bold', margin: '4px 0 0 0', color: analytics.pendingDeposits > 0 ? '#f59e0b' : 'inherit' }}>{analytics.pendingDeposits}</p>
+                <h4 style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>Pending Payments</h4>
+                <p style={{ fontSize: '2rem', fontWeight: 'bold', margin: '4px 0 0 0', color: analytics.pendingCampaigns > 0 ? '#f59e0b' : 'inherit' }}>{analytics.pendingCampaigns}</p>
               </div>
               <div style={{ padding: '1.5rem', background: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                 <Download size={28} style={{ color: '#8b5cf6', marginBottom: '0.5rem' }} />
@@ -408,69 +420,56 @@ const AdminPortal = ({ user }) => {
           </div>
         )}
 
-        {/* Tab 2: USDT Deposits */}
-        {activeTab === 'deposits' && (
+        {/* Tab 2: Pending Campaign Payments */}
+        {activeTab === 'pending-campaigns' && (
           <div>
-            <h3 style={{ marginBottom: '1.25rem', fontWeight: 800 }}>🪙 Pending USDT Deposits</h3>
-            {deposits.length === 0 ? (
+            <h3 style={{ marginBottom: '1.25rem', fontWeight: 800 }}>🪙 Pending Campaign Payments</h3>
+            {pendingCampaigns.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
-                🎉 No pending deposits to review.
+                🎉 No pending campaign payments to review.
               </div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
                     <tr style={{ borderBottom: '2px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                      <th style={{ padding: '0.75rem' }}>Advertiser</th>
-                      <th style={{ padding: '0.75rem' }}>Amount</th>
-                      <th style={{ padding: '0.75rem' }}>TxID Hash</th>
-                      <th style={{ padding: '0.75rem' }}>Receipt Image</th>
-                      <th style={{ padding: '0.75rem' }}>Submitted At</th>
+                      <th style={{ padding: '0.75rem' }}>Campaign</th>
+                      <th style={{ padding: '0.75rem' }}>Target & Cost</th>
+                      <th style={{ padding: '0.75rem' }}>Ref/TxID</th>
+                      <th style={{ padding: '0.75rem' }}>Date</th>
                       <th style={{ padding: '0.75rem', textAlign: 'right' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {deposits.map(dep => (
-                      <tr key={dep._id} style={{ borderBottom: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
+                    {pendingCampaigns.map(camp => (
+                      <tr key={camp._id} style={{ borderBottom: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
                         <td style={{ padding: '1rem 0.75rem' }}>
-                          <strong style={{ display: 'block' }}>{dep.fullname}</strong>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>@{dep.username}</span>
+                          <strong style={{ display: 'block' }}>{camp.title}</strong>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{camp.platform}</span>
                         </td>
-                        <td style={{ padding: '1rem 0.75rem', fontWeight: 'bold', color: 'var(--primary)' }}>
-                          ₦{Number(dep.amount).toLocaleString()}
+                        <td style={{ padding: '1rem 0.75rem', color: 'var(--primary)' }}>
+                          <strong style={{ display: 'block' }}>₦{Number(camp.totalCost).toLocaleString()}</strong>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{camp.targetCount} targets</span>
                         </td>
-                        <td style={{ padding: '1rem 0.75rem', fontFamily: 'monospace', fontSize: '0.75rem' }}>
-                          {dep.txHash || 'N/A'}
+                        <td style={{ padding: '1rem 0.75rem', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                          {camp.referenceNumber || 'N/A'}
                         </td>
-                        <td style={{ padding: '1rem 0.75rem' }}>
-                          {dep.receipt ? (
-                            <button 
-                              onClick={() => setSelectedReceipt(dep.receipt)}
-                              className="btn btn-outline btn-sm" 
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '0.35rem 0.65rem' }}
-                            >
-                              <ImageIcon size={12} /> View Pic
-                            </button>
-                          ) : (
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>No screenshot</span>
-                          )}
-                        </td>
-                        <td style={{ padding: '1rem 0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          {new Date(dep.createdAt).toLocaleString()}
+                        <td style={{ padding: '1rem 0.75rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                          {new Date(camp.createdAt).toLocaleDateString()}
                         </td>
                         <td style={{ padding: '1rem 0.75rem', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                             <button 
-                              onClick={() => handleApproveDeposit(dep._id)}
+                              onClick={() => handleApproveCampaign(camp._id)}
                               className="btn btn-primary btn-sm" 
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#10b981', borderColor: '#10b981', padding: '0.35rem 0.75rem' }}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '0.35rem 0.65rem' }}
                             >
-                              <Check size={14} /> Verify
+                              <Check size={14} /> Approve
                             </button>
                             <button 
-                              onClick={() => handleRejectDeposit(dep._id)}
+                              onClick={() => handleRejectCampaign(camp._id)}
                               className="btn btn-outline btn-sm" 
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ef4444', borderColor: '#ef4444', padding: '0.35rem 0.75rem' }}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '0.35rem 0.65rem', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
                             >
                               <X size={14} /> Reject
                             </button>

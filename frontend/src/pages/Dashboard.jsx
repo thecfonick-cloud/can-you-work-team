@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   DollarSign, 
   CheckSquare, 
-  Calendar, 
   TrendingUp, 
-  ArrowUpRight, 
   Gift, 
   Zap,
   Sparkles,
@@ -14,7 +12,7 @@ import {
 } from 'lucide-react';
 import { api } from '../api';
 
-const Dashboard = ({ user, refreshUser }) => {
+const Dashboard = ({ refreshUser }) => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [streakData, setStreakData] = useState(null);
@@ -22,11 +20,6 @@ const Dashboard = ({ user, refreshUser }) => {
   const [checkInMsg, setCheckInMsg] = useState('');
 
   const EXCHANGE_RATE = 1523.0;
-
-  useEffect(() => {
-    fetchDashboardData();
-    fetchStreakData();
-  }, []);
 
   const fetchDashboardData = async () => {
     const res = await api.getDashboard();
@@ -41,6 +34,11 @@ const Dashboard = ({ user, refreshUser }) => {
       setStreakData(res.streak);
     }
   };
+
+  useEffect(() => {
+    fetchDashboardData();
+    fetchStreakData();
+  }, []);
 
   const handleCheckIn = async () => {
     setCheckingIn(true);
@@ -105,7 +103,6 @@ const Dashboard = ({ user, refreshUser }) => {
   const { overview, recentTasks, earningsOverviewGraph, bottomStats } = data;
   const walletBalanceUSD = (overview.walletBalance / EXCHANGE_RATE).toFixed(2);
   const earningsThisMonthUSD = (overview.earningsThisMonth / EXCHANGE_RATE).toFixed(2);
-  const totalWithdrawnUSD = (bottomStats.totalWithdrawn / EXCHANGE_RATE).toFixed(2);
 
   // Generate SVG coordinate points from graph data
   const maxVal = 50000;

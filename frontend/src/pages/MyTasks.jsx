@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Clock, CheckCircle2, HelpCircle, XCircle, Sparkles, Trophy, Gift, Calendar } from 'lucide-react';
 import { api } from '../api';
 
@@ -15,12 +15,6 @@ const MyTasks = ({ refreshUser }) => {
   const [surveyAnswers, setSurveyAnswers] = useState({ q1: '', q2: '', q3: '' });
   const [surveySubmitting, setSurveySubmitting] = useState(false);
   const [surveySuccess, setSurveySuccess] = useState(false);
-
-  useEffect(() => {
-    fetchMyTasks();
-    fetchLuckyTasks();
-    fetchStreakData();
-  }, []);
 
   const fetchMyTasks = async () => {
     const res = await api.getMyTasks();
@@ -42,6 +36,12 @@ const MyTasks = ({ refreshUser }) => {
       setStreakData(res.streak);
     }
   };
+
+  useEffect(() => {
+    fetchMyTasks();
+    fetchLuckyTasks();
+    fetchStreakData();
+  }, []);
 
   if (!groupedTasks) {
     return <div className="loading-spinner-container">Loading Task Logs...</div>;
@@ -161,7 +161,7 @@ const MyTasks = ({ refreshUser }) => {
                         {new Date(log.createdAt).toLocaleDateString()}
                       </td>
                       <td className="log-reward-cell">
-                        ₦{log.taskId?.rewardAmount || 0}
+                        ₦{log.taskId?.reward || log.taskId?.rewardAmount || 2}
                       </td>
                       <td className="log-status-cell">
                         <span className={`status-pill ${log.status}`}>

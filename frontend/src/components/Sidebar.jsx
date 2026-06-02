@@ -44,7 +44,7 @@ const Sidebar = ({ user, handleLogout, isOpen, setIsOpen }) => {
     { name: 'Help & Support', path: '/help', icon: HelpCircle }
   ];
 
-  let sections = [];
+  let sections;
   if (user?.role === 'admin') {
     sections = [
       {
@@ -126,6 +126,18 @@ const Sidebar = ({ user, handleLogout, isOpen, setIsOpen }) => {
         </div>
       )}
 
+      {/* Logout button moved to the top */}
+      <div className="sidebar-top-action" style={{ padding: '0 20px', marginBottom: '15px' }}>
+        <button 
+          className="sidebar-logout-btn" 
+          onClick={() => { setIsOpen(false); handleLogout(); }}
+          style={{ width: '100%', justifyContent: 'center', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}
+        >
+          <LogOut size={18} />
+          <span>Logout</span>
+        </button>
+      </div>
+
       <nav className="sidebar-nav">
         {sections.map((section, sIdx) => (
           <div key={section.title || sIdx} className="sidebar-section">
@@ -152,12 +164,6 @@ const Sidebar = ({ user, handleLogout, isOpen, setIsOpen }) => {
         ))}
       </nav>
 
-      <div className="sidebar-footer">
-        <button className="sidebar-logout-btn" onClick={() => { setIsOpen(false); handleLogout(); }}>
-          <LogOut size={18} />
-          <span>Logout</span>
-        </button>
-      </div>
     </aside>
   );
 };

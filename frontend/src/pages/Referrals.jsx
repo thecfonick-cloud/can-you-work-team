@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Copy, Check, Users, Sparkles, TrendingUp, HelpCircle, Gift } from 'lucide-react';
 import { api } from '../api';
 
@@ -6,16 +6,16 @@ const Referrals = () => {
   const [data, setData] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    fetchReferralsData();
-  }, []);
-
   const fetchReferralsData = async () => {
     const res = await api.getReferrals();
     if (res.success) {
       setData(res);
     }
   };
+
+  useEffect(() => {
+    fetchReferralsData();
+  }, []);
 
   const handleCopyLink = () => {
     if (data && data.referralLink) {

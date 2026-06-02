@@ -1,13 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Trophy, Award, Users, ShieldAlert, Sparkles, TrendingUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Trophy, Award, Users, Sparkles } from 'lucide-react';
 import { api } from '../api';
 
 const Leaderboard = ({ user }) => {
   const [data, setData] = useState(null);
-
-  useEffect(() => {
-    fetchLeaderboard();
-  }, []);
 
   const fetchLeaderboard = async () => {
     const res = await api.getLeaderboard();
@@ -15,6 +11,10 @@ const Leaderboard = ({ user }) => {
       setData(res);
     }
   };
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
 
   if (!data) {
     return <div className="loading-spinner-container">Loading Leaderboard Rankings...</div>;

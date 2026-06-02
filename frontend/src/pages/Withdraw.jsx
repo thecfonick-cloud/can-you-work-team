@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Download, CreditCard, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Info, ShieldCheck } from 'lucide-react';
 import { api } from '../api';
 
@@ -7,7 +7,6 @@ const Withdraw = ({ refreshUser }) => {
   const [method, setMethod] = useState('PayPal');
   const [accountDetails, setAccountDetails] = useState('');
   const [amount, setAmount] = useState('');
-  const [fee, setFee] = useState(0);
   const [msg, setMsg] = useState({ type: '', text: '' });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -24,16 +23,16 @@ const Withdraw = ({ refreshUser }) => {
     { name: 'Payoneer', minVal: 7500, minUSD: 5.0, desc: 'Receive payout directly into your Payoneer email balance. (₦7,500 Min)' }
   ];
 
-  useEffect(() => {
-    fetchWallet();
-  }, []);
-
   const fetchWallet = async () => {
     const res = await api.getWallet();
     if (res.success) {
       setWallet(res.balances);
     }
   };
+
+  useEffect(() => {
+    fetchWallet();
+  }, []);
 
   const getActiveMethod = () => {
     return paymentMethods.find(p => p.name === method);

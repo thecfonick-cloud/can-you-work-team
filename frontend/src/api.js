@@ -220,6 +220,14 @@ const MOCK_REFERRALS_LIST = [
 
 // Helper to make API calls to local node backend, with dynamic Mock data fallback
 const BASE_URL = 'http://localhost:5000/api';
+const FETCH_TIMEOUT_MS = 500; // Abort fetch after 500ms so offline fallback fires instantly
+
+// Fast-fail fetch wrapper: if the backend is unreachable, abort in 500ms instead of waiting 30-40s for TCP timeout
+const fastFetch = (url, options = {}) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeoutId));
+};
 
 const getHeaders = () => {
   const token = localStorage.getItem('canyuwork_token');
@@ -231,54 +239,29 @@ const getHeaders = () => {
 };
 
 // Local Storage Offline Database Engine
+// Clears old mock data and re-seeds only admin user if schema version changes
+const OFFLINE_DB_VERSION = '3';
 const initOfflineDb = () => {
-  if (!localStorage.getItem('cw_offline_db_initialized')) {
+  const storedVersion = localStorage.getItem('cw_offline_db_version');
+  if (storedVersion !== OFFLINE_DB_VERSION) {
+    // Clear ALL old mock data
+    [
+      'cw_offline_users', 'cw_offline_wallets', 'cw_offline_tasks',
+      'cw_offline_submissions', 'cw_offline_transactions', 'cw_offline_notifications',
+      'cw_offline_streaks', 'cw_offline_withdrawals', 'cw_offline_referrals',
+      'cw_offline_db_initialized'
+    ].forEach(key => localStorage.removeItem(key));
+
+    // Seed ONLY the admin user
     localStorage.setItem('cw_offline_users', JSON.stringify([
       {
-        _id: '6a10cc2151f6a0a1d2981526',
-        fullname: 'John Goodluck',
-        username: 'johng',
-        email: 'johng@example.com',
-        phone: '+234 801 234 5678',
-        country: 'Nigeria',
-        referralCode: 'JohnG',
-        isVerified: true,
-        balance: 25680.00,
-        pendingBalance: 1230.00,
-        totalEarnings: 48250.00,
-        totalWithdrawn: 36800.00,
-        socialAccounts: {
-          instagramUsername: 'john_doe',
-          tiktokUsername: 'johndoe_tt',
-          twitterUsername: 'johndoe_x',
-          facebookUsername: 'john.doe.fb',
-          telegramUsername: 'johndoe_tg',
-          youtubeChannel: 'JohnDoeChannel'
-        },
-        notificationPreferences: {
-          taskAlerts: true,
-          bonusRewards: true,
-          withdrawalAlerts: true,
-          referrals: true,
-          leaderboard: true,
-          systemUpdates: true,
-          marketing: false
-        },
-        doNotDisturb: {
-          enabled: true,
-          quietHoursStart: '22:00',
-          quietHoursEnd: '07:00'
-        },
-        password: 'password123'
-      },
-      {
-        _id: '6a10cc2151f6a0a1d2981599',
-        fullname: 'System Admin',
+        _id: '6a1185e235c04d6ad2989aaa',
+        fullname: 'Admin Canyuwork',
         username: 'admin',
         email: 'admin@canyuwork.com',
         phone: '+234 800 000 0000',
         country: 'Nigeria',
-        referralCode: 'AdminG',
+        referralCode: 'admincode',
         isVerified: true,
         role: 'admin',
         balance: 0,
@@ -295,82 +278,25 @@ const initOfflineDb = () => {
           systemUpdates: true,
           marketing: false
         },
-        doNotDisturb: {
-          enabled: false,
-          quietHoursStart: '22:00',
-          quietHoursEnd: '07:00'
-        },
+        doNotDisturb: { enabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00' },
         password: 'admin123'
       }
     ]));
 
     localStorage.setItem('cw_offline_wallets', JSON.stringify({
-      '6a10cc2151f6a0a1d2981526': {
-        availableBalance: 25680.00,
-        pendingBalance: 1230.00,
-        totalEarnings: 48250.00,
-        totalWithdrawn: 36800.00
-      },
-      '6a10cc2151f6a0a1d2981599': {
-        availableBalance: 0.00,
-        pendingBalance: 0.00,
-        totalEarnings: 0.00,
-        totalWithdrawn: 0.00
-      }
+      '6a1185e235c04d6ad2989aaa': { availableBalance: 0, pendingBalance: 0, totalEarnings: 0, totalWithdrawn: 0 }
     }));
 
-    localStorage.setItem('cw_offline_tasks', JSON.stringify(MOCK_TASKS));
-    localStorage.setItem('cw_offline_submissions', JSON.stringify([
-      { _id: 's1', taskId: 't1', userId: '6a10cc2151f6a0a1d2981526', socialUsername: 'john_doe', status: 'approved', createdAt: new Date().toISOString() },
-      { _id: 's2', taskId: 't2', userId: '6a10cc2151f6a0a1d2981526', socialUsername: 'john_doe', status: 'approved', createdAt: new Date().toISOString() },
-      { _id: 's3', taskId: 't3', userId: '6a10cc2151f6a0a1d2981526', socialUsername: 'john_doe', status: 'approved', createdAt: new Date().toISOString() },
-      { _id: 's4', taskId: 't4', userId: '6a10cc2151f6a0a1d2981526', socialUsername: 'johndoe_tg', status: 'approved', createdAt: new Date().toISOString() },
-      { _id: 's5', taskId: 't5', userId: '6a10cc2151f6a0a1d2981526', socialUsername: 'john_doe', status: 'pending', createdAt: new Date().toISOString() }
-    ]));
+    // All other collections start empty
+    localStorage.setItem('cw_offline_tasks', JSON.stringify([]));
+    localStorage.setItem('cw_offline_submissions', JSON.stringify([]));
+    localStorage.setItem('cw_offline_transactions', JSON.stringify([]));
+    localStorage.setItem('cw_offline_notifications', JSON.stringify([]));
+    localStorage.setItem('cw_offline_streaks', JSON.stringify({}));
+    localStorage.setItem('cw_offline_withdrawals', JSON.stringify([]));
+    localStorage.setItem('cw_offline_referrals', JSON.stringify([]));
 
-    localStorage.setItem('cw_offline_transactions', JSON.stringify([
-      { _id: 'tx1', userId: '6a10cc2151f6a0a1d2981526', type: 'task_reward', description: 'Watch YouTube Video', amount: 304.60, status: 'Completed', createdAt: '2024-05-25T10:30:00Z' },
-      { _id: 'tx2', userId: '6a10cc2151f6a0a1d2981526', type: 'task_reward', description: 'Follow on Instagram', amount: 152.30, status: 'Completed', createdAt: '2024-05-25T09:15:00Z' },
-      { _id: 'tx3', userId: '6a10cc2151f6a0a1d2981526', type: 'withdrawal', description: 'Withdrawal to PayPal (john@example.com)', amount: -30460.00, status: 'Completed', createdAt: '2024-05-24T16:45:00Z' },
-      { _id: 'tx4', userId: '6a10cc2151f6a0a1d2981526', type: 'referral_bonus', description: 'Invite Bonus: 5 Friends Joined', amount: 7615.00, status: 'Completed', createdAt: '2024-05-24T14:20:00Z' },
-      { _id: 'tx5', userId: '6a10cc2151f6a0a1d2981526', type: 'task_reward', description: 'Like Facebook Page', amount: 152.30, status: 'Completed', createdAt: '2024-05-24T11:05:00Z' },
-      { _id: 'tx6', userId: '6a10cc2151f6a0a1d2981526', type: 'withdrawal', description: 'Pending Payout (Minimum payout not reached)', amount: 18732.90, status: 'Pending', createdAt: '2024-05-24T10:00:00Z' }
-    ]));
-
-    localStorage.setItem('cw_offline_notifications', JSON.stringify(MOCK_NOTIFICATIONS));
-    
-    localStorage.setItem('cw_offline_streaks', JSON.stringify({
-      '6a10cc2151f6a0a1d2981526': {
-        streakCount: 7,
-        checkedInToday: true,
-        lastCheckedIn: new Date().toISOString().split('T')[0],
-        streakList: [
-          { day: 'Mon', checked: true },
-          { day: 'Tue', checked: true },
-          { day: 'Wed', checked: true },
-          { day: 'Thu', checked: true },
-          { day: 'Fri', checked: true },
-          { day: 'Sat', checked: true },
-          { day: 'Sun', checked: false }
-        ]
-      }
-    }));
-
-    localStorage.setItem('cw_offline_withdrawals', JSON.stringify([
-      { _id: 'w1', userId: '6a10cc2151f6a0a1d2981526', amount: 30460, method: 'PayPal', accountDetails: 'john@example.com', status: 'paid', createdAt: '2024-05-24T16:45:00Z' },
-      { _id: 'w2', userId: '6a10cc2151f6a0a1d2981526', amount: 76150, method: 'Bank Transfer', accountDetails: 'Access Bank - 0123456789', status: 'paid', createdAt: '2024-05-10T09:10:00Z' },
-      { _id: 'w3', userId: '6a10cc2151f6a0a1d2981526', amount: 45690, method: 'Payoneer', accountDetails: 'payoneer@example.com', status: 'paid', createdAt: '2024-04-28T15:30:00Z' }
-    ]));
-
-    localStorage.setItem('cw_offline_referrals', JSON.stringify([
-      { referrerId: '6a10cc2151f6a0a1d2981526', fullname: 'Sarah Johnson', email: 'sarahj@example.com', status: 'Active', joinedOn: '2024-05-25T00:00:00Z', totalEarned: 500 },
-      { referrerId: '6a10cc2151f6a0a1d2981526', fullname: 'Michael Brown', email: 'michaelb@example.com', status: 'Active', joinedOn: '2024-05-24T00:00:00Z', totalEarned: 500 },
-      { referrerId: '6a10cc2151f6a0a1d2981526', fullname: 'Emily Davis', email: 'emilyd@example.com', status: 'Pending', joinedOn: '2024-05-23T00:00:00Z', totalEarned: 0 },
-      { referrerId: '6a10cc2151f6a0a1d2981526', fullname: 'David Wilson', email: 'davidw@example.com', status: 'Active', joinedOn: '2024-05-20T00:00:00Z', totalEarned: 500 },
-      { referrerId: '6a10cc2151f6a0a1d2981526', fullname: 'Jessica Taylor', email: 'jessicat@example.com', status: 'Completed', joinedOn: '2024-05-18T00:00:00Z', totalEarned: 500 }
-    ]));
-
-    localStorage.setItem('cw_offline_db_initialized', 'true');
+    localStorage.setItem('cw_offline_db_version', OFFLINE_DB_VERSION);
   }
 };
 
@@ -422,8 +348,15 @@ const getActiveUserIdOffline = () => {
 
 const syncUserToOfflineDb = (user, password = null) => {
   try {
+    if (!user || !user._id) return;
     const users = getOfflineUsers();
-    const idx = users.findIndex(u => u._id === user._id || u.email.toLowerCase() === user.email.toLowerCase() || u.username.toLowerCase() === user.username.toLowerCase());
+    const userEmail = user.email ? user.email.toLowerCase() : '';
+    const userUsername = user.username ? user.username.toLowerCase() : '';
+    const idx = users.findIndex(u => 
+      u._id === user._id || 
+      (userEmail && u.email && u.email.toLowerCase() === userEmail) || 
+      (userUsername && u.username && u.username.toLowerCase() === userUsername)
+    );
     
     const offlineUser = {
       ...user,
@@ -454,8 +387,32 @@ const syncUserToOfflineDb = (user, password = null) => {
 export const api = {
   // Authentication
   login: async (email, password) => {
+    // Helper: attempt offline login
+    const tryOfflineLogin = (emailOrUsername, pwd) => {
+      const users = getOfflineUsers();
+      const sanitized = emailOrUsername.trim().toLowerCase();
+      const user = users.find(u =>
+        (u.email && u.email.toLowerCase() === sanitized) ||
+        (u.username && u.username.toLowerCase() === sanitized)
+      );
+      if (!user) return { success: false, message: 'Account not found. Please register first.' };
+      if (user.password && user.password !== pwd) {
+        return { success: false, message: 'Invalid password.' };
+      }
+      const wallets = getOfflineWallets();
+      const wallet = wallets[user._id];
+      if (wallet) {
+        user.balance = wallet.availableBalance;
+        user.pendingBalance = wallet.pendingBalance;
+        user.totalEarnings = wallet.totalEarnings;
+        user.totalWithdrawn = wallet.totalWithdrawn;
+      }
+      localStorage.setItem('canyuwork_token', user._id);
+      return { success: true, user, token: user._id };
+    };
+
     try {
-      const res = await fetch(`${BASE_URL}/auth/login`, {
+      const res = await fastFetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({ email, password, deviceFingerprint: localStorage.getItem('canyuwork_fingerprint') })
@@ -464,62 +421,20 @@ export const api = {
       if (data.success) {
         localStorage.setItem('canyuwork_token', data.token);
         syncUserToOfflineDb(data.user, password);
+        return data;
       }
-      return data;
+      // Backend returned error - try offline fallback before returning failure
+      const offlineResult = tryOfflineLogin(email, password);
+      if (offlineResult.success) return offlineResult;
+      return data; // Return the original backend error message
     } catch (e) {
-      // Mock Fallback
-      const users = getOfflineUsers();
-      const sanitizedEmail = email.trim().toLowerCase();
-      let user = users.find(u => u.email.toLowerCase() === sanitizedEmail || u.username.toLowerCase() === sanitizedEmail);
-      if (user) {
-        if (user.password && user.password !== password) {
-          return { success: false, message: 'Invalid credentials or offline.' };
-        }
-        const wallets = getOfflineWallets();
-        const wallet = wallets[user._id];
-        if (wallet) {
-          user.balance = wallet.availableBalance;
-          user.pendingBalance = wallet.pendingBalance;
-          user.totalEarnings = wallet.totalEarnings;
-          user.totalWithdrawn = wallet.totalWithdrawn;
-        }
-        localStorage.setItem('canyuwork_token', user._id);
-        return { success: true, user, token: user._id };
-      }
-      if (email.includes('johng') || email.includes('john@')) {
-        const john = users.find(u => u.username === 'johng');
-        if (john) {
-          const wallets = getOfflineWallets();
-          const wallet = wallets[john._id];
-          if (wallet) {
-            john.balance = wallet.availableBalance;
-            john.pendingBalance = wallet.pendingBalance;
-            john.totalEarnings = wallet.totalEarnings;
-            john.totalWithdrawn = wallet.totalWithdrawn;
-          }
-          localStorage.setItem('canyuwork_token', john._id);
-          return { success: true, user: john, token: john._id };
-        }
-      }
-      return { success: false, message: 'Invalid credentials or offline.' };
+      // Network/server unreachable - try offline fallback
+      return tryOfflineLogin(email, password);
     }
   },
 
   register: async (fullname, username, email, phone, country, password, referredBy, role = 'user') => {
-    try {
-      const res = await fetch(`${BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ fullname, username, email, phone, country, password, referredBy, role, deviceFingerprint: 'mock_fingerprint' })
-      });
-      const data = await res.json();
-      if (data.success) {
-        localStorage.setItem('canyuwork_token', data.token);
-        syncUserToOfflineDb(data.user, password);
-      }
-      return data;
-    } catch (e) {
-      // Mock Fallback
+    const tryOfflineRegister = () => {
       const users = getOfflineUsers();
       const sanitizedEmail = email.trim().toLowerCase();
       const sanitizedUsername = username.trim().toLowerCase();
@@ -541,34 +456,19 @@ export const api = {
         referralCode,
         referredBy: referredBy || null,
         isVerified: true,
-        role, // Store role in mock DB
-        password, // Save password in mock DB
-        balance: role === 'advertiser' ? 0.0 : 200.0, // Advertisers start with 0 budget
+        role,
+        password,
+        balance: role === 'advertiser' ? 0.0 : 200.0,
         pendingBalance: 0.0,
         totalEarnings: role === 'advertiser' ? 0.0 : 200.0,
         totalWithdrawn: 0.0,
         socialAccounts: {
-          instagramUsername: '',
-          tiktokUsername: '',
-          twitterUsername: '',
-          facebookUsername: '',
-          telegramUsername: '',
-          youtubeChannel: ''
+          instagramUsername: '', tiktokUsername: '', twitterUsername: '', facebookUsername: '', telegramUsername: '', youtubeChannel: ''
         },
         notificationPreferences: {
-          taskAlerts: true,
-          bonusRewards: true,
-          withdrawalAlerts: true,
-          referrals: true,
-          leaderboard: true,
-          systemUpdates: true,
-          marketing: false
+          taskAlerts: true, bonusRewards: true, withdrawalAlerts: true, referrals: true, leaderboard: true, systemUpdates: true, marketing: false
         },
-        doNotDisturb: {
-          enabled: false,
-          quietHoursStart: '22:00',
-          quietHoursEnd: '07:00'
-        }
+        doNotDisturb: { enabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00' }
       };
 
       users.push(newUser);
@@ -589,7 +489,7 @@ export const api = {
         userId: newUserId,
         type: 'challenge_bonus',
         description: 'Sign Up Bonus: Profile created successfully',
-        amount: 200,
+        amount: role === 'advertiser' ? 0 : 200,
         status: 'Completed',
         createdAt: new Date().toISOString()
       });
@@ -599,9 +499,9 @@ export const api = {
       notifs.push({
         _id: 'notif_signup_' + Date.now(),
         userId: newUserId,
-        title: 'Bonus Earned! 🎉',
-        message: 'You earned ₦200 for completing your profile sign up bonus.',
-        type: 'bonus',
+        title: 'Welcome to CanYouWork! 🎉',
+        message: 'Your profile has been created successfully.',
+        type: 'system',
         isRead: false,
         createdAt: new Date().toISOString()
       });
@@ -609,23 +509,76 @@ export const api = {
 
       const streaks = getOfflineStreaks();
       streaks[newUserId] = {
-        streakCount: 0,
-        checkedInToday: false,
-        lastCheckedIn: null,
+        streakCount: 0, checkedInToday: false, lastCheckedIn: null,
         streakList: [
-          { day: 'Mon', checked: false },
-          { day: 'Tue', checked: false },
-          { day: 'Wed', checked: false },
-          { day: 'Thu', checked: false },
-          { day: 'Fri', checked: false },
-          { day: 'Sat', checked: false },
-          { day: 'Sun', checked: false }
+          { day: 'Mon', checked: false }, { day: 'Tue', checked: false }, { day: 'Wed', checked: false }, { day: 'Thu', checked: false }, { day: 'Fri', checked: false }, { day: 'Sat', checked: false }, { day: 'Sun', checked: false }
         ]
       };
       saveOfflineStreaks(streaks);
 
+      // Track referral if user signed up with a referral code
+      if (referredBy) {
+        const referrer = users.find(u => u.referralCode === referredBy);
+        if (referrer) {
+          const refs = getOfflineReferrals();
+          refs.push({
+            _id: 'ref_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            referrerId: referrer._id,
+            referredUserId: newUserId,
+            referredUsername: sanitizedUsername,
+            referredFullname: fullname,
+            status: 'Active',
+            joinedAt: new Date().toISOString(),
+            tasksCompleted: 0,
+            earningsGenerated: 0
+          });
+          saveOfflineReferrals(refs);
+
+          // Credit referrer with ₦200 bonus for first referral signup
+          const refWallets = getOfflineWallets();
+          if (refWallets[referrer._id]) {
+            refWallets[referrer._id].availableBalance += 200;
+            refWallets[referrer._id].totalEarnings += 200;
+            saveOfflineWallets(refWallets);
+          }
+
+          // Add notification for referrer
+          const refNotifs = getOfflineNotifications();
+          refNotifs.push({
+            _id: 'notif_ref_' + Date.now(),
+            userId: referrer._id,
+            title: '🎉 New Referral Joined!',
+            message: `${fullname} (${sanitizedUsername}) joined using your referral link! You earned ₦200 bonus.`,
+            type: 'referral',
+            isRead: false,
+            createdAt: new Date().toISOString()
+          });
+          saveOfflineNotifications(refNotifs);
+        }
+      }
+
       localStorage.setItem('canyuwork_token', newUserId);
       return { success: true, user: newUser, token: newUserId };
+    };
+
+    try {
+      const res = await fastFetch(`${BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ fullname, username, email, phone, country, password, referredBy, role, deviceFingerprint: 'mock_fingerprint' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem('canyuwork_token', data.token);
+        syncUserToOfflineDb(data.user, password);
+        return data;
+      }
+      
+      const offlineResult = tryOfflineRegister();
+      if (offlineResult.success) return offlineResult;
+      return data;
+    } catch (e) {
+      return tryOfflineRegister();
     }
   },
 
@@ -635,12 +588,12 @@ export const api = {
 
   getDashboard: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/dashboard/overview`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/dashboard/overview`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
       const users = getOfflineUsers();
-      const user = users.find(u => u._id === userId) || users[0];
+      const user = users.find(u => u._id === userId);
       if (!user) return { success: false, message: 'Offline user not found' };
 
       const wallets = getOfflineWallets();
@@ -698,13 +651,19 @@ export const api = {
 
   getTasks: async (platform = 'All Tasks') => {
     try {
-      const res = await fetch(`${BASE_URL}/tasks?platform=${platform}`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/tasks?platform=${platform}`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const tasks = getOfflineTasks();
-      let list = tasks;
+      let list = tasks.filter(t => t.status === 'active');
+      // Filter out completed tasks
+      list = list.filter(t => {
+        const target = t.targetCount || t.subscribersRequired || 0;
+        const current = t.currentCount || t.subscribersCount || 0;
+        return target > 0 && current < target;
+      });
       if (platform !== 'All Tasks' && platform !== 'all') {
-        list = tasks.filter(t => t.platform.toLowerCase() === platform.toLowerCase());
+        list = list.filter(t => t.platform.toLowerCase() === platform.toLowerCase());
       }
       return { success: true, tasks: list };
     }
@@ -712,7 +671,7 @@ export const api = {
 
   getTaskById: async (id) => {
     try {
-      const res = await fetch(`${BASE_URL}/tasks/${id}`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/tasks/${id}`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const tasks = getOfflineTasks();
@@ -735,7 +694,7 @@ export const api = {
       const headers = getHeaders();
       delete headers['Content-Type'];
 
-      const res = await fetch(`${BASE_URL}/tasks/${id}/submit`, {
+      const res = await fastFetch(`${BASE_URL}/tasks/${id}/submit`, {
         method: 'POST',
         headers,
         body: formData
@@ -782,7 +741,7 @@ export const api = {
 
   getLuckyTasks: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/tasks/lucky-tasks`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/tasks/lucky-tasks`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const isCompleted = localStorage.getItem('cw_lucky_task_completed_l1') === 'true';
@@ -792,7 +751,7 @@ export const api = {
 
   completeLuckyTask: async (id) => {
     try {
-      const res = await fetch(`${BASE_URL}/tasks/lucky-tasks/${id}/complete`, {
+      const res = await fastFetch(`${BASE_URL}/tasks/lucky-tasks/${id}/complete`, {
         method: 'POST',
         headers: getHeaders()
       });
@@ -854,7 +813,7 @@ export const api = {
 
   getMyTasks: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/tasks/my-logs`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/tasks/my-logs`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
@@ -883,7 +842,7 @@ export const api = {
 
   getWallet: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/wallet`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/wallet`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const EXCHANGE_RATE = 1523.0;
@@ -909,7 +868,7 @@ export const api = {
 
   getTransactions: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/wallet/transactions`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/wallet/transactions`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
@@ -921,7 +880,7 @@ export const api = {
 
   requestWithdrawal: async (method, accountDetails, amount) => {
     try {
-      const res = await fetch(`${BASE_URL}/withdrawals`, {
+      const res = await fastFetch(`${BASE_URL}/withdrawals`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({ method, accountDetails, amount })
@@ -992,7 +951,7 @@ export const api = {
 
   getWithdrawalHistory: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/withdrawals`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/withdrawals`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
@@ -1004,12 +963,13 @@ export const api = {
 
   getReferrals: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/referrals`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/referrals`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
       const users = getOfflineUsers();
-      const user = users.find(u => u._id === userId) || users[0];
+      const user = users.find(u => u._id === userId);
+      if (!user) return { success: false, message: 'User not found' };
       
       const refs = getOfflineReferrals().filter(r => r.referrerId === user._id);
       const activeCount = refs.filter(r => r.status === 'Active' || r.status === 'Completed').length;
@@ -1037,7 +997,7 @@ export const api = {
 
   getLeaderboard: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/leaderboard`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/leaderboard`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
@@ -1069,7 +1029,8 @@ export const api = {
         ...item
       }));
 
-      const activeUser = users.find(u => u._id === userId) || users[0];
+      const activeUser = users.find(u => u._id === userId);
+      if (!activeUser) return { success: true, leaderboard: rankedList };
       const activeUserRanked = rankedList.find(item => item.username === activeUser.username) || {
         rank: 23,
         fullname: activeUser.fullname,
@@ -1103,12 +1064,13 @@ export const api = {
 
   getBonuses: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/bonuses/progress`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/bonuses/progress`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
       const users = getOfflineUsers();
-      const user = users.find(u => u._id === userId) || users[0];
+      const user = users.find(u => u._id === userId);
+      if (!user) return { success: false, message: 'User not found' };
       
       const streaks = getOfflineStreaks();
       const userStreak = streaks[user._id] || {
@@ -1159,7 +1121,7 @@ export const api = {
 
   checkIn: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/bonuses/check-in`, { method: 'POST', headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/bonuses/check-in`, { method: 'POST', headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
@@ -1239,7 +1201,7 @@ export const api = {
 
   getNotifications: async (type = 'All') => {
     try {
-      const res = await fetch(`${BASE_URL}/notifications?type=${type}`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/notifications?type=${type}`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
@@ -1255,7 +1217,7 @@ export const api = {
 
   markNotificationsRead: async (id) => {
     try {
-      const res = await fetch(`${BASE_URL}/notifications/read`, {
+      const res = await fastFetch(`${BASE_URL}/notifications/read`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({ id })
@@ -1284,12 +1246,13 @@ export const api = {
 
   getPreferences: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/notifications/preferences`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/notifications/preferences`, { headers: getHeaders() });
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
       const users = getOfflineUsers();
-      const user = users.find(u => u._id === userId) || users[0];
+      const user = users.find(u => u._id === userId);
+      if (!user) return { success: false, message: 'User not found' };
       return {
         success: true,
         notificationPreferences: user.notificationPreferences,
@@ -1300,7 +1263,7 @@ export const api = {
 
   updatePreferences: async (notificationPreferences, doNotDisturb) => {
     try {
-      const res = await fetch(`${BASE_URL}/notifications/preferences`, {
+      const res = await fastFetch(`${BASE_URL}/notifications/preferences`, {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify({ notificationPreferences, doNotDisturb })
@@ -1332,7 +1295,7 @@ export const api = {
 
   getProfile: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/user/profile`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/user/profile`, { headers: getHeaders() });
       const data = await res.json();
       if (data.success && data.user) {
         syncUserToOfflineDb(data.user);
@@ -1340,8 +1303,15 @@ export const api = {
       return data;
     } catch (e) {
       const userId = getActiveUserIdOffline();
+      if (!userId) return { success: false, message: 'No active session' };
+      
       const users = getOfflineUsers();
-      const user = users.find(u => u._id === userId) || users[0];
+      const user = users.find(u => u._id === userId);
+      
+      if (!user) {
+        return { success: false, message: 'User not found in offline db' };
+      }
+
       if (user) {
         const wallets = getOfflineWallets();
         const wallet = wallets[user._id];
@@ -1358,7 +1328,7 @@ export const api = {
 
   updateProfile: async (fullname, username, email, phone, country, socialAccounts) => {
     try {
-      const res = await fetch(`${BASE_URL}/user/profile`, {
+      const res = await fastFetch(`${BASE_URL}/user/profile`, {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify({ fullname, username, email, phone, country, socialAccounts })
@@ -1393,7 +1363,7 @@ export const api = {
 
   depositFunds: async (amount, txHash, receipt) => {
     try {
-      const res = await fetch(`${BASE_URL}/advertiser/deposit`, {
+      const res = await fastFetch(`${BASE_URL}/advertiser/deposit`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({ amount, txHash, receipt })
@@ -1434,80 +1404,91 @@ export const api = {
     }
   },
 
-  createCampaign: async (title, platform, guidelines, rewardPerTask, totalBudget) => {
+  createCampaign: async (title, platform, socialLink, guidelines, targetQuantity, referenceNumber, totalCost) => {
     try {
-      const res = await fetch(`${BASE_URL}/advertiser/campaigns`, {
+      const res = await fastFetch(`${BASE_URL}/advertiser/campaigns`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ title, platform, guidelines, rewardPerTask, totalBudget })
+        body: JSON.stringify({ title, platform, socialLink, guidelines, targetQuantity, referenceNumber, totalCost })
       });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
-      const wallets = getOfflineWallets();
-      const wallet = wallets[userId];
-      
-      if (!wallet || wallet.availableBalance < Number(totalBudget)) {
-        return { success: false, message: 'Insufficient budget balance' };
-      }
-
-      wallet.availableBalance -= Number(totalBudget);
-      saveOfflineWallets(wallets);
-
       const tasks = getOfflineTasks();
+      
       const newTaskId = 't_camp_' + Math.random().toString(36).substr(2, 9);
       const newTask = {
         _id: newTaskId,
         advertiserId: userId,
         title,
         platform,
+        socialLink,
         guidelines,
-        reward: Number(rewardPerTask),
-        totalBudget: Number(totalBudget),
-        remainingBudget: Number(totalBudget),
-        subscribersRequired: Math.floor(Number(totalBudget) / Number(rewardPerTask)),
-        subscribersCount: 0,
-        status: 'active',
+        reward: 2, // Fixed 2 NGN reward for earners
+        targetCount: Number(targetQuantity),
+        currentCount: 0,
+        totalCost: Number(totalCost),
+        referenceNumber,
+        status: 'pending_payment',
         createdAt: new Date().toISOString()
       };
+      
       tasks.push(newTask);
       saveOfflineTasks(tasks);
-
-      const txs = getOfflineTransactions();
-      txs.push({
-        _id: 'tx_camp_' + Date.now(),
-        userId,
-        type: 'withdrawal',
-        description: `Campaign Launched: ${title}`,
-        amount: -Number(totalBudget),
-        status: 'Completed',
-        createdAt: new Date().toISOString()
-      });
-      saveOfflineTransactions(txs);
 
       const notifs = getOfflineNotifications();
       notifs.push({
         _id: 'notif_camp_' + Date.now(),
         userId,
+        title: 'Campaign Pending Verification',
+        message: `Your campaign "${title}" payment is being verified by the admin.`,
+        type: 'system',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineNotifications(notifs);
+
+      return { success: true, task: newTask };
+    }
+  },
+
+  approveCampaign: async (campaignId) => {
+    try {
+      const res = await fastFetch(`${BASE_URL}/admin/campaigns/${campaignId}/approve`, {
+        method: 'POST',
+        headers: getHeaders()
+      });
+      if (!res.ok) throw new Error('API Error');
+      return await res.json();
+    } catch (e) {
+      const tasks = getOfflineTasks();
+      const taskIdx = tasks.findIndex(t => t._id === campaignId);
+      if (taskIdx === -1) return { success: false, message: 'Campaign not found' };
+      
+      tasks[taskIdx].status = 'active';
+      saveOfflineTasks(tasks);
+
+      // Notify advertiser
+      const notifs = getOfflineNotifications();
+      notifs.push({
+        _id: 'notif_camp_appr_' + Date.now(),
+        userId: tasks[taskIdx].advertiserId,
         title: 'Campaign Live! 🚀',
-        message: `Your campaign "${title}" is live for ₦${Number(totalBudget).toLocaleString()} budget.`,
+        message: `Your campaign "${tasks[taskIdx].title}" payment was approved and is now live!`,
         type: 'task',
         isRead: false,
         createdAt: new Date().toISOString()
       });
       saveOfflineNotifications(notifs);
 
-      // Trigger Mascot 360 loop-flight animatic
-      window.dispatchEvent(new CustomEvent('mascot-campaign-live', { detail: { title } }));
-
-      return { success: true, task: newTask };
+      return { success: true, message: 'Campaign approved successfully' };
     }
   },
 
   getAdvertiserCampaigns: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/advertiser/campaigns`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/advertiser/campaigns`, { headers: getHeaders() });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
@@ -1520,7 +1501,7 @@ export const api = {
 
   getAdvertiserSubmissions: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/advertiser/submissions`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/advertiser/submissions`, { headers: getHeaders() });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
@@ -1549,7 +1530,7 @@ export const api = {
 
   verifySubmission: async (submissionId, status) => {
     try {
-      const res = await fetch(`${BASE_URL}/advertiser/submissions/verify`, {
+      const res = await fastFetch(`${BASE_URL}/advertiser/submissions/verify`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({ submissionId, status })
@@ -1575,6 +1556,14 @@ export const api = {
       const task = tasks.find(t => t._id === submission.taskId);
 
       if (status === 'approved') {
+        if (task) {
+          task.currentCount = (task.currentCount || task.subscribersCount || 0) + 1;
+          if (task.currentCount >= (task.targetCount || task.subscribersRequired || 99999)) {
+            task.status = 'completed';
+          }
+          saveOfflineTasks(tasks);
+        }
+        
         const wallets = getOfflineWallets();
         const earnerWallet = wallets[submission.userId];
         const reward = task ? task.reward : 15;
@@ -1645,7 +1634,7 @@ export const api = {
 
   getPendingDeposits: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/admin/deposits`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/admin/deposits`, { headers: getHeaders() });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
@@ -1665,7 +1654,7 @@ export const api = {
 
   approveDeposit: async (transactionId) => {
     try {
-      const res = await fetch(`${BASE_URL}/admin/deposits/approve`, {
+      const res = await fastFetch(`${BASE_URL}/admin/deposits/approve`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({ transactionId })
@@ -1725,7 +1714,7 @@ export const api = {
 
   rejectDeposit: async (transactionId) => {
     try {
-      const res = await fetch(`${BASE_URL}/admin/deposits/reject`, {
+      const res = await fastFetch(`${BASE_URL}/admin/deposits/reject`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({ transactionId })
@@ -1762,7 +1751,7 @@ export const api = {
 
   getAllUsers: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/admin/users`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/admin/users`, { headers: getHeaders() });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
@@ -1773,7 +1762,7 @@ export const api = {
 
   updateUserBalance: async (userId, balance) => {
     try {
-      const res = await fetch(`${BASE_URL}/admin/users/update-balance`, {
+      const res = await fastFetch(`${BASE_URL}/admin/users/update-balance`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({ userId, balance })
@@ -1800,7 +1789,7 @@ export const api = {
 
   getAllCampaigns: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/admin/campaigns`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/admin/campaigns`, { headers: getHeaders() });
       if (!res.ok) throw new Error('API Error');
       const data = await res.json();
       return { success: true, campaigns: data.campaigns };
@@ -1812,7 +1801,7 @@ export const api = {
 
   updateCampaignStatus: async (campaignId, status) => {
     try {
-      const res = await fetch(`${BASE_URL}/admin/campaigns/status`, {
+      const res = await fastFetch(`${BASE_URL}/admin/campaigns/status`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({ campaignId, status })
@@ -1837,7 +1826,7 @@ export const api = {
 
   getAllSubmissions: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/admin/submissions`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/admin/submissions`, { headers: getHeaders() });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
@@ -1864,7 +1853,7 @@ export const api = {
 
   getAllWithdrawals: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/admin/withdrawals`, { headers: getHeaders() });
+      const res = await fastFetch(`${BASE_URL}/admin/withdrawals`, { headers: getHeaders() });
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch (e) {
@@ -1884,7 +1873,7 @@ export const api = {
 
   reviewWithdrawalAdmin: async (withdrawalId, status, rejectionReason) => {
     try {
-      const res = await fetch(`${BASE_URL}/admin/withdraw/approve`, {
+      const res = await fastFetch(`${BASE_URL}/admin/withdraw/approve`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({ withdrawalId, status, rejectionReason })
@@ -1955,6 +1944,43 @@ export const api = {
       saveOfflineNotifications(notifs);
 
       return { success: true, message: `Withdrawal successfully reviewed as ${status}` };
+    }
+  },
+
+  // Analytics & Global Stats
+  getGlobalStats: async () => {
+    try {
+      const res = await fastFetch(`${BASE_URL}/stats/global`, {
+        headers: getHeaders()
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+      throw new Error('Fallback to offline stats');
+    } catch (err) {
+      // Offline mock calculation
+      const users = getOfflineUsers();
+      const transactions = getOfflineTransactions();
+      const submissions = getOfflineSubmissions();
+
+      const totalRewardsPaid = transactions
+        .filter(t => t.type === 'withdrawal' && t.status === 'Completed' || t.status === 'paid')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+      
+      const totalTasksCompleted = submissions
+        .filter(s => s.status === 'approved')
+        .length;
+
+      const activeEarners = users.filter(u => u.role !== 'admin').length;
+
+      return {
+        success: true,
+        stats: {
+          totalRewardsPaid: totalRewardsPaid || 0,
+          totalTasksCompleted: totalTasksCompleted || 0,
+          activeEarners: activeEarners || 0
+        }
+      };
     }
   }
 };

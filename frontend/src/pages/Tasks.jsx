@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
-  CheckSquare, 
-  Send, 
-  FileText, 
-  Users, 
+  Send,
+  FileText,
+  CheckSquare,
   ExternalLink,
   Upload,
   AlertCircle,
@@ -51,10 +50,6 @@ const Tasks = ({ refreshUser }) => {
     { name: 'Telegram', value: 'telegram' }
   ];
 
-  useEffect(() => {
-    fetchTasks();
-  }, [activeFilter]);
-
   const fetchTasks = async () => {
     const filterVal = filterTabs.find(f => f.name === activeFilter)?.value || 'all';
     const res = await api.getTasks(filterVal);
@@ -62,6 +57,21 @@ const Tasks = ({ refreshUser }) => {
       setTasks(res.tasks);
     }
   };
+
+  useEffect(() => {
+    fetchTasks();
+  }, [activeFilter]);
+
+  const getRemainingSlots = (t) => {
+    if (t.targetCount !== undefined) return Math.max(0, t.targetCount - (t.currentCount || 0));
+    if (t.subscribersRequired !== undefined) return Math.max(0, t.subscribersRequired - (t.subscribersCount || 0));
+    return t.remainingSlots || 0;
+  };
+
+  const getTotalSlots = (t) => t.targetCount || t.subscribersRequired || t.totalSlots || 1;
+  const getReward = (t) => t.reward || t.rewardAmount || 2;
+  const getTaskLink = (t) => t.socialLink || t.taskLink || '';
+  const getTaskDesc = (t) => t.guidelines || t.description || '';
 
   const handleSelectTask = async (task) => {
     setSelectedTask(task);
@@ -172,23 +182,23 @@ const Tasks = ({ refreshUser }) => {
                     <span className="task-tag category-tag">{task.category || 'Campaign'}</span>
                   </div>
                   <h3 className="task-row-title">{task.title}</h3>
-                  <p className="task-row-desc">{task.description}</p>
+                  <p className="task-row-desc">{getTaskDesc(task)}</p>
                 </div>
 
                 <div className="task-row-slots">
                   <div className="slots-text-row">
-                    <span>Slots: <strong>{task.remainingSlots.toLocaleString()}</strong> / {task.totalSlots.toLocaleString()}</span>
+                    <span>Remaining Slots: <strong>{getRemainingSlots(task).toLocaleString()}</strong> / {getTotalSlots(task).toLocaleString()}</span>
                   </div>
                   <div className="slots-progress-bar">
                     <div 
                       className="slots-progress-fill" 
-                      style={{ width: `${Math.min(100, Math.max(0, (task.remainingSlots / task.totalSlots) * 100))}%` }}
+                      style={{ width: `${Math.min(100, Math.max(0, ((getTotalSlots(task) - getRemainingSlots(task)) / getTotalSlots(task)) * 100))}%` }}
                     ></div>
                   </div>
                 </div>
                 
                 <div className="task-row-action">
-                  <span className="task-reward-amount-green">₦{task.rewardAmount.toLocaleString()}</span>
+                  <span className="task-reward-amount-green">₦{getReward(task).toLocaleString()}</span>
                   <button className="btn btn-secondary btn-sm start-task-btn-row">Start Task</button>
                 </div>
               </div>
@@ -213,11 +223,11 @@ const Tasks = ({ refreshUser }) => {
           <div className="panel-body">
             <div className="detail-meta-row">
               <span className="detail-platform">{selectedTask.platform.toUpperCase()} TASK</span>
-              <span className="detail-reward-amount">₦{selectedTask.rewardAmount.toLocaleString()}</span>
+              <span className="detail-reward-amount">₦{getReward(selectedTask).toLocaleString()}</span>
             </div>
 
             <h2 className="detail-title">{selectedTask.title}</h2>
-            <p className="detail-desc">{selectedTask.description}</p>
+            <p className="detail-desc">{getTaskDesc(selectedTask)}</p>
 
             {/* Note Warning Highlight Box */}
             <div className="task-warning-highlight-box">
@@ -231,18 +241,23 @@ const Tasks = ({ refreshUser }) => {
             <div className="detail-section">
               <h4>Required Steps:</h4>
               <div className="instructions-step-list">
-                {selectedTask.instructions.map((ins, index) => (
+                {selectedTask.instructions ? selectedTask.instructions.map((ins, index) => (
                   <div key={index} className="instruction-step-item">
                     <div className="step-circle-number">{index + 1}</div>
                     <div className="step-text-content">{ins}</div>
                   </div>
-                ))}
+                )) : (
+                  <div className="instruction-step-item">
+                    <div className="step-circle-number">1</div>
+                    <div className="step-text-content">{getTaskDesc(selectedTask)}</div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {selectedTask.taskLink && (
+            {getTaskLink(selectedTask) && (
               <a 
-                href={selectedTask.taskLink} 
+                href={getTaskLink(selectedTask)} 
                 target="_blank" 
                 rel="noreferrer" 
                 className="btn btn-primary task-link-button"
@@ -264,7 +279,7 @@ const Tasks = ({ refreshUser }) => {
                 </div>
               )}
 
-              {selectedTask.requiredProof.username && (
+              {(!selectedTask.requiredProof || selectedTask.requiredProof.username !== false) && (
                 <div className="form-group">
                   <label htmlFor="social-handle">Your Social Handle / Username (Public)</label>
                   <input
@@ -291,7 +306,7 @@ const Tasks = ({ refreshUser }) => {
                 ></textarea>
               </div>
 
-              {selectedTask.requiredProof.screenshot && (
+              {(!selectedTask.requiredProof || selectedTask.requiredProof.screenshot !== false) && (
                 <div className="form-group">
                   <label>Screenshot Verification Proof</label>
                   <div className="file-upload-drag-area">

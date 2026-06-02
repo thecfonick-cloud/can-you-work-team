@@ -69,6 +69,7 @@ const adminWallet = [
 if (fs.existsSync(DATA_DIR)) {
   fs.writeFileSync(path.join(DATA_DIR, 'user.json'), JSON.stringify(adminUser, null, 2));
   fs.writeFileSync(path.join(DATA_DIR, 'wallet.json'), JSON.stringify(adminWallet, null, 2));
+  fs.writeFileSync(path.join(DATA_DIR, 'task.json'), '[]');
   fs.writeFileSync(path.join(DATA_DIR, 'leaderboard.json'), '[]');
   fs.writeFileSync(path.join(DATA_DIR, 'transaction.json'), '[]');
   fs.writeFileSync(path.join(DATA_DIR, 'withdrawal.json'), '[]');
@@ -77,7 +78,7 @@ if (fs.existsSync(DATA_DIR)) {
   fs.writeFileSync(path.join(DATA_DIR, 'referral.json'), '[]');
   fs.writeFileSync(path.join(DATA_DIR, 'referralcommission.json'), '[]');
   fs.writeFileSync(path.join(DATA_DIR, 'luckytask.json'), '[]');
-  console.log('Successfully cleared all existing regular users and logs!');
+  console.log('Successfully cleared all existing regular users, tasks, and logs!');
 } else {
   console.error('Error: data directory not found.');
 }

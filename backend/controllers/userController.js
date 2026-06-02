@@ -54,19 +54,13 @@ const updateProfile = async (req, res) => {
 
     await user.save();
 
+    const userObj = user.toObject();
+    delete userObj.passwordHash;
+
     res.json({
       success: true,
       message: 'Profile updated successfully',
-      user: {
-        _id: user._id,
-        fullname: user.fullname,
-        username: user.username,
-        email: user.email,
-        phone: user.phone,
-        country: user.country,
-        socialAccounts: user.socialAccounts,
-        balance: user.balance
-      }
+      user: userObj
     });
 
   } catch (error) {

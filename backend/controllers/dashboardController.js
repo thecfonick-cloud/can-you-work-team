@@ -3,6 +3,7 @@ const Wallet = require('../models/Wallet');
 const TaskSubmission = require('../models/TaskSubmission');
 const Referral = require('../models/Referral');
 const Transaction = require('../models/Transaction');
+const Withdrawal = require('../models/Withdrawal');
 
 const getDashboardOverview = async (req, res) => {
   try {
@@ -92,4 +93,27 @@ const getDashboardOverview = async (req, res) => {
   }
 };
 
-module.exports = { getDashboardOverview };
+const getGlobalStats = async (req, res) => {
+  try {
+    const totalEarners = await User.countDocuments({ role: 'user' });
+    const totalCompletedTasks = await TaskSubmission.countDocuments({ status: 'approved' });
+
+    // Calculate total paid out from paid withdrawals
+    const paidWithdrawals = await Withdrawal.find({ status: 'paid' });
+    const totalPaidOut = paidWithdrawals.reduce((sum, w) => sum + w.amount, 0);
+
+    res.json({
+      success: true,
+      stats: {
+        totalPaidOut,
+        totalCompletedTasks,
+        totalEarners
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching global stats:', error);
+    res.status(500).json({ success: false, message: 'Server error fetching global stats' });
+  }
+};
+
+module.exports = { getDashboardOverview, getGlobalStats };

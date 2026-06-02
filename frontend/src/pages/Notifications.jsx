@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Bell, Mail, ToggleLeft, ToggleRight, Clock, ShieldCheck, AlertCircle, CheckCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Bell, ToggleLeft, ToggleRight, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import { api } from '../api';
 
 const Notifications = () => {
@@ -13,11 +13,6 @@ const Notifications = () => {
   const [savingPrefs, setSavingPrefs] = useState(false);
 
   const filterTabs = ['All', 'Task', 'Bonus', 'Referral', 'Withdrawal', 'System'];
-
-  useEffect(() => {
-    fetchNotifications();
-    fetchPreferences();
-  }, [filterType]);
 
   const fetchNotifications = async () => {
     const res = await api.getNotifications(filterType);
@@ -35,6 +30,11 @@ const Notifications = () => {
       setDndEnd(res.doNotDisturb.quietHoursEnd);
     }
   };
+
+  useEffect(() => {
+    fetchNotifications();
+    fetchPreferences();
+  }, [filterType]);
 
   const handleMarkAsRead = async (id) => {
     const res = await api.markNotificationsRead(id);

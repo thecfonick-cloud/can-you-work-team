@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Coins, Layers, CheckSquare, Plus, ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
 import { api } from '../api';
@@ -12,7 +12,7 @@ const AdvertiserDashboard = ({ user, refreshUser }) => {
     pendingSubmissions: 0
   });
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -49,7 +49,9 @@ const AdvertiserDashboard = ({ user, refreshUser }) => {
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    setTimeout(() => {
+      fetchDashboardData();
+    }, 0);
   }, [user.balance]);
 
   return (

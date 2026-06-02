@@ -23,14 +23,23 @@ const getLeaderboard = async (req, res) => {
       .sort({ totalEarnings: -1 })
       .limit(10); // top 10
 
-    const list = leaderboardRows.map((row, idx) => ({
-      rank: idx + 1,
-      fullname: row.userId.fullname,
-      username: row.userId.username,
-      country: row.userId.country,
-      tasksCompleted: row.referralsCount * 12 + 5, // mock calculation matching design
-      totalEarnings: row.totalEarnings
-    }));
+    const list = [];
+    for (let idx = 0; idx < leaderboardRows.length; idx++) {
+      const row = leaderboardRows[idx];
+      if (!row.userId) continue;
+      const completedCount = await TaskSubmission.countDocuments({
+        userId: row.userId._id,
+        status: 'approved'
+      });
+      list.push({
+        rank: idx + 1,
+        fullname: row.userId.fullname,
+        username: row.userId.username,
+        country: row.userId.country,
+        tasksCompleted: completedCount,
+        totalEarnings: row.totalEarnings
+      });
+    }
 
     // Find current user's rank
     const allLeaderboard = await Leaderboard.find({}).sort({ totalEarnings: -1 });
@@ -63,8 +72,8 @@ const getLeaderboard = async (req, res) => {
     res.json({
       success: true,
       stats: {
-        totalUsers: totalUsers || 12458,
-        totalTasksCompleted: totalTasksCompleted || 245672,
+        totalUsers: totalUsers,
+        totalTasksCompleted: totalTasksCompleted,
         totalRewardsPaid: totalRewardsPaid
       },
       topRewards: {

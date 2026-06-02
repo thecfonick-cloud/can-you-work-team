@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Gift, Calendar, CheckCircle2, Trophy, Clock, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Gift, CheckCircle2, Clock, Sparkles } from 'lucide-react';
 import { api } from '../api';
 
 const Bonus = ({ refreshUser }) => {
@@ -7,16 +7,16 @@ const Bonus = ({ refreshUser }) => {
   const [checkingIn, setCheckingIn] = useState(false);
   const [msg, setMsg] = useState('');
 
-  useEffect(() => {
-    fetchBonusData();
-  }, []);
-
   const fetchBonusData = async () => {
     const res = await api.getBonuses();
     if (res.success) {
       setData(res);
     }
   };
+
+  useEffect(() => {
+    fetchBonusData();
+  }, []);
 
   const handleCheckIn = async () => {
     setCheckingIn(true);
