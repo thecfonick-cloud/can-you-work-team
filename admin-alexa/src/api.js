@@ -56,6 +56,281 @@ function pushActivity(type, description, metadata = {}) {
   saveLocalStorageItem(KEYS.ACTIVITY_LOG, log);
 }
 
+const OFFLINE_DB_VERSION = '3';
+function initOfflineDb() {
+  const storedVersion = localStorage.getItem('cw_offline_db_version');
+  if (storedVersion !== OFFLINE_DB_VERSION) {
+    // Clear all old keys
+    Object.values(KEYS).forEach(k => localStorage.removeItem(k));
+    localStorage.removeItem('cw_offline_db_version');
+
+    // Users
+    const users = [
+      {
+        id: 'admin_user',
+        fullname: 'Admin Alexa',
+        username: 'admin',
+        email: 'admin@canyuwork.com',
+        phone: '+234 800 000 0000',
+        country: 'Nigeria',
+        referralCode: 'admincode',
+        isVerified: true,
+        role: 'admin',
+        password: 'admin123',
+        status: 'active'
+      },
+      {
+        id: 'user_john',
+        fullname: 'John Goodluck',
+        username: 'johng',
+        email: 'johng@example.com',
+        phone: '+234 801 234 5678',
+        country: 'Nigeria',
+        referralCode: 'JohnG',
+        isVerified: true,
+        role: 'user',
+        password: 'pass123',
+        status: 'active'
+      },
+      {
+        id: 'user_sarah',
+        fullname: 'Sarah Johnson',
+        username: 'sarahj',
+        email: 'sarahj@example.com',
+        phone: '+234 802 345 6789',
+        country: 'Nigeria',
+        referralCode: 'SarahJ',
+        isVerified: true,
+        role: 'user',
+        password: 'pass123',
+        status: 'active'
+      },
+      {
+        id: 'adv_nike',
+        fullname: 'Nike Advertiser',
+        username: 'nike_ads',
+        email: 'nike@example.com',
+        phone: '+234 803 456 7890',
+        country: 'Nigeria',
+        referralCode: 'NikeAds',
+        isVerified: true,
+        role: 'advertiser',
+        password: 'pass123',
+        status: 'active'
+      }
+    ];
+    saveLocalStorageItem(KEYS.USERS, users);
+
+    // Wallets
+    const wallets = {
+      'admin_user': { balance: 0, earnings: 0, spent: 0 },
+      'user_john': { balance: 25680.00, earnings: 48250.00, spent: 0 },
+      'user_sarah': { balance: 12450.00, earnings: 15450.00, spent: 0 },
+      'adv_nike': { balance: 150000.00, earnings: 0, spent: 75000.00 }
+    };
+    saveLocalStorageItem(KEYS.WALLETS, wallets);
+
+    // Tasks (Campaigns)
+    const tasks = [
+      {
+        id: 't1',
+        title: 'Follow @techworld on Instagram',
+        description: 'Follow the Instagram page @techworld and stay active. After completing the task, upload a screenshot as proof.',
+        platform: 'instagram',
+        taskType: 'social_follow',
+        reward: 10,
+        targetCount: 1000,
+        currentCount: 450,
+        totalCost: 10000,
+        remainingSlots: 550,
+        taskLink: 'https://instagram.com/techworld',
+        advertiserId: 'adv_nike',
+        status: 'active',
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 't2',
+        title: 'Like & Share this Facebook Post',
+        description: 'Like the post and share it on your timeline. Take screenshot and upload.',
+        platform: 'facebook',
+        taskType: 'social_like',
+        reward: 15,
+        targetCount: 500,
+        currentCount: 500,
+        totalCost: 7500,
+        remainingSlots: 0,
+        taskLink: 'https://facebook.com/posts/1234',
+        advertiserId: 'adv_nike',
+        status: 'completed',
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 't3',
+        title: 'Watch this YouTube Video',
+        description: 'Watch the video for at least 60 seconds. Like and subscribe.',
+        platform: 'youtube',
+        taskType: 'social_like',
+        reward: 20,
+        targetCount: 1500,
+        currentCount: 0,
+        totalCost: 30000,
+        remainingSlots: 1500,
+        taskLink: 'https://youtube.com/watch?v=123',
+        advertiserId: 'adv_nike',
+        status: 'pending_payment',
+        referenceNumber: 'TXN8892104859',
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+    saveLocalStorageItem(KEYS.TASKS, tasks);
+
+    // Submissions
+    const submissions = [
+      {
+        id: 's1',
+        taskId: 't1',
+        userId: 'user_john',
+        socialUsername: 'john_doe_ig',
+        proofText: 'Followed as @john_doe_ig',
+        status: 'approved',
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        approvedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 's2',
+        taskId: 't1',
+        userId: 'user_sarah',
+        socialUsername: 'sarah_j_ig',
+        proofText: 'Followed. Check screenshot.',
+        status: 'pending',
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+    saveLocalStorageItem(KEYS.SUBMISSIONS, submissions);
+
+    // Withdrawals
+    const withdrawals = [
+      {
+        id: 'w1',
+        userId: 'user_john',
+        fullname: 'John Goodluck',
+        username: 'johng',
+        method: 'PayPal',
+        accountDetails: 'john@example.com',
+        amount: 30460.00,
+        status: 'paid',
+        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+        paidAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'w2',
+        userId: 'user_john',
+        fullname: 'John Goodluck',
+        username: 'johng',
+        method: 'Bank Transfer',
+        accountDetails: 'Access Bank - 0123456789',
+        amount: 18732.90,
+        status: 'pending',
+        createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+    saveLocalStorageItem(KEYS.WITHDRAWALS, withdrawals);
+
+    // Transactions
+    const transactions = [
+      {
+        id: 'tx1',
+        userId: 'adv_nike',
+        type: 'deposit',
+        amount: 75000.00,
+        status: 'completed',
+        description: 'Fund wallet via Crypto',
+        createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'tx2',
+        userId: 'adv_nike',
+        type: 'deposit',
+        amount: 150000.00,
+        status: 'completed',
+        description: 'Fund wallet via Bank Transfer',
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'tx3',
+        userId: 'user_john',
+        type: 'withdrawal',
+        amount: -30460.00,
+        status: 'completed',
+        description: 'Withdrawal to PayPal (john@example.com)',
+        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+    saveLocalStorageItem(KEYS.TRANSACTIONS, transactions);
+
+    // Notifications
+    saveLocalStorageItem(KEYS.NOTIFICATIONS, []);
+
+    // Referrals
+    saveLocalStorageItem(KEYS.REFERRALS, []);
+
+    // Streaks
+    saveLocalStorageItem(KEYS.STREAKS, {});
+
+    // Activity Log
+    const activityLog = [
+      {
+        id: 'act1',
+        type: 'system',
+        description: 'Admin Alexa command cockpit initialized',
+        timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'act2',
+        type: 'deposit',
+        description: 'Advertiser "Nike Advertiser" requested ₦75,000 deposit',
+        timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'act3',
+        type: 'campaign',
+        description: 'Campaign "Follow @techworld on Instagram" created by Nike Advertiser',
+        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'act4',
+        type: 'user',
+        description: 'User "John Goodluck" signed up to CanYouWork',
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'act5',
+        type: 'submission',
+        description: 'User johng submitted proof for "Follow @techworld on Instagram"',
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'act6',
+        type: 'submission',
+        description: 'Submission s1 approved by Nike Advertiser',
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'act7',
+        type: 'withdrawal',
+        description: 'User johng requested ₦18,732.90 payout via Bank Transfer',
+        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+    saveLocalStorageItem(KEYS.ACTIVITY_LOG, activityLog);
+
+    localStorage.setItem('cw_offline_db_version', OFFLINE_DB_VERSION);
+  }
+}
+
+// Run initialization on file load
+initOfflineDb();
+
 // ── Exported Admin API ──────────────────────────────────────
 
 export const adminApi = {

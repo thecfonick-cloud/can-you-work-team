@@ -318,6 +318,15 @@ const AdminPortal = ({ refreshUser }) => {
 
   return (
     <div className="admin-portal-container" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {/* Migration Banner */}
+      <div style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)' }}>
+        <div>
+          <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.15rem', color: '#00d4ff', display: 'flex', alignItems: 'center', gap: '8px' }}>🚀 Standalone Cockpit: Admin Alexa is Active!</h3>
+          <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.75)' }}>The admin interface has been upgraded to a dedicated platform with a real-time Operations Center activity feed, command controls, and full transaction ledger.</p>
+        </div>
+        <a href="https://admin-alexa.vercel.app" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ background: 'linear-gradient(90deg, #8b5cf6, #00d4ff)', border: 'none', color: '#ffffff', padding: '0.6rem 1.2rem', fontWeight: 'bold', textDecoration: 'none', borderRadius: '4px', whiteSpace: 'nowrap' }}>Open Admin Alexa ↗</a>
+      </div>
+
       {/* Header bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '1.25rem 2rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
         <div>

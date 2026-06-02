@@ -50,7 +50,7 @@ const Sidebar = ({ user, handleLogout, isOpen, setIsOpen }) => {
       {
         title: 'System Admin',
         items: [
-          { name: 'Admin Portal', path: '/admin', icon: ShieldCheck }
+          { name: 'Admin Alexa Cockpit', href: 'https://admin-alexa.vercel.app', icon: ShieldCheck, external: true }
         ]
       },
       {
@@ -146,6 +146,21 @@ const Sidebar = ({ user, handleLogout, isOpen, setIsOpen }) => {
             )}
             {section.items.map((item) => {
               const Icon = item.icon;
+              if (item.external) {
+                return (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="sidebar-nav-link"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <Icon size={18} className="nav-icon" />
+                    <span>{item.name}</span>
+                  </a>
+                );
+              }
               return (
                 <NavLink
                   key={item.name}
