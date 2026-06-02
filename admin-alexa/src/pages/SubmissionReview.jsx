@@ -59,13 +59,13 @@ const SubmissionReview = () => {
           </thead>
           <tbody>
             {filtered.map(s => (
-              <tr key={s._id}>
+              <tr key={s.id}>
                 <td>
-                  <div><strong>{s.userName || 'Unknown'}</strong></div>
-                  <div className="text-muted" style={{ fontSize: '0.8rem' }}>@{s.userUsername || '—'}</div>
+                  <div><strong>{s.user?.name || 'Unknown'}</strong></div>
+                  <div className="text-muted" style={{ fontSize: '0.8rem' }}>{s.user?.email || '—'}</div>
                 </td>
                 <td>
-                  <div>{s.taskTitle || 'Task'}</div>
+                  <div>{s.task?.title || 'Task'}</div>
                   <div className="text-muted" style={{ fontSize: '0.8rem' }}>{s.platform || ''}</div>
                 </td>
                 <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -78,8 +78,8 @@ const SubmissionReview = () => {
                 <td>
                   {s.status === 'pending' && (
                     <div style={{ display: 'flex', gap: '0.25rem' }}>
-                      <button className="btn btn-success btn-sm" onClick={() => act(adminApi.approveSubmission, s._id)}><CheckCircle size={12} /></button>
-                      <button className="btn btn-danger btn-sm" onClick={() => act(adminApi.rejectSubmission, s._id)}><XCircle size={12} /></button>
+                      <button className="btn btn-success btn-sm" onClick={() => act(adminApi.approveSubmission, s.id)}><CheckCircle size={12} /></button>
+                      <button className="btn btn-danger btn-sm" onClick={() => act(adminApi.rejectSubmission, s.id)}><XCircle size={12} /></button>
                     </div>
                   )}
                 </td>

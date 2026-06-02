@@ -59,9 +59,9 @@ const CampaignCenter = () => {
           </thead>
           <tbody>
             {filtered.map(c => (
-              <tr key={c._id}>
+              <tr key={c.id}>
                 <td><strong>{c.title}</strong></td>
-                <td className="text-muted">{c.advertiserName || 'Unknown'}</td>
+                <td className="text-muted">{c.advertiser?.name || 'Unknown'}</td>
                 <td><span className="badge badge-info">{c.platform}</span></td>
                 <td className="text-mono">{c.targetCount}</td>
                 <td>
@@ -78,13 +78,13 @@ const CampaignCenter = () => {
                   <div style={{ display: 'flex', gap: '0.25rem' }}>
                     {c.status === 'pending_payment' && (
                       <>
-                        <button className="btn btn-success btn-sm" onClick={() => action(adminApi.approveCampaign, c._id)}><CheckCircle size={12} /></button>
-                        <button className="btn btn-danger btn-sm" onClick={() => action(adminApi.rejectCampaign, c._id)}><XCircle size={12} /></button>
+                        <button className="btn btn-success btn-sm" onClick={() => action(adminApi.approveCampaign, c.id)}><CheckCircle size={12} /></button>
+                        <button className="btn btn-danger btn-sm" onClick={() => action(adminApi.rejectCampaign, c.id)}><XCircle size={12} /></button>
                       </>
                     )}
-                    {c.status === 'active' && <button className="btn btn-outline btn-sm" onClick={() => action(adminApi.pauseCampaign, c._id)}><Pause size={12} /></button>}
-                    {c.status === 'paused' && <button className="btn btn-success btn-sm" onClick={() => action(adminApi.resumeCampaign, c._id)}><Play size={12} /></button>}
-                    {c.status !== 'deleted' && <button className="btn btn-danger btn-sm" onClick={() => { if (confirm('Delete this campaign?')) action(adminApi.deleteCampaign, c._id); }}><Trash2 size={12} /></button>}
+                    {c.status === 'active' && <button className="btn btn-outline btn-sm" onClick={() => action(adminApi.pauseCampaign, c.id)}><Pause size={12} /></button>}
+                    {c.status === 'paused' && <button className="btn btn-success btn-sm" onClick={() => action(adminApi.resumeCampaign, c.id)}><Play size={12} /></button>}
+                    {c.status !== 'deleted' && <button className="btn btn-danger btn-sm" onClick={() => { if (confirm('Delete this campaign?')) action(adminApi.deleteCampaign, c.id); }}><Trash2 size={12} /></button>}
                   </div>
                 </td>
               </tr>

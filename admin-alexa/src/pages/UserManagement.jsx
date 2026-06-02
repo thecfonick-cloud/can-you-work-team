@@ -81,21 +81,21 @@ const UserManagement = () => {
           </thead>
           <tbody>
             {filtered.map(u => (
-              <tr key={u._id}>
+              <tr key={u.id}>
                 <td>
                   <div><strong>{u.fullname}</strong></div>
                   <div className="text-muted" style={{ fontSize: '0.8rem' }}>@{u.username} · {u.email}</div>
                 </td>
                 <td>{roleBadge(u.role)}</td>
                 <td>
-                  {editBalanceId === u._id ? (
+                  {editBalanceId === u.id ? (
                     <div style={{ display: 'flex', gap: '0.25rem' }}>
                       <input className="form-input" style={{ width: '100px', padding: '0.25rem 0.5rem' }} type="number" value={newBalance} onChange={e => setNewBalance(e.target.value)} />
-                      <button className="btn btn-success btn-sm" onClick={() => handleBalanceUpdate(u._id)}><Check size={12} /></button>
+                      <button className="btn btn-success btn-sm" onClick={() => handleBalanceUpdate(u.id)}><Check size={12} /></button>
                       <button className="btn btn-outline btn-sm" onClick={() => setEditBalanceId(null)}><X size={12} /></button>
                     </div>
                   ) : (
-                    <span className="text-mono">₦{(u.availableBalance || 0).toLocaleString()}</span>
+                    <span className="text-mono">₦{(u.wallet?.balance || 0).toLocaleString()}</span>
                   )}
                 </td>
                 <td>
@@ -105,14 +105,14 @@ const UserManagement = () => {
                 </td>
                 <td>
                   <div style={{ display: 'flex', gap: '0.25rem' }}>
-                    <button className="btn btn-outline btn-sm" title="View" onClick={() => viewDetail(u._id)}><Eye size={12} /></button>
-                    <button className="btn btn-outline btn-sm" title="Edit Balance" onClick={() => { setEditBalanceId(u._id); setNewBalance(u.availableBalance || 0); }}><Edit3 size={12} /></button>
+                    <button className="btn btn-outline btn-sm" title="View" onClick={() => viewDetail(u.id)}><Eye size={12} /></button>
+                    <button className="btn btn-outline btn-sm" title="Edit Balance" onClick={() => { setEditBalanceId(u.id); setNewBalance(u.wallet?.balance || 0); }}><Edit3 size={12} /></button>
                     {u.role !== 'admin' && (
                       <>
-                        <button className={`btn btn-sm ${u.status === 'suspended' ? 'btn-success' : 'btn-danger'}`} onClick={() => handleSuspend(u._id, u.status)}>
+                        <button className={`btn btn-sm ${u.status === 'suspended' ? 'btn-success' : 'btn-danger'}`} onClick={() => handleSuspend(u.id, u.status)}>
                           {u.status === 'suspended' ? <Shield size={12} /> : <Ban size={12} />}
                         </button>
-                        <button className="btn btn-danger btn-sm" title="Delete" onClick={() => handleDelete(u._id)}><Trash2 size={12} /></button>
+                        <button className="btn btn-danger btn-sm" title="Delete" onClick={() => handleDelete(u.id)}><Trash2 size={12} /></button>
                       </>
                     )}
                   </div>

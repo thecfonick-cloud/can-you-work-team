@@ -49,15 +49,15 @@ const FinancialControl = () => {
             <thead><tr><th>User</th><th>Amount</th><th>TX Hash</th><th>Date</th><th>Actions</th></tr></thead>
             <tbody>
               {deposits.map(d => (
-                <tr key={d._id}>
-                  <td>{d.userName || d.userId}</td>
+                <tr key={d.id}>
+                  <td>{d.user?.name || d.user?.email || d.userId}</td>
                   <td className="text-mono text-success">₦{(d.amount || 0).toLocaleString()}</td>
                   <td className="text-mono" style={{ fontSize: '0.8rem', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.txHash || d.referenceNumber || '—'}</td>
                   <td className="text-muted">{new Date(d.createdAt).toLocaleDateString()}</td>
                   <td>
                     <div style={{ display: 'flex', gap: '0.25rem' }}>
-                      <button className="btn btn-success btn-sm" onClick={() => act(adminApi.approveDeposit, d._id)}><CheckCircle size={12} /> Approve</button>
-                      <button className="btn btn-danger btn-sm" onClick={() => act(adminApi.rejectDeposit, d._id)}><XCircle size={12} /> Reject</button>
+                      <button className="btn btn-success btn-sm" onClick={() => act(adminApi.approveDeposit, d.id)}><CheckCircle size={12} /> Approve</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => act(adminApi.rejectDeposit, d.id)}><XCircle size={12} /> Reject</button>
                     </div>
                   </td>
                 </tr>
@@ -74,17 +74,17 @@ const FinancialControl = () => {
             <thead><tr><th>User</th><th>Method</th><th>Account</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
               {withdrawals.map(w => (
-                <tr key={w._id}>
-                  <td><strong>{w.userName || 'Unknown'}</strong></td>
+                <tr key={w.id}>
+                  <td><strong>{w.user?.name || w.fullname || 'Unknown'}</strong></td>
                   <td><span className="badge badge-info">{w.method || 'Bank'}</span></td>
                   <td className="text-mono" style={{ fontSize: '0.8rem' }}>{w.accountDetails || '—'}</td>
                   <td className="text-mono text-danger">₦{(w.amount || 0).toLocaleString()}</td>
-                  <td><span className={`badge ${w.status === 'paid' ? 'badge-success' : w.status === 'rejected' ? 'badge-danger' : 'badge-warning'}`}>{w.status}</span></td>
+                  <td><span className={`badge ${w.status === 'paid' || w.status === 'Completed' || w.status === 'completed' ? 'badge-success' : w.status === 'rejected' || w.status === 'Rejected' ? 'badge-danger' : 'badge-warning'}`}>{w.status}</span></td>
                   <td>
                     {(w.status?.toLowerCase() === 'pending') && (
                       <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        <button className="btn btn-success btn-sm" onClick={() => act(adminApi.approveWithdrawal, w._id)}><CheckCircle size={12} /></button>
-                        <button className="btn btn-danger btn-sm" onClick={() => { const r = prompt('Rejection reason?'); if (r) act(adminApi.rejectWithdrawal, w._id, r); }}><XCircle size={12} /></button>
+                        <button className="btn btn-success btn-sm" onClick={() => act(adminApi.approveWithdrawal, w.id)}><CheckCircle size={12} /></button>
+                        <button className="btn btn-danger btn-sm" onClick={() => { const r = prompt('Rejection reason?'); if (r) act(adminApi.rejectWithdrawal, w.id, r); }}><XCircle size={12} /></button>
                       </div>
                     )}
                   </td>
@@ -102,15 +102,15 @@ const FinancialControl = () => {
             <thead><tr><th>Date</th><th>User</th><th>Type</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead>
             <tbody>
               {transactions.slice(0, 100).map((tx, i) => (
-                <tr key={tx._id || i}>
+                <tr key={tx.id || i}>
                   <td className="text-mono" style={{ fontSize: '0.8rem' }}>{new Date(tx.createdAt).toLocaleDateString()}</td>
-                  <td>{tx.userName || tx.userId}</td>
+                  <td>{tx.user?.name || tx.userId}</td>
                   <td><span className="badge badge-info">{tx.type}</span></td>
                   <td>{tx.description}</td>
                   <td className={`text-mono ${tx.type === 'withdrawal' ? 'text-danger' : 'text-success'}`}>
                     {tx.type === 'withdrawal' ? '-' : '+'}₦{(tx.amount || 0).toLocaleString()}
                   </td>
-                  <td><span className={`badge ${tx.status === 'Completed' ? 'badge-success' : tx.status === 'Pending' ? 'badge-warning' : 'badge-danger'}`}>{tx.status}</span></td>
+                  <td><span className={`badge ${tx.status === 'Completed' || tx.status === 'completed' ? 'badge-success' : tx.status === 'Pending' || tx.status === 'pending' ? 'badge-warning' : 'badge-danger'}`}>{tx.status}</span></td>
                 </tr>
               ))}
             </tbody>
