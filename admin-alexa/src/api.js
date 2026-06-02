@@ -56,7 +56,7 @@ function pushActivity(type, description, metadata = {}) {
   saveLocalStorageItem(KEYS.ACTIVITY_LOG, log);
 }
 
-const OFFLINE_DB_VERSION = '3';
+const OFFLINE_DB_VERSION = '5';
 function initOfflineDb() {
   const storedVersion = localStorage.getItem('cw_offline_db_version');
   if (storedVersion !== OFFLINE_DB_VERSION) {
@@ -68,6 +68,7 @@ function initOfflineDb() {
     const users = [
       {
         id: 'admin_user',
+        _id: 'admin_user',
         fullname: 'Admin Alexa',
         username: 'admin',
         email: 'admin@canyuwork.com',
@@ -77,10 +78,18 @@ function initOfflineDb() {
         isVerified: true,
         role: 'admin',
         password: 'admin123',
-        status: 'active'
+        status: 'active',
+        balance: 0,
+        pendingBalance: 0,
+        totalEarnings: 0,
+        totalWithdrawn: 0,
+        socialAccounts: {},
+        notificationPreferences: { taskAlerts: true, bonusRewards: true, withdrawalAlerts: true, referrals: true, leaderboard: true, systemUpdates: true, marketing: false },
+        doNotDisturb: { enabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00' }
       },
       {
         id: 'user_john',
+        _id: 'user_john',
         fullname: 'John Goodluck',
         username: 'johng',
         email: 'johng@example.com',
@@ -90,10 +99,18 @@ function initOfflineDb() {
         isVerified: true,
         role: 'user',
         password: 'pass123',
-        status: 'active'
+        status: 'active',
+        balance: 25680.00,
+        pendingBalance: 1230.00,
+        totalEarnings: 48250.00,
+        totalWithdrawn: 36800.00,
+        socialAccounts: { instagramUsername: 'john_doe', tiktokUsername: 'johndoe_tt', twitterUsername: 'johndoe_x', facebookUsername: 'john.doe.fb', telegramUsername: 'johndoe_tg', youtubeChannel: 'JohnDoeChannel' },
+        notificationPreferences: { taskAlerts: true, bonusRewards: true, withdrawalAlerts: true, referrals: true, leaderboard: true, systemUpdates: true, marketing: false },
+        doNotDisturb: { enabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00' }
       },
       {
         id: 'user_sarah',
+        _id: 'user_sarah',
         fullname: 'Sarah Johnson',
         username: 'sarahj',
         email: 'sarahj@example.com',
@@ -103,10 +120,18 @@ function initOfflineDb() {
         isVerified: true,
         role: 'user',
         password: 'pass123',
-        status: 'active'
+        status: 'active',
+        balance: 12450.00,
+        pendingBalance: 0.00,
+        totalEarnings: 15450.00,
+        totalWithdrawn: 3000.00,
+        socialAccounts: { instagramUsername: 'sarah_j', tiktokUsername: 'sarahj_tt', twitterUsername: 'sarahj_x', facebookUsername: 'sarah.j.fb', telegramUsername: 'sarahj_tg', youtubeChannel: 'SarahJChannel' },
+        notificationPreferences: { taskAlerts: true, bonusRewards: true, withdrawalAlerts: true, referrals: true, leaderboard: true, systemUpdates: true, marketing: false },
+        doNotDisturb: { enabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00' }
       },
       {
         id: 'adv_nike',
+        _id: 'adv_nike',
         fullname: 'Nike Advertiser',
         username: 'nike_ads',
         email: 'nike@example.com',
@@ -116,17 +141,24 @@ function initOfflineDb() {
         isVerified: true,
         role: 'advertiser',
         password: 'pass123',
-        status: 'active'
+        status: 'active',
+        balance: 150000.00,
+        pendingBalance: 0.00,
+        totalEarnings: 0.00,
+        totalWithdrawn: 0.00,
+        socialAccounts: {},
+        notificationPreferences: { taskAlerts: true, bonusRewards: true, withdrawalAlerts: true, referrals: true, leaderboard: true, systemUpdates: true, marketing: false },
+        doNotDisturb: { enabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00' }
       }
     ];
     saveLocalStorageItem(KEYS.USERS, users);
 
     // Wallets
     const wallets = {
-      'admin_user': { balance: 0, earnings: 0, spent: 0 },
-      'user_john': { balance: 25680.00, earnings: 48250.00, spent: 0 },
-      'user_sarah': { balance: 12450.00, earnings: 15450.00, spent: 0 },
-      'adv_nike': { balance: 150000.00, earnings: 0, spent: 75000.00 }
+      'admin_user': { availableBalance: 0, balance: 0, pendingBalance: 0, totalEarnings: 0, earnings: 0, totalWithdrawn: 0, spent: 0 },
+      'user_john': { availableBalance: 25680.00, balance: 25680.00, pendingBalance: 1230.00, totalEarnings: 48250.00, earnings: 48250.00, totalWithdrawn: 36800.00, spent: 0 },
+      'user_sarah': { availableBalance: 12450.00, balance: 12450.00, pendingBalance: 0, totalEarnings: 15450.00, earnings: 15450.00, totalWithdrawn: 3000.00, spent: 0 },
+      'adv_nike': { availableBalance: 150000.00, balance: 150000.00, pendingBalance: 0, totalEarnings: 0, earnings: 0, totalWithdrawn: 0, spent: 75000.00 }
     };
     saveLocalStorageItem(KEYS.WALLETS, wallets);
 
@@ -134,48 +166,88 @@ function initOfflineDb() {
     const tasks = [
       {
         id: 't1',
+        _id: 't1',
         title: 'Follow @techworld on Instagram',
         description: 'Follow the Instagram page @techworld and stay active. After completing the task, upload a screenshot as proof.',
         platform: 'instagram',
         taskType: 'social_follow',
         reward: 10,
+        rewardAmount: 10,
         targetCount: 1000,
+        totalSlots: 1000,
         currentCount: 450,
+        subscribersCount: 450,
         totalCost: 10000,
         remainingSlots: 550,
         taskLink: 'https://instagram.com/techworld',
+        socialLink: 'https://instagram.com/techworld',
+        instructions: [
+          'Click on the Start Task button.',
+          'You will be redirected to Instagram.',
+          'Follow the page @techworld.',
+          'Take a screenshot showing that you followed the page.',
+          'Upload the screenshot below.'
+        ],
+        guidelines: 'Follow @techworld on Instagram. Submit username and screenshot.',
+        requiredProof: { screenshot: true, username: true },
         advertiserId: 'adv_nike',
         status: 'active',
         createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         id: 't2',
+        _id: 't2',
         title: 'Like & Share this Facebook Post',
         description: 'Like the post and share it on your timeline. Take screenshot and upload.',
         platform: 'facebook',
         taskType: 'social_like',
         reward: 15,
+        rewardAmount: 15,
         targetCount: 500,
+        totalSlots: 500,
         currentCount: 500,
+        subscribersCount: 500,
         totalCost: 7500,
         remainingSlots: 0,
         taskLink: 'https://facebook.com/posts/1234',
+        socialLink: 'https://facebook.com/posts/1234',
+        instructions: [
+          'Go to the link.',
+          'Like the post.',
+          'Share the post on your timeline (must be public).',
+          'Upload proof.'
+        ],
+        guidelines: 'Like and share the Facebook post publicly. Submit link and screenshot.',
+        requiredProof: { screenshot: true, username: true },
         advertiserId: 'adv_nike',
         status: 'completed',
         createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         id: 't3',
+        _id: 't3',
         title: 'Watch this YouTube Video',
         description: 'Watch the video for at least 60 seconds. Like and subscribe.',
         platform: 'youtube',
         taskType: 'social_like',
         reward: 20,
+        rewardAmount: 20,
         targetCount: 1500,
+        totalSlots: 1500,
         currentCount: 0,
+        subscribersCount: 0,
         totalCost: 30000,
         remainingSlots: 1500,
         taskLink: 'https://youtube.com/watch?v=123',
+        socialLink: 'https://youtube.com/watch?v=123',
+        instructions: [
+          'Open the video link.',
+          'Watch for at least 60 seconds.',
+          'Like and subscribe to the channel.',
+          'Upload a screenshot.'
+        ],
+        guidelines: 'Watch at least 60s, like, and subscribe. Submit proof.',
+        requiredProof: { screenshot: true, username: true },
         advertiserId: 'adv_nike',
         status: 'pending_payment',
         referenceNumber: 'TXN8892104859',
@@ -188,7 +260,9 @@ function initOfflineDb() {
     const submissions = [
       {
         id: 's1',
+        _id: 's1',
         taskId: 't1',
+        campaignId: 't1',
         userId: 'user_john',
         socialUsername: 'john_doe_ig',
         proofText: 'Followed as @john_doe_ig',
@@ -198,7 +272,9 @@ function initOfflineDb() {
       },
       {
         id: 's2',
+        _id: 's2',
         taskId: 't1',
+        campaignId: 't1',
         userId: 'user_sarah',
         socialUsername: 'sarah_j_ig',
         proofText: 'Followed. Check screenshot.',
@@ -212,6 +288,7 @@ function initOfflineDb() {
     const withdrawals = [
       {
         id: 'w1',
+        _id: 'w1',
         userId: 'user_john',
         fullname: 'John Goodluck',
         username: 'johng',
@@ -224,6 +301,7 @@ function initOfflineDb() {
       },
       {
         id: 'w2',
+        _id: 'w2',
         userId: 'user_john',
         fullname: 'John Goodluck',
         username: 'johng',
@@ -240,6 +318,7 @@ function initOfflineDb() {
     const transactions = [
       {
         id: 'tx1',
+        _id: 'tx1',
         userId: 'adv_nike',
         type: 'deposit',
         amount: 75000.00,
@@ -249,6 +328,7 @@ function initOfflineDb() {
       },
       {
         id: 'tx2',
+        _id: 'tx2',
         userId: 'adv_nike',
         type: 'deposit',
         amount: 150000.00,
@@ -258,6 +338,7 @@ function initOfflineDb() {
       },
       {
         id: 'tx3',
+        _id: 'tx3',
         userId: 'user_john',
         type: 'withdrawal',
         amount: -30460.00,
@@ -268,55 +349,53 @@ function initOfflineDb() {
     ];
     saveLocalStorageItem(KEYS.TRANSACTIONS, transactions);
 
-    // Notifications
-    saveLocalStorageItem(KEYS.NOTIFICATIONS, []);
-
-    // Referrals
-    saveLocalStorageItem(KEYS.REFERRALS, []);
-
-    // Streaks
-    saveLocalStorageItem(KEYS.STREAKS, {});
-
     // Activity Log
     const activityLog = [
       {
         id: 'act1',
+        _id: 'act1',
         type: 'system',
         description: 'Admin Alexa command cockpit initialized',
         timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         id: 'act2',
+        _id: 'act2',
         type: 'deposit',
         description: 'Advertiser "Nike Advertiser" requested ₦75,000 deposit',
         timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         id: 'act3',
+        _id: 'act3',
         type: 'campaign',
         description: 'Campaign "Follow @techworld on Instagram" created by Nike Advertiser',
         timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         id: 'act4',
-        type: 'user',
+        _id: 'act4',
+        type: 'user_signup',
         description: 'User "John Goodluck" signed up to CanYouWork',
         timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         id: 'act5',
+        _id: 'act5',
         type: 'submission',
         description: 'User johng submitted proof for "Follow @techworld on Instagram"',
         timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         id: 'act6',
+        _id: 'act6',
         type: 'submission',
         description: 'Submission s1 approved by Nike Advertiser',
         timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         id: 'act7',
+        _id: 'act7',
         type: 'withdrawal',
         description: 'User johng requested ₦18,732.90 payout via Bank Transfer',
         timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
@@ -324,6 +403,9 @@ function initOfflineDb() {
     ];
     saveLocalStorageItem(KEYS.ACTIVITY_LOG, activityLog);
 
+    saveLocalStorageItem(KEYS.NOTIFICATIONS, []);
+    saveLocalStorageItem(KEYS.REFERRALS, []);
+    saveLocalStorageItem(KEYS.STREAKS, {});
     localStorage.setItem('cw_offline_db_version', OFFLINE_DB_VERSION);
   }
 }
@@ -350,7 +432,7 @@ export const adminApi = {
       return { success: false, message: 'Invalid credentials or insufficient privileges.' };
     }
     const token = `admin_${generateId()}`;
-    pushActivity('system', `Admin "${user.name || user.email}" logged in`, { userId: user.id });
+    pushActivity('system', `Admin "${user.fullname || user.name || user.email}" logged in`, { userId: user.id });
     return { success: true, user, token };
   },
 
@@ -418,7 +500,7 @@ export const adminApi = {
     const wallets = getLocalStorageItem(KEYS.WALLETS, {});
     const merged  = users.map((u) => ({
       ...u,
-      wallet: wallets[u.id] || { balance: 0, earnings: 0, spent: 0 },
+      wallet: wallets[u.id || u._id] || wallets[u._id] || { balance: 0, earnings: 0, spent: 0 },
     }));
     return { success: true, users: merged };
   },
@@ -432,7 +514,7 @@ export const adminApi = {
     const referrals    = getLocalStorageItem(KEYS.REFERRALS, []);
     const streaks      = getLocalStorageItem(KEYS.STREAKS, {});
 
-    const user = users.find((u) => u.id === userId);
+    const user = users.find((u) => u.id === userId || u._id === userId);
     if (!user) return { success: false, message: 'User not found.' };
 
     return {
@@ -477,7 +559,7 @@ export const adminApi = {
     users[idx].suspendedAt = new Date().toISOString();
     saveLocalStorageItem(KEYS.USERS, users);
 
-    pushActivity('user', `User "${users[idx].name || users[idx].email}" suspended`, { userId });
+    pushActivity('user', `User "${users[idx].fullname || users[idx].name || users[idx].email}" suspended`, { userId });
     return { success: true, user: users[idx] };
   },
 
@@ -491,7 +573,7 @@ export const adminApi = {
     delete users[idx].suspendedAt;
     saveLocalStorageItem(KEYS.USERS, users);
 
-    pushActivity('user', `User "${users[idx].name || users[idx].email}" activated`, { userId });
+    pushActivity('user', `User "${users[idx].fullname || users[idx].name || users[idx].email}" activated`, { userId });
     return { success: true, user: users[idx] };
   },
 
@@ -539,7 +621,7 @@ export const adminApi = {
     refs = refs.filter((r) => r.referrerId !== userId && r.referredId !== userId);
     saveLocalStorageItem(KEYS.REFERRALS, refs);
 
-    pushActivity('user', `User "${target.name || target.email}" deleted permanently`, {
+    pushActivity('user', `User "${target.fullname || target.name || target.email}" deleted permanently`, {
       userId,
       email: target.email,
     });
@@ -555,11 +637,11 @@ export const adminApi = {
     const users = getLocalStorageItem(KEYS.USERS, []);
 
     const campaigns = tasks.map((t) => {
-      const advertiser = users.find((u) => u.id === t.advertiserId || u.id === t.userId) || null;
+      const advertiser = users.find((u) => u.id === t.advertiserId || u._id === t.advertiserId || u.id === t.userId || u._id === t.userId) || null;
       return {
         ...t,
         advertiser: advertiser
-          ? { id: advertiser.id, name: advertiser.name, email: advertiser.email }
+          ? { id: advertiser.id || advertiser._id, name: advertiser.fullname || advertiser.name, email: advertiser.email }
           : null,
       };
     });
@@ -649,12 +731,12 @@ export const adminApi = {
     const tasks       = getLocalStorageItem(KEYS.TASKS, []);
 
     const enriched = submissions.map((s) => {
-      const user = users.find((u) => u.id === s.userId) || null;
-      const task = tasks.find((t) => t.id === s.taskId || t.id === s.campaignId) || null;
+      const user = users.find((u) => u.id === s.userId || u._id === s.userId) || null;
+      const task = tasks.find((t) => t.id === s.taskId || t._id === s.taskId || t.id === s.campaignId || t._id === s.campaignId) || null;
       return {
         ...s,
-        user: user ? { id: user.id, name: user.name, email: user.email } : null,
-        task: task ? { id: task.id, title: task.title, reward: task.reward } : null,
+        user: user ? { id: user.id || user._id, name: user.fullname || user.name, email: user.email } : null,
+        task: task ? { id: task.id || task._id, title: task.title, reward: task.rewardAmount || task.reward } : null,
       };
     });
 
@@ -749,10 +831,10 @@ export const adminApi = {
           (t.status === 'pending' || t.status === 'Pending')
       )
       .map((t) => {
-        const user = users.find((u) => u.id === t.userId) || null;
+        const user = users.find((u) => u.id === t.userId || u._id === t.userId) || null;
         return {
           ...t,
-          user: user ? { id: user.id, name: user.name, email: user.email } : null,
+          user: user ? { id: user.id || user._id, name: user.fullname || user.name, email: user.email } : null,
         };
       });
 
@@ -813,10 +895,10 @@ export const adminApi = {
     const users       = getLocalStorageItem(KEYS.USERS, []);
 
     const enriched = withdrawals.map((w) => {
-      const user = users.find((u) => u.id === w.userId) || null;
+      const user = users.find((u) => u.id === w.userId || u._id === w.userId) || null;
       return {
         ...w,
-        user: user ? { id: user.id, name: user.name, email: user.email } : null,
+        user: user ? { id: user.id || user._id, name: user.fullname || user.name, email: user.email } : null,
       };
     });
 
@@ -902,10 +984,10 @@ export const adminApi = {
     const users        = getLocalStorageItem(KEYS.USERS, []);
 
     const enriched = transactions.map((t) => {
-      const user = users.find((u) => u.id === t.userId) || null;
+      const user = users.find((u) => u.id === t.userId || u._id === t.userId) || null;
       return {
         ...t,
-        user: user ? { id: user.id, name: user.name, email: user.email } : null,
+        user: user ? { id: user.id || user._id, name: user.fullname || user.name, email: user.email } : null,
       };
     });
 
@@ -964,4 +1046,32 @@ export const adminApi = {
 
     return { success: true, count: sent.length, notifications: sent };
   },
+
+  /** 26. Get all notifications for admin_user */
+  getNotifications() {
+    const notifs = getLocalStorageItem(KEYS.NOTIFICATIONS, []);
+    const adminNotifs = notifs.filter(n => n.userId === 'admin_user');
+    const unreadCount = adminNotifs.filter(n => !n.isRead && !n.read).length;
+    return { success: true, notifications: adminNotifs, unreadCount };
+  },
+
+  /** 27. Mark admin notification as read */
+  markNotificationRead(id) {
+    const notifs = getLocalStorageItem(KEYS.NOTIFICATIONS, []);
+    const idx = notifs.findIndex(n => n.id === id || n._id === id);
+    if (idx !== -1) {
+      notifs[idx].isRead = true;
+      notifs[idx].read = true;
+      saveLocalStorageItem(KEYS.NOTIFICATIONS, notifs);
+    }
+    return { success: true };
+  },
+
+  /** 28. Clear all admin notifications */
+  clearNotifications() {
+    let notifs = getLocalStorageItem(KEYS.NOTIFICATIONS, []);
+    notifs = notifs.filter(n => n.userId !== 'admin_user');
+    saveLocalStorageItem(KEYS.NOTIFICATIONS, notifs);
+    return { success: true };
+  }
 };

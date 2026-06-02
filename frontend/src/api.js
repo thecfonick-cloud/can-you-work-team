@@ -238,9 +238,26 @@ const getHeaders = () => {
   };
 };
 
+const pushActivity = (type, description, metadata = {}) => {
+  try {
+    const raw = localStorage.getItem('cw_offline_activity_log');
+    const log = raw ? JSON.parse(raw) : [];
+    log.unshift({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      type,
+      description,
+      metadata,
+      timestamp: new Date().toISOString()
+    });
+    localStorage.setItem('cw_offline_activity_log', JSON.stringify(log));
+  } catch (e) {
+    console.error('Error logging activity:', e);
+  }
+};
+
 // Local Storage Offline Database Engine
-// Clears old mock data and re-seeds only admin user if schema version changes
-const OFFLINE_DB_VERSION = '3';
+// Clears old mock data and re-seeds if schema version changes
+const OFFLINE_DB_VERSION = '5';
 const initOfflineDb = () => {
   const storedVersion = localStorage.getItem('cw_offline_db_version');
   if (storedVersion !== OFFLINE_DB_VERSION) {
@@ -249,14 +266,15 @@ const initOfflineDb = () => {
       'cw_offline_users', 'cw_offline_wallets', 'cw_offline_tasks',
       'cw_offline_submissions', 'cw_offline_transactions', 'cw_offline_notifications',
       'cw_offline_streaks', 'cw_offline_withdrawals', 'cw_offline_referrals',
-      'cw_offline_db_initialized'
+      'cw_offline_activity_log', 'cw_offline_db_initialized'
     ].forEach(key => localStorage.removeItem(key));
 
-    // Seed ONLY the admin user
-    localStorage.setItem('cw_offline_users', JSON.stringify([
+    // Users
+    const users = [
       {
-        _id: '6a1185e235c04d6ad2989aaa',
-        fullname: 'Admin Canyuwork',
+        id: 'admin_user',
+        _id: 'admin_user',
+        fullname: 'Admin Alexa',
         username: 'admin',
         email: 'admin@canyuwork.com',
         phone: '+234 800 000 0000',
@@ -264,38 +282,335 @@ const initOfflineDb = () => {
         referralCode: 'admincode',
         isVerified: true,
         role: 'admin',
+        password: 'admin123',
+        status: 'active',
         balance: 0,
         pendingBalance: 0,
         totalEarnings: 0,
         totalWithdrawn: 0,
         socialAccounts: {},
-        notificationPreferences: {
-          taskAlerts: true,
-          bonusRewards: true,
-          withdrawalAlerts: true,
-          referrals: true,
-          leaderboard: true,
-          systemUpdates: true,
-          marketing: false
-        },
-        doNotDisturb: { enabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00' },
-        password: 'admin123'
+        notificationPreferences: { taskAlerts: true, bonusRewards: true, withdrawalAlerts: true, referrals: true, leaderboard: true, systemUpdates: true, marketing: false },
+        doNotDisturb: { enabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00' }
+      },
+      {
+        id: 'user_john',
+        _id: 'user_john',
+        fullname: 'John Goodluck',
+        username: 'johng',
+        email: 'johng@example.com',
+        phone: '+234 801 234 5678',
+        country: 'Nigeria',
+        referralCode: 'JohnG',
+        isVerified: true,
+        role: 'user',
+        password: 'pass123',
+        status: 'active',
+        balance: 25680.00,
+        pendingBalance: 1230.00,
+        totalEarnings: 48250.00,
+        totalWithdrawn: 36800.00,
+        socialAccounts: { instagramUsername: 'john_doe', tiktokUsername: 'johndoe_tt', twitterUsername: 'johndoe_x', facebookUsername: 'john.doe.fb', telegramUsername: 'johndoe_tg', youtubeChannel: 'JohnDoeChannel' },
+        notificationPreferences: { taskAlerts: true, bonusRewards: true, withdrawalAlerts: true, referrals: true, leaderboard: true, systemUpdates: true, marketing: false },
+        doNotDisturb: { enabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00' }
+      },
+      {
+        id: 'user_sarah',
+        _id: 'user_sarah',
+        fullname: 'Sarah Johnson',
+        username: 'sarahj',
+        email: 'sarahj@example.com',
+        phone: '+234 802 345 6789',
+        country: 'Nigeria',
+        referralCode: 'SarahJ',
+        isVerified: true,
+        role: 'user',
+        password: 'pass123',
+        status: 'active',
+        balance: 12450.00,
+        pendingBalance: 0.00,
+        totalEarnings: 15450.00,
+        totalWithdrawn: 3000.00,
+        socialAccounts: { instagramUsername: 'sarah_j', tiktokUsername: 'sarahj_tt', twitterUsername: 'sarahj_x', facebookUsername: 'sarah.j.fb', telegramUsername: 'sarahj_tg', youtubeChannel: 'SarahJChannel' },
+        notificationPreferences: { taskAlerts: true, bonusRewards: true, withdrawalAlerts: true, referrals: true, leaderboard: true, systemUpdates: true, marketing: false },
+        doNotDisturb: { enabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00' }
+      },
+      {
+        id: 'adv_nike',
+        _id: 'adv_nike',
+        fullname: 'Nike Advertiser',
+        username: 'nike_ads',
+        email: 'nike@example.com',
+        phone: '+234 803 456 7890',
+        country: 'Nigeria',
+        referralCode: 'NikeAds',
+        isVerified: true,
+        role: 'advertiser',
+        password: 'pass123',
+        status: 'active',
+        balance: 150000.00,
+        pendingBalance: 0.00,
+        totalEarnings: 0.00,
+        totalWithdrawn: 0.00,
+        socialAccounts: {},
+        notificationPreferences: { taskAlerts: true, bonusRewards: true, withdrawalAlerts: true, referrals: true, leaderboard: true, systemUpdates: true, marketing: false },
+        doNotDisturb: { enabled: false, quietHoursStart: '22:00', quietHoursEnd: '07:00' }
       }
-    ]));
+    ];
+    localStorage.setItem('cw_offline_users', JSON.stringify(users));
 
-    localStorage.setItem('cw_offline_wallets', JSON.stringify({
-      '6a1185e235c04d6ad2989aaa': { availableBalance: 0, pendingBalance: 0, totalEarnings: 0, totalWithdrawn: 0 }
-    }));
+    // Wallets
+    const wallets = {
+      'admin_user': { availableBalance: 0, balance: 0, pendingBalance: 0, totalEarnings: 0, earnings: 0, totalWithdrawn: 0, spent: 0 },
+      'user_john': { availableBalance: 25680.00, balance: 25680.00, pendingBalance: 1230.00, totalEarnings: 48250.00, earnings: 48250.00, totalWithdrawn: 36800.00, spent: 0 },
+      'user_sarah': { availableBalance: 12450.00, balance: 12450.00, pendingBalance: 0, totalEarnings: 15450.00, earnings: 15450.00, totalWithdrawn: 3000.00, spent: 0 },
+      'adv_nike': { availableBalance: 150000.00, balance: 150000.00, pendingBalance: 0, totalEarnings: 0, earnings: 0, totalWithdrawn: 0, spent: 75000.00 }
+    };
+    localStorage.setItem('cw_offline_wallets', JSON.stringify(wallets));
 
-    // All other collections start empty
-    localStorage.setItem('cw_offline_tasks', JSON.stringify([]));
-    localStorage.setItem('cw_offline_submissions', JSON.stringify([]));
-    localStorage.setItem('cw_offline_transactions', JSON.stringify([]));
+    // Tasks (Campaigns)
+    const tasks = [
+      {
+        id: 't1',
+        _id: 't1',
+        title: 'Follow @techworld on Instagram',
+        description: 'Follow the Instagram page @techworld and stay active. After completing the task, upload a screenshot as proof.',
+        platform: 'instagram',
+        taskType: 'social_follow',
+        reward: 10,
+        rewardAmount: 10,
+        targetCount: 1000,
+        totalSlots: 1000,
+        currentCount: 450,
+        subscribersCount: 450,
+        totalCost: 10000,
+        remainingSlots: 550,
+        taskLink: 'https://instagram.com/techworld',
+        socialLink: 'https://instagram.com/techworld',
+        instructions: [
+          'Click on the Start Task button.',
+          'You will be redirected to Instagram.',
+          'Follow the page @techworld.',
+          'Take a screenshot showing that you followed the page.',
+          'Upload the screenshot below.'
+        ],
+        guidelines: 'Follow @techworld on Instagram. Submit username and screenshot.',
+        requiredProof: { screenshot: true, username: true },
+        advertiserId: 'adv_nike',
+        status: 'active',
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 't2',
+        _id: 't2',
+        title: 'Like & Share this Facebook Post',
+        description: 'Like the post and share it on your timeline. Take screenshot and upload.',
+        platform: 'facebook',
+        taskType: 'social_like',
+        reward: 15,
+        rewardAmount: 15,
+        targetCount: 500,
+        totalSlots: 500,
+        currentCount: 500,
+        subscribersCount: 500,
+        totalCost: 7500,
+        remainingSlots: 0,
+        taskLink: 'https://facebook.com/posts/1234',
+        socialLink: 'https://facebook.com/posts/1234',
+        instructions: [
+          'Go to the link.',
+          'Like the post.',
+          'Share the post on your timeline (must be public).',
+          'Upload proof.'
+        ],
+        guidelines: 'Like and share the Facebook post publicly. Submit link and screenshot.',
+        requiredProof: { screenshot: true, username: true },
+        advertiserId: 'adv_nike',
+        status: 'completed',
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 't3',
+        _id: 't3',
+        title: 'Watch this YouTube Video',
+        description: 'Watch the video for at least 60 seconds. Like and subscribe.',
+        platform: 'youtube',
+        taskType: 'social_like',
+        reward: 20,
+        rewardAmount: 20,
+        targetCount: 1500,
+        totalSlots: 1500,
+        currentCount: 0,
+        subscribersCount: 0,
+        totalCost: 30000,
+        remainingSlots: 1500,
+        taskLink: 'https://youtube.com/watch?v=123',
+        socialLink: 'https://youtube.com/watch?v=123',
+        instructions: [
+          'Open the video link.',
+          'Watch for at least 60 seconds.',
+          'Like and subscribe to the channel.',
+          'Upload a screenshot.'
+        ],
+        guidelines: 'Watch at least 60s, like, and subscribe. Submit proof.',
+        requiredProof: { screenshot: true, username: true },
+        advertiserId: 'adv_nike',
+        status: 'pending_payment',
+        referenceNumber: 'TXN8892104859',
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+    localStorage.setItem('cw_offline_tasks', JSON.stringify(tasks));
+
+    // Submissions
+    const submissions = [
+      {
+        id: 's1',
+        _id: 's1',
+        taskId: 't1',
+        campaignId: 't1',
+        userId: 'user_john',
+        socialUsername: 'john_doe_ig',
+        proofText: 'Followed as @john_doe_ig',
+        status: 'approved',
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        approvedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 's2',
+        _id: 's2',
+        taskId: 't1',
+        campaignId: 't1',
+        userId: 'user_sarah',
+        socialUsername: 'sarah_j_ig',
+        proofText: 'Followed. Check screenshot.',
+        status: 'pending',
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+    localStorage.setItem('cw_offline_submissions', JSON.stringify(submissions));
+
+    // Withdrawals
+    const withdrawals = [
+      {
+        id: 'w1',
+        _id: 'w1',
+        userId: 'user_john',
+        fullname: 'John Goodluck',
+        username: 'johng',
+        method: 'PayPal',
+        accountDetails: 'john@example.com',
+        amount: 30460.00,
+        status: 'paid',
+        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+        paidAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'w2',
+        _id: 'w2',
+        userId: 'user_john',
+        fullname: 'John Goodluck',
+        username: 'johng',
+        method: 'Bank Transfer',
+        accountDetails: 'Access Bank - 0123456789',
+        amount: 18732.90,
+        status: 'pending',
+        createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+    localStorage.setItem('cw_offline_withdrawals', JSON.stringify(withdrawals));
+
+    // Transactions
+    const transactions = [
+      {
+        id: 'tx1',
+        _id: 'tx1',
+        userId: 'adv_nike',
+        type: 'deposit',
+        amount: 75000.00,
+        status: 'completed',
+        description: 'Fund wallet via Crypto',
+        createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'tx2',
+        _id: 'tx2',
+        userId: 'adv_nike',
+        type: 'deposit',
+        amount: 150000.00,
+        status: 'completed',
+        description: 'Fund wallet via Bank Transfer',
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'tx3',
+        _id: 'tx3',
+        userId: 'user_john',
+        type: 'withdrawal',
+        amount: -30460.00,
+        status: 'completed',
+        description: 'Withdrawal to PayPal (john@example.com)',
+        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+    localStorage.setItem('cw_offline_transactions', JSON.stringify(transactions));
+
+    // Activity Log
+    const activityLog = [
+      {
+        id: 'act1',
+        _id: 'act1',
+        type: 'system',
+        description: 'Admin Alexa command cockpit initialized',
+        timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'act2',
+        _id: 'act2',
+        type: 'deposit',
+        description: 'Advertiser "Nike Advertiser" requested ₦75,000 deposit',
+        timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'act3',
+        _id: 'act3',
+        type: 'campaign',
+        description: 'Campaign "Follow @techworld on Instagram" created by Nike Advertiser',
+        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'act4',
+        _id: 'act4',
+        type: 'user',
+        description: 'User "John Goodluck" signed up to CanYouWork',
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'act5',
+        _id: 'act5',
+        type: 'submission',
+        description: 'User johng submitted proof for "Follow @techworld on Instagram"',
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'act6',
+        _id: 'act6',
+        type: 'submission',
+        description: 'Submission s1 approved by Nike Advertiser',
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'act7',
+        _id: 'act7',
+        type: 'withdrawal',
+        description: 'User johng requested ₦18,732.90 payout via Bank Transfer',
+        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+    localStorage.setItem('cw_offline_activity_log', JSON.stringify(activityLog));
+
     localStorage.setItem('cw_offline_notifications', JSON.stringify([]));
-    localStorage.setItem('cw_offline_streaks', JSON.stringify({}));
-    localStorage.setItem('cw_offline_withdrawals', JSON.stringify([]));
     localStorage.setItem('cw_offline_referrals', JSON.stringify([]));
-
+    localStorage.setItem('cw_offline_streaks', JSON.stringify({}));
     localStorage.setItem('cw_offline_db_version', OFFLINE_DB_VERSION);
   }
 };
@@ -448,6 +763,7 @@ export const api = {
       
       const newUser = {
         _id: newUserId,
+        id: newUserId,
         fullname,
         username: sanitizedUsername,
         email: sanitizedEmail,
@@ -458,6 +774,7 @@ export const api = {
         isVerified: true,
         role,
         password,
+        status: 'active',
         balance: role === 'advertiser' ? 0.0 : 200.0,
         pendingBalance: 0.0,
         totalEarnings: role === 'advertiser' ? 0.0 : 200.0,
@@ -477,15 +794,20 @@ export const api = {
       const wallets = getOfflineWallets();
       wallets[newUserId] = {
         availableBalance: role === 'advertiser' ? 0.0 : 200.0,
+        balance: role === 'advertiser' ? 0.0 : 200.0,
         pendingBalance: 0.0,
         totalEarnings: role === 'advertiser' ? 0.0 : 200.0,
-        totalWithdrawn: 0.0
+        earnings: role === 'advertiser' ? 0.0 : 200.0,
+        totalWithdrawn: 0.0,
+        spent: 0.0
       };
       saveOfflineWallets(wallets);
 
       const txs = getOfflineTransactions();
+      const newTxId = 'tx_signup_' + Date.now();
       txs.push({
-        _id: 'tx_signup_' + Date.now(),
+        _id: newTxId,
+        id: newTxId,
         userId: newUserId,
         type: 'challenge_bonus',
         description: 'Sign Up Bonus: Profile created successfully',
@@ -496,8 +818,10 @@ export const api = {
       saveOfflineTransactions(txs);
 
       const notifs = getOfflineNotifications();
+      const newNotifId = 'notif_signup_' + Date.now();
       notifs.push({
-        _id: 'notif_signup_' + Date.now(),
+        _id: newNotifId,
+        id: newNotifId,
         userId: newUserId,
         title: 'Welcome to CanYouWork! 🎉',
         message: 'Your profile has been created successfully.',
@@ -521,8 +845,10 @@ export const api = {
         const referrer = users.find(u => u.referralCode === referredBy);
         if (referrer) {
           const refs = getOfflineReferrals();
+          const newRefId = 'ref_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
           refs.push({
-            _id: 'ref_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            _id: newRefId,
+            id: newRefId,
             referrerId: referrer._id,
             referredUserId: newUserId,
             referredUsername: sanitizedUsername,
@@ -538,14 +864,18 @@ export const api = {
           const refWallets = getOfflineWallets();
           if (refWallets[referrer._id]) {
             refWallets[referrer._id].availableBalance += 200;
+            refWallets[referrer._id].balance = refWallets[referrer._id].availableBalance;
             refWallets[referrer._id].totalEarnings += 200;
+            refWallets[referrer._id].earnings = refWallets[referrer._id].totalEarnings;
             saveOfflineWallets(refWallets);
           }
 
           // Add notification for referrer
           const refNotifs = getOfflineNotifications();
+          const refNotifId = 'notif_ref_' + Date.now();
           refNotifs.push({
-            _id: 'notif_ref_' + Date.now(),
+            _id: refNotifId,
+            id: refNotifId,
             userId: referrer._id,
             title: '🎉 New Referral Joined!',
             message: `${fullname} (${sanitizedUsername}) joined using your referral link! You earned ₦200 bonus.`,
@@ -557,6 +887,22 @@ export const api = {
         }
       }
 
+      // Send notification to Admin
+      const adminNotifId = 'notif_admin_signup_' + Date.now();
+      const allNotifs = getOfflineNotifications();
+      allNotifs.push({
+        _id: adminNotifId,
+        id: adminNotifId,
+        userId: 'admin_user',
+        title: 'New User Registered 🚀',
+        message: `${fullname} (@${sanitizedUsername}) registered as ${role} from ${country}.`,
+        type: 'user_signup',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+      saveOfflineNotifications(allNotifs);
+
+      pushActivity('user_signup', `User "${fullname}" (@${sanitizedUsername}) registered as ${role}`, { userId: newUserId });
       localStorage.setItem('canyuwork_token', newUserId);
       return { success: true, user: newUser, token: newUserId };
     };
@@ -705,15 +1051,18 @@ export const api = {
       const subs = getOfflineSubmissions();
       
       const tasks = getOfflineTasks();
-      const taskIdx = tasks.findIndex(t => t._id === id);
+      const taskIdx = tasks.findIndex(t => t._id === id || t.id === id);
       if (taskIdx !== -1) {
-        tasks[taskIdx].remainingSlots = Math.max(0, tasks[taskIdx].remainingSlots - 1);
+        tasks[taskIdx].remainingSlots = Math.max(0, (tasks[taskIdx].remainingSlots || 0) - 1);
         saveOfflineTasks(tasks);
       }
 
+      const newSubId = 'sub_' + Date.now();
       const newSub = {
-        _id: 'sub_' + Date.now(),
+        _id: newSubId,
+        id: newSubId,
         taskId: id,
+        campaignId: id,
         userId: userId,
         socialUsername,
         proofText,
@@ -724,8 +1073,10 @@ export const api = {
       saveOfflineSubmissions(subs);
 
       const notifs = getOfflineNotifications();
+      const newNotifId = 'notif_sub_' + Date.now();
       notifs.push({
-        _id: 'notif_sub_' + Date.now(),
+        _id: newNotifId,
+        id: newNotifId,
         userId: userId,
         title: 'Task Proof Submitted',
         message: 'Your proof for task has been submitted and is pending review.',
@@ -734,6 +1085,12 @@ export const api = {
         createdAt: new Date().toISOString()
       });
       saveOfflineNotifications(notifs);
+
+      const users = getOfflineUsers();
+      const user = users.find(u => u._id === userId || u.id === userId);
+      const name = user ? user.fullname : 'User';
+      const task = tasks[taskIdx];
+      pushActivity('submission', `User "${name}" submitted proof for "${task ? task.title : 'Microtask'}"`, { userId, taskId: id, submissionId: newSubId });
 
       return { success: true, message: 'Proof submitted successfully (Simulated offline Mode)' };
     }
@@ -765,13 +1122,15 @@ export const api = {
       const wallet = wallets[userId];
       if (wallet) {
         wallet.availableBalance += 5000.0;
+        wallet.balance = wallet.availableBalance;
         wallet.totalEarnings += 5000.0;
+        wallet.earnings = wallet.totalEarnings;
         wallets[userId] = wallet;
         saveOfflineWallets(wallets);
       }
 
       const users = getOfflineUsers();
-      const userIdx = users.findIndex(u => u._id === userId);
+      const userIdx = users.findIndex(u => u._id === userId || u.id === userId);
       if (userIdx !== -1 && wallet) {
         users[userIdx].balance = wallet.availableBalance;
         users[userIdx].totalEarnings = wallet.totalEarnings;
@@ -779,8 +1138,10 @@ export const api = {
       }
 
       const txs = getOfflineTransactions();
+      const newTxId = 'tx_lucky_' + Date.now();
       txs.push({
-        _id: 'tx_lucky_' + Date.now(),
+        _id: newTxId,
+        id: newTxId,
         userId: userId,
         type: 'task_reward',
         description: 'Lucky Task: Complete Premium Survey',
@@ -791,8 +1152,10 @@ export const api = {
       saveOfflineTransactions(txs);
 
       const notifs = getOfflineNotifications();
+      const newNotifId = 'notif_lucky_' + Date.now();
       notifs.push({
-        _id: 'notif_lucky_' + Date.now(),
+        _id: newNotifId,
+        id: newNotifId,
         userId: userId,
         title: 'Lucky Task Completed! 🎁',
         message: 'Congratulations! You earned ₦5,000 for completing the Premium Survey.',
@@ -801,6 +1164,10 @@ export const api = {
         createdAt: new Date().toISOString()
       });
       saveOfflineNotifications(notifs);
+
+      const user = users.find(u => u._id === userId || u.id === userId);
+      const name = user ? user.fullname : 'User';
+      pushActivity('submission', `User "${name}" completed Lucky Task: "${id}" (+₦5,000)`, { userId, taskId: id });
 
       return { 
         success: true, 
@@ -891,18 +1258,21 @@ export const api = {
       const wallets = getOfflineWallets();
       const wallet = wallets[userId];
       
-      if (!wallet || wallet.availableBalance < amount) {
+      if (!wallet || (wallet.availableBalance || wallet.balance) < amount) {
         return { success: false, message: 'Insufficient funds.' };
       }
 
       wallet.availableBalance -= amount;
+      wallet.balance = wallet.availableBalance;
       wallet.pendingBalance += amount;
       wallets[userId] = wallet;
       saveOfflineWallets(wallets);
 
       const txs = getOfflineTransactions();
+      const newTxId = 'tx_w_' + Date.now();
       txs.push({
-        _id: 'tx_w_' + Date.now(),
+        _id: newTxId,
+        id: newTxId,
         userId: userId,
         type: 'withdrawal',
         description: `Pending Payout via ${method} (${accountDetails})`,
@@ -913,8 +1283,10 @@ export const api = {
       saveOfflineTransactions(txs);
 
       const withdrawals = getOfflineWithdrawals();
+      const newWdId = 'w_' + Date.now();
       withdrawals.push({
-        _id: 'w_' + Date.now(),
+        _id: newWdId,
+        id: newWdId,
         userId: userId,
         amount: amount,
         method: method,
@@ -925,7 +1297,7 @@ export const api = {
       saveOfflineWithdrawals(withdrawals);
 
       const users = getOfflineUsers();
-      const userIdx = users.findIndex(u => u._id === userId);
+      const userIdx = users.findIndex(u => u._id === userId || u.id === userId);
       if (userIdx !== -1) {
         users[userIdx].balance = wallet.availableBalance;
         users[userIdx].pendingBalance = wallet.pendingBalance;
@@ -933,12 +1305,27 @@ export const api = {
         saveOfflineUsers(users);
       }
 
+      const user = users.find(u => u._id === userId || u.id === userId);
+      const name = user ? user.fullname : 'User';
+      pushActivity('withdrawal', `User "${name}" requested ₦${amount} payout via ${method}`, { userId, amount, method });
+
       const notifs = getOfflineNotifications();
       notifs.push({
         _id: 'notif_w_' + Date.now(),
         userId: userId,
         title: 'Withdrawal Request Received',
         message: `Your withdrawal request of ₦${amount} via ${method} has been submitted.`,
+        type: 'withdrawal',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+      // Send notification to Admin
+      notifs.push({
+        _id: 'notif_admin_w_' + Date.now(),
+        id: 'notif_admin_w_' + Date.now(),
+        userId: 'admin_user',
+        title: 'New Withdrawal Payout Request 💸',
+        message: `User "${name}" requested a payout of ₦${amount.toLocaleString()} via ${method}.`,
         type: 'withdrawal',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -1372,11 +1759,15 @@ export const api = {
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
+      const users = getOfflineUsers();
+      const user = users.find(u => u._id === userId || u.id === userId);
+      const name = user ? user.fullname : 'Advertiser';
       
       const txs = getOfflineTransactions();
       const newTxId = 'tx_deposit_' + Date.now();
       txs.push({
         _id: newTxId,
+        id: newTxId,
         userId,
         type: 'deposit',
         description: `Mock USDT Deposit (Hash: ${txHash || 'N/A'})`,
@@ -1389,8 +1780,10 @@ export const api = {
       saveOfflineTransactions(txs);
 
       const notifs = getOfflineNotifications();
+      const newNotifId = 'notif_dep_' + Date.now();
       notifs.push({
-        _id: 'notif_dep_' + Date.now(),
+        _id: newNotifId,
+        id: newNotifId,
         userId,
         title: 'Deposit Submitted 💳',
         message: `Your deposit of ₦${Number(amount).toLocaleString()} is pending admin verification.`,
@@ -1398,7 +1791,20 @@ export const api = {
         isRead: false,
         createdAt: new Date().toISOString()
       });
+      // Send notification to Admin
+      notifs.push({
+        _id: 'notif_admin_dep_' + Date.now(),
+        id: 'notif_admin_dep_' + Date.now(),
+        userId: 'admin_user',
+        title: 'New Deposit Request 💳',
+        message: `Advertiser "${name}" requested a deposit of ₦${Number(amount).toLocaleString()}.`,
+        type: 'deposit',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
       saveOfflineNotifications(notifs);
+
+      pushActivity('deposit', `Advertiser "${name}" requested ₦${Number(amount).toLocaleString()} deposit`, { userId, amount: Number(amount) });
 
       return { success: true, message: 'Deposit submitted for verification (Simulated)' };
     }
@@ -1415,19 +1821,28 @@ export const api = {
       return await res.json();
     } catch (e) {
       const userId = getActiveUserIdOffline();
+      const users = getOfflineUsers();
+      const user = users.find(u => u._id === userId || u.id === userId);
+      const name = user ? user.fullname : 'Advertiser';
       const tasks = getOfflineTasks();
       
       const newTaskId = 't_camp_' + Math.random().toString(36).substr(2, 9);
       const newTask = {
         _id: newTaskId,
+        id: newTaskId,
         advertiserId: userId,
         title,
         platform,
         socialLink,
+        taskLink: socialLink,
         guidelines,
-        reward: 2, // Fixed 2 NGN reward for earners
+        instructions: [guidelines],
+        reward: 2,
+        rewardAmount: 2,
         targetCount: Number(targetQuantity),
+        totalSlots: Number(targetQuantity),
         currentCount: 0,
+        subscribersCount: 0,
         totalCost: Number(totalCost),
         referenceNumber,
         status: 'pending_payment',
@@ -1438,8 +1853,10 @@ export const api = {
       saveOfflineTasks(tasks);
 
       const notifs = getOfflineNotifications();
+      const newNotifId = 'notif_camp_' + Date.now();
       notifs.push({
-        _id: 'notif_camp_' + Date.now(),
+        _id: newNotifId,
+        id: newNotifId,
         userId,
         title: 'Campaign Pending Verification',
         message: `Your campaign "${title}" payment is being verified by the admin.`,
@@ -1447,7 +1864,20 @@ export const api = {
         isRead: false,
         createdAt: new Date().toISOString()
       });
+      // Send notification to Admin
+      notifs.push({
+        _id: 'notif_admin_camp_' + Date.now(),
+        id: 'notif_admin_camp_' + Date.now(),
+        userId: 'admin_user',
+        title: 'Campaign Awaiting Verification 🚀',
+        message: `Campaign "${title}" created by ${name} is awaiting payment verification.`,
+        type: 'campaign',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
       saveOfflineNotifications(notifs);
+
+      pushActivity('campaign', `Campaign "${title}" created by ${name} (Awaiting verification)`, { userId, campaignId: newTaskId });
 
       return { success: true, task: newTask };
     }

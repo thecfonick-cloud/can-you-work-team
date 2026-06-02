@@ -133,13 +133,13 @@ const UserManagement = () => {
             </div>
             <div className="modal-body">
               <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', marginBottom: '1rem' }}>
-                <div className="stat-card"><div className="stat-label">Balance</div><div className="stat-value text-mono">₦{(selectedUser.wallet?.availableBalance || 0).toLocaleString()}</div></div>
-                <div className="stat-card"><div className="stat-label">Total Earned</div><div className="stat-value text-mono">₦{(selectedUser.wallet?.totalEarnings || 0).toLocaleString()}</div></div>
-                <div className="stat-card"><div className="stat-label">Submissions</div><div className="stat-value">{selectedUser.submissions?.length || 0}</div></div>
-                <div className="stat-card"><div className="stat-label">Referrals</div><div className="stat-value">{selectedUser.referrals?.length || 0}</div></div>
+                <div className="stat-card"><div className="stat-label">Balance</div><div className="stat-value text-mono">₦{(selectedUser.user.wallet?.availableBalance || selectedUser.user.wallet?.balance || 0).toLocaleString()}</div></div>
+                <div className="stat-card"><div className="stat-label">Total Earned</div><div className="stat-value text-mono">₦{(selectedUser.user.wallet?.totalEarnings || selectedUser.user.wallet?.earnings || 0).toLocaleString()}</div></div>
+                <div className="stat-card"><div className="stat-label">Submissions</div><div className="stat-value">{selectedUser.user.submissions?.length || 0}</div></div>
+                <div className="stat-card"><div className="stat-label">Referrals</div><div className="stat-value">{selectedUser.user.referrals?.length || 0}</div></div>
               </div>
               <h4 style={{ marginBottom: '0.5rem' }}>Recent Transactions</h4>
-              {(selectedUser.transactions || []).slice(0, 5).map((tx, i) => (
+              {(selectedUser.user.transactions || []).slice(0, 5).map((tx, i) => (
                 <div key={i} className="activity-item">
                   <span className="text-muted text-mono" style={{ fontSize: '0.8rem' }}>{new Date(tx.createdAt).toLocaleDateString()}</span>
                   <span style={{ flex: 1, marginLeft: '0.5rem' }}>{tx.description || tx.type}</span>
