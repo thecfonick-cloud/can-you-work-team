@@ -60,22 +60,22 @@ const CampaignCenter = () => {
           <tbody>
             {filtered.map(c => (
               <tr key={c.id}>
-                <td><strong>{c.title}</strong></td>
-                <td className="text-muted">{c.advertiser?.name || 'Unknown'}</td>
-                <td><span className="badge badge-info">{c.platform}</span></td>
-                <td className="text-mono">{c.targetCount}</td>
-                <td>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{ flex: 1, height: '6px', background: 'var(--bg-deepest)', borderRadius: '3px', overflow: 'hidden' }}>
+                <td data-label="Campaign"><strong>{c.title}</strong></td>
+                <td data-label="Advertiser" className="text-muted">{c.advertiser?.name || 'Unknown'}</td>
+                <td data-label="Platform"><span className="badge badge-info">{c.platform}</span></td>
+                <td data-label="Target" className="text-mono">{c.targetCount}</td>
+                <td data-label="Progress">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', justifyContent: 'flex-end' }}>
+                    <div style={{ flex: 1, maxWidth: '100px', height: '6px', background: 'var(--bg-deepest)', borderRadius: '3px', overflow: 'hidden' }}>
                       <div style={{ width: `${Math.min(100, ((c.currentCount || 0) / c.targetCount) * 100)}%`, height: '100%', background: 'var(--accent-cyan)', borderRadius: '3px', transition: 'width 0.5s ease' }}></div>
                     </div>
                     <span className="text-mono" style={{ fontSize: '0.8rem' }}>{c.currentCount || 0}/{c.targetCount}</span>
                   </div>
                 </td>
-                <td className="text-mono">₦{(c.totalCost || 0).toLocaleString()}</td>
-                <td>{statusBadge(c.status)}</td>
-                <td>
-                  <div style={{ display: 'flex', gap: '0.25rem' }}>
+                <td data-label="Cost" className="text-mono">₦{(c.totalCost || 0).toLocaleString()}</td>
+                <td data-label="Status">{statusBadge(c.status)}</td>
+                <td data-label="Actions">
+                  <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
                     {c.status === 'pending_payment' && (
                       <>
                         <button className="btn btn-success btn-sm" onClick={() => action(adminApi.approveCampaign, c.id)}><CheckCircle size={12} /></button>

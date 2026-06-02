@@ -60,22 +60,22 @@ const SubmissionReview = () => {
           <tbody>
             {filtered.map(s => (
               <tr key={s.id}>
-                <td>
+                <td data-label="User">
                   <div><strong>{s.user?.name || 'Unknown'}</strong></div>
                   <div className="text-muted" style={{ fontSize: '0.8rem' }}>{s.user?.email || '—'}</div>
                 </td>
-                <td>
+                <td data-label="Campaign">
                   <div>{s.task?.title || 'Task'}</div>
                   <div className="text-muted" style={{ fontSize: '0.8rem' }}>{s.platform || ''}</div>
                 </td>
-                <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <td data-label="Proof" style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {s.proofText || '—'}
                 </td>
-                <td className="text-mono" style={{ fontSize: '0.85rem' }}>{s.socialUsername || '—'}</td>
-                <td className="text-mono text-success">₦{s.reward || 2}</td>
-                <td>{statusBadge(s.status)}</td>
-                <td className="text-muted" style={{ fontSize: '0.8rem' }}>{new Date(s.createdAt).toLocaleDateString()}</td>
-                <td>
+                <td data-label="Social Handle" className="text-mono" style={{ fontSize: '0.85rem' }}>{s.socialUsername || '—'}</td>
+                <td data-label="Reward" className="text-mono text-success">₦{s.reward || 2}</td>
+                <td data-label="Status">{statusBadge(s.status)}</td>
+                <td data-label="Date" className="text-muted" style={{ fontSize: '0.8rem' }}>{new Date(s.createdAt).toLocaleDateString()}</td>
+                <td data-label="Actions">
                   {s.status === 'pending' && (
                     <div style={{ display: 'flex', gap: '0.25rem' }}>
                       <button className="btn btn-success btn-sm" onClick={() => act(adminApi.approveSubmission, s.id)}><CheckCircle size={12} /></button>

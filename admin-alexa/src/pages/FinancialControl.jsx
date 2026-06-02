@@ -50,12 +50,12 @@ const FinancialControl = () => {
             <tbody>
               {deposits.map(d => (
                 <tr key={d.id}>
-                  <td>{d.user?.name || d.user?.email || d.userId}</td>
-                  <td className="text-mono text-success">₦{(d.amount || 0).toLocaleString()}</td>
-                  <td className="text-mono" style={{ fontSize: '0.8rem', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.txHash || d.referenceNumber || '—'}</td>
-                  <td className="text-muted">{new Date(d.createdAt).toLocaleDateString()}</td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                  <td data-label="User">{d.user?.name || d.user?.email || d.userId}</td>
+                  <td data-label="Amount" className="text-mono text-success">₦{(d.amount || 0).toLocaleString()}</td>
+                  <td data-label="TX Hash" className="text-mono" style={{ fontSize: '0.8rem', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.txHash || d.referenceNumber || '—'}</td>
+                  <td data-label="Date" className="text-muted">{new Date(d.createdAt).toLocaleDateString()}</td>
+                  <td data-label="Actions">
+                    <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
                       <button className="btn btn-success btn-sm" onClick={() => act(adminApi.approveDeposit, d.id)}><CheckCircle size={12} /> Approve</button>
                       <button className="btn btn-danger btn-sm" onClick={() => act(adminApi.rejectDeposit, d.id)}><XCircle size={12} /> Reject</button>
                     </div>
@@ -75,14 +75,16 @@ const FinancialControl = () => {
             <tbody>
               {withdrawals.map(w => (
                 <tr key={w.id}>
-                  <td><strong>{w.user?.name || w.fullname || 'Unknown'}</strong></td>
-                  <td><span className="badge badge-info">{w.method || 'Bank'}</span></td>
-                  <td className="text-mono" style={{ fontSize: '0.8rem' }}>{w.accountDetails || '—'}</td>
-                  <td className="text-mono text-danger">₦{(w.amount || 0).toLocaleString()}</td>
-                  <td><span className={`badge ${w.status === 'paid' || w.status === 'Completed' || w.status === 'completed' ? 'badge-success' : w.status === 'rejected' || w.status === 'Rejected' ? 'badge-danger' : 'badge-warning'}`}>{w.status}</span></td>
-                  <td>
+                  <td data-label="User"><strong>{w.user?.name || w.fullname || 'Unknown'}</strong></td>
+                  <td data-label="Method"><span className="badge badge-info">{w.method || 'Bank'}</span></td>
+                  <td data-label="Account" className="text-mono" style={{ fontSize: '0.8rem' }}>{w.accountDetails || '—'}</td>
+                  <td data-label="Amount" className="text-mono text-danger">₦{(w.amount || 0).toLocaleString()}</td>
+                  <td data-label="Status">
+                    <span className={`badge ${w.status === 'paid' || w.status === 'Completed' || w.status === 'completed' ? 'badge-success' : w.status === 'rejected' || w.status === 'Rejected' ? 'badge-danger' : 'badge-warning'}`}>{w.status}</span>
+                  </td>
+                  <td data-label="Actions">
                     {(w.status?.toLowerCase() === 'pending') && (
-                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
                         <button className="btn btn-success btn-sm" onClick={() => act(adminApi.approveWithdrawal, w.id)}><CheckCircle size={12} /></button>
                         <button className="btn btn-danger btn-sm" onClick={() => { const r = prompt('Rejection reason?'); if (r) act(adminApi.rejectWithdrawal, w.id, r); }}><XCircle size={12} /></button>
                       </div>
@@ -103,14 +105,16 @@ const FinancialControl = () => {
             <tbody>
               {transactions.slice(0, 100).map((tx, i) => (
                 <tr key={tx.id || i}>
-                  <td className="text-mono" style={{ fontSize: '0.8rem' }}>{new Date(tx.createdAt).toLocaleDateString()}</td>
-                  <td>{tx.user?.name || tx.userId}</td>
-                  <td><span className="badge badge-info">{tx.type}</span></td>
-                  <td>{tx.description}</td>
-                  <td className={`text-mono ${tx.type === 'withdrawal' ? 'text-danger' : 'text-success'}`}>
+                  <td data-label="Date" className="text-mono" style={{ fontSize: '0.8rem' }}>{new Date(tx.createdAt).toLocaleDateString()}</td>
+                  <td data-label="User">{tx.user?.name || tx.userId}</td>
+                  <td data-label="Type"><span className="badge badge-info">{tx.type}</span></td>
+                  <td data-label="Description">{tx.description}</td>
+                  <td data-label="Amount" className={`text-mono ${tx.type === 'withdrawal' ? 'text-danger' : 'text-success'}`}>
                     {tx.type === 'withdrawal' ? '-' : '+'}₦{(tx.amount || 0).toLocaleString()}
                   </td>
-                  <td><span className={`badge ${tx.status === 'Completed' || tx.status === 'completed' ? 'badge-success' : tx.status === 'Pending' || tx.status === 'pending' ? 'badge-warning' : 'badge-danger'}`}>{tx.status}</span></td>
+                  <td data-label="Status">
+                    <span className={`badge ${tx.status === 'Completed' || tx.status === 'completed' ? 'badge-success' : tx.status === 'Pending' || tx.status === 'pending' ? 'badge-warning' : 'badge-danger'}`}>{tx.status}</span>
+                  </td>
                 </tr>
               ))}
             </tbody>

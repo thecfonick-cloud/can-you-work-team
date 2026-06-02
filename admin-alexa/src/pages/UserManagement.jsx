@@ -82,12 +82,12 @@ const UserManagement = () => {
           <tbody>
             {filtered.map(u => (
               <tr key={u.id}>
-                <td>
+                <td data-label="User">
                   <div><strong>{u.fullname}</strong></div>
                   <div className="text-muted" style={{ fontSize: '0.8rem' }}>@{u.username} · {u.email}</div>
                 </td>
-                <td>{roleBadge(u.role)}</td>
-                <td>
+                <td data-label="Role">{roleBadge(u.role)}</td>
+                <td data-label="Balance">
                   {editBalanceId === u.id ? (
                     <div style={{ display: 'flex', gap: '0.25rem' }}>
                       <input className="form-input" style={{ width: '100px', padding: '0.25rem 0.5rem' }} type="number" value={newBalance} onChange={e => setNewBalance(e.target.value)} />
@@ -98,12 +98,12 @@ const UserManagement = () => {
                     <span className="text-mono">₦{(u.wallet?.balance || 0).toLocaleString()}</span>
                   )}
                 </td>
-                <td>
+                <td data-label="Status">
                   <span className={`badge ${u.status === 'suspended' ? 'badge-danger' : 'badge-success'}`}>
                     {u.status || 'active'}
                   </span>
                 </td>
-                <td>
+                <td data-label="Actions">
                   <div style={{ display: 'flex', gap: '0.25rem' }}>
                     <button className="btn btn-outline btn-sm" title="View" onClick={() => viewDetail(u.id)}><Eye size={12} /></button>
                     <button className="btn btn-outline btn-sm" title="Edit Balance" onClick={() => { setEditBalanceId(u.id); setNewBalance(u.wallet?.balance || 0); }}><Edit3 size={12} /></button>
