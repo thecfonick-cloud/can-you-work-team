@@ -1,6 +1,6 @@
-import { Bell, Clock } from 'lucide-react';
+import { Bell, Clock, Menu } from 'lucide-react';
 
-const Topbar = ({ title }) => {
+const Topbar = ({ title, onToggleSidebar }) => {
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
@@ -8,6 +8,9 @@ const Topbar = ({ title }) => {
   return (
     <header className="topbar">
       <div className="topbar-left">
+        <button className="mobile-toggle" onClick={onToggleSidebar} title="Open Menu">
+          <Menu size={20} />
+        </button>
         <h1 className="topbar-title">{title}</h1>
       </div>
       <div className="topbar-right">

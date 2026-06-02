@@ -24,6 +24,7 @@ function App() {
     const saved = localStorage.getItem('alexa_admin_session');
     return saved ? JSON.parse(saved) : null;
   });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
 
   const handleLogin = (user) => {
@@ -44,9 +45,10 @@ function App() {
 
   return (
     <div className="app-container">
-      <Sidebar onLogout={handleLogout} />
+      <Sidebar onLogout={handleLogout} sidebarOpen={sidebarOpen} onCloseSidebar={() => setSidebarOpen(false)} />
+      <div className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}></div>
       <div className="main-content">
-        <Topbar title={title} />
+        <Topbar title={title} onToggleSidebar={() => setSidebarOpen(prev => !prev)} />
         <div className="page-content">
           <Routes>
             <Route path="/" element={<Dashboard />} />

@@ -1,0 +1,18 @@
+{
+  "name": "Admin Alexa Control Cockpit",
+  "short_name": "Admin Alexa",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e1a",
+  "theme_color": "#0a0e1a",
+  "description": "Mobile standalone control cockpit dashboard for platform administration.",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

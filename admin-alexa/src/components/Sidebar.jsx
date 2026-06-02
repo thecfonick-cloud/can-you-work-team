@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Activity, Users, Megaphone, DollarSign, ClipboardCheck, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, Activity, Users, Megaphone, DollarSign, ClipboardCheck, LogOut, Shield, X } from 'lucide-react';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard', end: true },
@@ -10,17 +10,20 @@ const navItems = [
   { path: '/submissions', icon: ClipboardCheck, label: 'Submission Review' },
 ];
 
-const Sidebar = ({ onLogout }) => {
+const Sidebar = ({ onLogout, sidebarOpen, onCloseSidebar }) => {
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
-        <div className="sidebar-logo">
+        <div className="sidebar-logo" style={{ flex: 1 }}>
           <Shield size={28} className="text-cyan" />
           <div>
             <span className="sidebar-title">Admin Alexa</span>
             <span className="sidebar-subtitle">Control Cockpit</span>
           </div>
         </div>
+        <button className="mobile-toggle" onClick={onCloseSidebar} title="Close Menu" style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+          <X size={20} />
+        </button>
       </div>
 
       <nav className="sidebar-nav">
