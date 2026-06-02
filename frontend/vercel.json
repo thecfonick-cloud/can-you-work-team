@@ -1,6 +1,7 @@
 {
+  "cleanUrls": true,
   "rewrites": [
-    { "source": "/admin-alexa/:path*", "destination": "/admin-alexa/index.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/admin-alexa/:path((?!.*\\.).*)", "destination": "/admin-alexa/index.html" },
+    { "source": "/:path((?!.*\\.).*)", "destination": "/index.html" }
   ]
 }
