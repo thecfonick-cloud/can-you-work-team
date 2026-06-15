@@ -360,11 +360,12 @@ function App() {
 const GlobalMascot = ({ user }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [visible, setVisible] = useState(() => localStorage.getItem("canyuwork_mascot_dismissed") !== "true");
+  const [visible, setVisible] = useState(false);
   const [speechText, setSpeechText] = useState("");
   const [bubbleAnim, setBubbleAnim] = useState(false);
   const [mascotClass, setMascotClass] = useState("");
-  const [currentPath, setCurrentPath] = useState(location.pathname);
+  const isInitialMount = useRef(true);
+  const prevPathRef = useRef(location.pathname);
 
   // Panda expressions, 3D cursor tilt, and Leaf particle system
   const [emotion, setEmotion] = useState('normal'); // normal, happy, warning, thinking
@@ -428,7 +429,10 @@ const GlobalMascot = ({ user }) => {
 
   // Mouse tilt tracking
   useEffect(() => {
-    if (!visible) return;
+    if (!visible) {
+      setTiltStyle({});
+      return;
+    }
 
     const handleMouseMove = (e) => {
       const mascotEl = document.querySelector('.mascot-tutor-container');
@@ -592,20 +596,7 @@ const GlobalMascot = ({ user }) => {
     }
   };
 
-  useEffect(() => {
-    const dismissed = localStorage.getItem("canyuwork_mascot_dismissed") === "true";
-    if (dismissed) return;
-
-    // Show mascot after 1 second initially
-    const timer = setTimeout(() => {
-      setVisible(true);
-      setSpeechText(getSpeechTextForRoute(location.pathname, user));
-      setBubbleAnim(true);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [location.pathname, user]);
-
-  // Trigger wobbly bounce animation on route change (locks in place)
+  // Trigger animations on route changes (Climb Off -> Climb On)
   useEffect(() => {
     const dismissed = localStorage.getItem("canyuwork_mascot_dismissed") === "true";
     if (dismissed) {
@@ -613,19 +604,40 @@ const GlobalMascot = ({ user }) => {
       return;
     }
 
-    if (location.pathname !== currentPath) {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      // Show mascot after 1 second initially
+      const timer = setTimeout(() => {
+        setVisible(true);
+        setSpeechText(getSpeechTextForRoute(location.pathname, user));
+        setBubbleAnim(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+
+    if (location.pathname !== prevPathRef.current) {
+      const targetPath = location.pathname;
+      prevPathRef.current = targetPath;
       setBubbleAnim(false);
-      setCurrentPath(location.pathname);
-      setSpeechText(getSpeechTextForRoute(location.pathname, user));
-      setMascotClass("mascot-jump");
+      setMascotClass("mascot-climb-off");
+
+      // Ensure visible is true if not dismissed (e.g. if navigated before initial 1s timer)
+      setVisible(true);
+
+      // Cancel any active click or custom event animations/timers to prevent collision
+      if (mascotTimeoutRef.current) {
+        clearTimeout(mascotTimeoutRef.current);
+      }
 
       const timer1 = setTimeout(() => {
-        setBubbleAnim(true);
-      }, 300);
+        setMascotClass("mascot-climb-on");
+      }, 900); // match climbOffScreen CSS duration (0.9s)
 
       const timer2 = setTimeout(() => {
         setMascotClass("");
-      }, 1600);
+        setSpeechText(getSpeechTextForRoute(targetPath, user));
+        setBubbleAnim(true);
+      }, 2000); // 900ms off + 1100ms on = 2000ms total
 
       return () => {
         clearTimeout(timer1);
@@ -634,7 +646,7 @@ const GlobalMascot = ({ user }) => {
     } else {
       setSpeechText(getSpeechTextForRoute(location.pathname, user));
     }
-  }, [location.pathname, user, currentPath]);
+  }, [location.pathname, user]);
 
   const handleScroll = useCallback(() => {
     if (location.pathname !== '/') return;
@@ -732,26 +744,25 @@ const GlobalMascot = ({ user }) => {
       onClick={handleMascotClick}
       onMouseEnter={() => setBubbleAnim(true)}
     >
-      <button 
-        className="mascot-close-btn"
-        onClick={handleCloseMascot}
-        title="Hide guide mascot"
-        aria-label="Close mascot guide"
-      >
-        &times;
-      </button>
-
-      <div 
-        className={`mascot-speech-bubble ${bubbleAnim ? 'pop' : ''}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          setBubbleAnim(false);
-        }}
-      >
-        {speechText}
-      </div>
-      
       <div className={`mascot-robot-wrapper ${mascotClass}`}>
+        <button 
+          className="mascot-close-btn"
+          onClick={handleCloseMascot}
+          title="Hide guide mascot"
+          aria-label="Close mascot guide"
+        >
+          &times;
+        </button>
+
+        <div 
+          className={`mascot-speech-bubble ${bubbleAnim ? 'pop' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setBubbleAnim(false);
+          }}
+        >
+          {speechText}
+        </div>
         <div className="mascot-panda-3d" style={{ position: 'relative', width: '80px', height: '96px', transformStyle: 'preserve-3d' }}>
           
           {/* Leaf particles overlay rendering */}

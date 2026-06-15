@@ -5495,6 +5495,13 @@ a {
 }
 
 /* 3D Container */
+.mascot-robot-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
 .mascot-panda-3d {
   transform-style: preserve-3d;
   will-change: transform;
